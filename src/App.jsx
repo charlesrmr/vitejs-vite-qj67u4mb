@@ -1,0 +1,1028 @@
+import { useState, useCallback, useRef, useEffect } from 'react';
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+} from 'recharts';
+import { C, PALETTE } from './tokens';
+import { DEMO } from './data/demo';
+import { eur, num, parseCSV, buildFromFiles, getAISynthesis } from './utils';
+import './App.css';
+
+function ScoreRing({ score }) {
+  const [v, setV] = useState(0);
+  useEffect(() => {
+    let s = 0;
+    const id = setInterval(() => {
+      s += 2;
+      if (s >= score) {
+        s = score;
+        clearInterval(id);
+      }
+      setV(s);
+    }, 18);
+    return () => clearInterval(id);
+  }, [score]);
+  const col = score >= 70 ? C.emerald : score >= 50 ? C.amber : C.rose;
+  const r = 54,
+    cx = 70,
+    cy = 70;
+  const circ = 2 * Math.PI * r;
+  const dash = circ * (v / 100);
+  return (
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        gap: 8,
+      }}
+    >
+      <div style={{ position: 'relative', width: 140, height: 140 }}>
+        <svg width="140" height="140" style={{ transform: 'rotate(-90deg)' }}>
+          <circle
+            cx={cx}
+            cy={cy}
+            r={r}
+            fill="none"
+            stroke="rgba(255,255,255,.1)"
+            strokeWidth="10"
+          />
+          <circle
+            cx={cx}
+            cy={cy}
+            r={r}
+            fill="none"
+            stroke={col}
+            strokeWidth="10"
+            strokeDasharray={`${dash} ${circ}`}
+            strokeLinecap="round"
+            style={{
+              transition: 'stroke-dasharray 1.2s cubic-bezier(.2,.8,.2,1)',
+            }}
+          />
+        </svg>
+        <div
+          style={{
+            position: 'absolute',
+            inset: 0,
+            display: 'grid',
+            placeItems: 'center',
+          }}
+        >
+          <div style={{ textAlign: 'center' }}>
+            <div
+              style={{
+                fontFamily: 'JetBrains Mono, monospace',
+                fontSize: '2rem',
+                fontWeight: 700,
+                color: '#fff',
+                lineHeight: 1,
+              }}
+            >
+              {v}
+            </div>
+            <div style={{ fontSize: 10, color: '#94A3B8', letterSpacing: 1 }}>
+              /100
+            </div>
+          </div>
+        </div>
+      </div>
+      <div
+        style={{
+          fontSize: 10,
+          fontWeight: 600,
+          letterSpacing: 1.5,
+          textTransform: 'uppercase',
+          color: '#94A3B8',
+        }}
+      >
+        Score sante
+      </div>
+    </div>
+  );
+}
+
+function Slot({ label, hint, optional, file, onFile }) {
+  const ref = useRef();
+  const [drag, setDrag] = useState(false);
+  return (
+    <div
+      className={`slot${file ? ' fill' : ''}${drag ? ' drag' : ''}`}
+      onClick={() => ref.current.click()}
+      onDragOver={(e) => {
+        e.preventDefault();
+        setDrag(true);
+      }}
+      onDragLeave={() => setDrag(false)}
+      onDrop={(e) => {
+        e.preventDefault();
+        setDrag(false);
+        const f = e.dataTransfer.files[0];
+        if (f) onFile(f);
+      }}
+    >
+      <input
+        ref={ref}
+        type="file"
+        accept=".csv,.xlsx,.xls"
+        style={{ display: 'none' }}
+        onChange={(e) => onFile(e.target.files[0])}
+      />
+      <div className="slot-top">
+        <div className="slot-ico">{file ? 'OK' : '+'}</div>
+        <div className="slot-n">{label}</div>
+      </div>
+      <div className="slot-h">{hint}</div>
+      {file && <div className="slot-f">{file.name}</div>}
+      {(optional || file) && (
+        <span className={`slot-badge ${file ? 'ok' : 'opt'}`}>
+          {file ? 'ready' : 'optional'}
+        </span>
+      )}
+    </div>
+  );
+}
+
+function PB({ pct, color }) {
+  return (
+    <div className="pb">
+      <div className="pb-tk">
+        <div
+          className="pb-fl"
+          style={{
+            width: `${Math.min(pct, 100)}%`,
+            background: color || C.violet,
+          }}
+        />
+      </div>
+      <span className="pb-n">{pct}%</span>
+    </div>
+  );
+}
+
+function TT({ active, payload, label }) {
+  if (!active || !payload?.length) return null;
+  return (
+    <div className="tt">
+      <div style={{ fontWeight: 600, marginBottom: 3 }}>{label}</div>
+      {payload.map((p, i) => (
+        <div key={i} style={{ color: p.color || '#94A3B8' }}>
+          {p.name}:{' '}
+          {p.value > 999
+            ? eur(p.value)
+            : p.value + (p.name === 'marge' ? '%' : '')}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function SH({ label }) {
+  return (
+    <div className="sh">
+      <div className="sh-l">{label}</div>
+      <div className="sh-line" />
+    </div>
+  );
+}
+
+const TABS = [
+  { id: 'synthese', label: 'Synthese' },
+  { id: 'marge', label: 'Marge' },
+  { id: 'analyse', label: 'Analyse' },
+  { id: 'produits', label: 'Produits' },
+  { id: 'action', label: 'Actions' },
+];
+
+const STEPS = [
+  'Lecture des fichiers LGO...',
+  'Normalisation des colonnes...',
+  'Calcul des KPI...',
+  'Detection des alertes...',
+  'Synthese en cours...',
+  'Rapport pret',
+];
+
+export default function App() {
+  const [files, setFiles] = useState({ ventes: null, stock: null });
+  const [step, setStep] = useState('upload');
+  const [ls, setLs] = useState(0);
+  const [data, setData] = useState(null);
+  const [syn, setSyn] = useState('');
+  const [tab, setTab] = useState('synthese');
+
+  const sf = (k) => (f) => setFiles((p) => ({ ...p, [k]: f }));
+
+  const run = useCallback(
+    async (demo = false) => {
+      setStep('loading');
+      setLs(0);
+      try {
+        await new Promise((r) => setTimeout(r, 400));
+        setLs(1);
+        await new Promise((r) => setTimeout(r, 350));
+        setLs(2);
+        let res = DEMO;
+        if (!demo) {
+          const parsed = {};
+          for (const [k, f] of Object.entries(files)) {
+            if (f) parsed[k] = await parseCSV(f);
+          }
+          res = buildFromFiles(parsed);
+        }
+        setData(res);
+        setLs(3);
+        await new Promise((r) => setTimeout(r, 300));
+        setLs(4);
+        const s = await getAISynthesis(res);
+        setSyn(s);
+        setLs(5);
+        await new Promise((r) => setTimeout(r, 200));
+        setStep('dashboard');
+        setTab('synthese');
+      } catch {
+        setData(DEMO);
+        setSyn(DEMO.synthesis);
+        setStep('dashboard');
+        setTab('synthese');
+      }
+    },
+    [files]
+  );
+
+  const reset = () => {
+    setStep('upload');
+    setData(null);
+    setSyn('');
+    setFiles({ ventes: null, stock: null });
+  };
+  const tc = (t) => (t === 'up' ? C.emerald : t === 'down' ? C.rose : C.t3);
+  const ti = (t) => (t === 'up' ? 'haut' : t === 'down' ? 'bas' : '-');
+
+  return (
+    <div className="app">
+      <header className="hd">
+        <div className="hd-l">
+          <div className="hd-mk">P</div>
+          <div className="hd-nm">Pilot Officine</div>
+        </div>
+        <div className="hd-r">
+          {step === 'dashboard' && data && (
+            <div className="hd-meta">
+              {data.officine} - {data.periode}
+            </div>
+          )}
+          <div className="hd-badge">beta</div>
+        </div>
+      </header>
+
+      {step === 'upload' && (
+        <div className="up">
+          <div className="up-blob" />
+          <div className="up-blob2" />
+          <div className="up-in">
+            <div className="up-kicker">Pilot Officine - CRC Pharma</div>
+            <h1 className="up-h">
+              Vos exports LGO valent
+              <br />
+              plus qu un tableau Excel.
+            </h1>
+            <p className="up-s">
+              Importez vos fichiers et recevez votre diagnostic strategique
+              complet en 60 secondes.
+            </p>
+            <div className="slots">
+              <Slot
+                label="Export Ventes"
+                hint="CA, marge, familles, produits"
+                file={files.ventes}
+                onFile={sf('ventes')}
+              />
+              <Slot
+                label="Etat du Stock"
+                hint="Pour l analyse dormants"
+                optional
+                file={files.stock}
+                onFile={sf('stock')}
+              />
+            </div>
+            <p className="up-note">
+              Un seul fichier suffit pour demarrer -{' '}
+              <b>le stock est optionnel</b>
+            </p>
+            <button className="btn-go" onClick={() => run(false)}>
+              Analyser mon officine
+            </button>
+            <button className="btn-demo" onClick={() => run(true)}>
+              Tester avec les donnees de demonstration
+            </button>
+            <div className="trust">
+              <span className="trust-i">donnees locales</span>
+              <span className="trust-i">resultat en 60s</span>
+              <span className="trust-i">rapport PDF</span>
+              <span className="trust-i">RGPD</span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {step === 'loading' && (
+        <div className="ld">
+          <div className="ld-ring" />
+          <div className="ld-t">Analyse en cours...</div>
+          <p className="ld-s">Pilot Officine calcule vos indicateurs</p>
+          <ul className="ld-steps">
+            {STEPS.map((s, i) => (
+              <li key={i} className={i < ls ? 'd' : i === ls ? 'a' : ''}>
+                <span className="sd" />
+                {s}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {step === 'dashboard' && data && (
+        <div className="dash">
+          <div className="dtb">
+            <div className="dtb-l">
+              <span className="dtb-name">{data.officine}</span>
+              <div className="dtb-sep" />
+              <span className="dtb-meta">
+                {data.periode} - {data.lgo}
+              </span>
+            </div>
+            <div className="dtb-r">
+              <button className="btn ghost" onClick={reset}>
+                Nouveau
+              </button>
+              <button
+                className="btn accent"
+                onClick={() => alert('Export PDF -> charlesromier@gmail.com')}
+              >
+                PDF
+              </button>
+            </div>
+          </div>
+
+          <div className="tabs">
+            {TABS.map((t) => (
+              <button
+                key={t.id}
+                className={`tab${tab === t.id ? ' on' : ''}`}
+                onClick={() => setTab(t.id)}
+              >
+                {t.label}
+              </button>
+            ))}
+          </div>
+
+          <div className="content">
+            {tab === 'synthese' && (
+              <>
+                <div className="g4">
+                  {[
+                    {
+                      l: 'CA Total',
+                      v: eur(data.ca),
+                      f: 'toutes familles',
+                      ac: C.violet,
+                      bd: null,
+                    },
+                    {
+                      l: 'Marge Brute',
+                      v: `${data.marge_pct}%`,
+                      f: eur(data.marge_eur),
+                      ac: C.cyan,
+                      bd: {
+                        t:
+                          data.marge_pct >= 28
+                            ? 'dans la norme'
+                            : 'sous la norme',
+                        x: data.marge_pct >= 28 ? 'g' : 'r',
+                      },
+                    },
+                    {
+                      l: 'Stock immobilise',
+                      v: eur(data.stock_eur),
+                      f: `rotation x${data.extra.rotation}`,
+                      ac: data.stock_eur / data.ca > 0.6 ? C.rose : C.emerald,
+                      bd: {
+                        t: `${Math.round(
+                          (data.stock_eur / data.ca) * 100
+                        )}% du CA`,
+                        x: data.stock_eur / data.ca > 0.6 ? 'w' : 'g',
+                      },
+                    },
+                    {
+                      l: 'Produits dormants',
+                      v: num(data.dormants),
+                      f: 'sans vente',
+                      ac: C.rose,
+                      bd: { t: 'action requise', x: 'r' },
+                    },
+                  ].map((k, i) => (
+                    <div key={i} className="card kpi fu">
+                      <div className="kpi-ac" style={{ background: k.ac }} />
+                      <div className="kpi-l">{k.l}</div>
+                      <div className="kpi-v">{k.v}</div>
+                      {k.bd && (
+                        <span className={`kpi-bd ${k.bd.x}`}>{k.bd.t}</span>
+                      )}
+                      <div
+                        className="kpi-f"
+                        style={{ marginTop: k.bd ? 4 : 8 }}
+                      >
+                        {k.f}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <SH label="KPIs de pilotage" />
+                <div className="g4">
+                  {[
+                    {
+                      l: 'Rotation stock',
+                      v: `x${data.extra.rotation}`,
+                      f: 'obj. >3x',
+                      ac: data.extra.rotation >= 3 ? C.emerald : C.amber,
+                    },
+                    {
+                      l: 'Panier moyen',
+                      v: `${data.extra.panier}EUR`,
+                      f: 'par passage',
+                      ac: C.cyan,
+                    },
+                    {
+                      l: 'Tx ventes assoc.',
+                      v: `${data.extra.tx_assoc}%`,
+                      f: 'obj. >18%',
+                      ac: data.extra.tx_assoc >= 18 ? C.emerald : C.amber,
+                    },
+                    {
+                      l: 'Clients / mois',
+                      v: num(data.extra.clients),
+                      f: 'passages',
+                      ac: C.violet,
+                    },
+                  ].map((k, i) => (
+                    <div key={i} className="card-sm fu">
+                      <div className="kpi-l">{k.l}</div>
+                      <div
+                        style={{
+                          fontSize: '1.35rem',
+                          fontWeight: 700,
+                          color: C.t1,
+                          marginBottom: 4,
+                        }}
+                      >
+                        {k.v}
+                      </div>
+                      <div
+                        style={{
+                          height: 3,
+                          borderRadius: 2,
+                          background: k.ac,
+                          marginBottom: 4,
+                        }}
+                      />
+                      <div className="kpi-f">{k.f}</div>
+                    </div>
+                  ))}
+                </div>
+
+                <SH label="Synthese et Alertes" />
+                <div className="g2">
+                  <div className="synth fu">
+                    <div className="synth-tag">
+                      AI synthesis - Pilot Officine
+                    </div>
+                    <div className="synth-b">{syn || data.synthesis}</div>
+                  </div>
+                  <div className="fu">
+                    {data.alerts.map((a, i) => (
+                      <div key={i} className={`al ${a.type}`}>
+                        <div className="al-i">
+                          {a.type === 'r'
+                            ? '[!]'
+                            : a.type === 'a'
+                            ? '[~]'
+                            : a.type === 'g'
+                            ? '[+]'
+                            : '[i]'}
+                        </div>
+                        <div>
+                          <div className="al-t">{a.title}</div>
+                          <div className="al-b">{a.body}</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <SH label="Score de sante" />
+                <div
+                  style={{
+                    background: C.navy,
+                    borderRadius: 14,
+                    padding: '1.5rem',
+                    border: `1px solid ${C.navyBd}`,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '2rem',
+                    flexWrap: 'wrap',
+                  }}
+                  className="fu"
+                >
+                  <ScoreRing score={data.score} />
+                  <div style={{ flex: 1, minWidth: 220 }}>
+                    <div
+                      style={{
+                        fontSize: 13,
+                        fontWeight: 600,
+                        color: '#fff',
+                        marginBottom: 8,
+                      }}
+                    >
+                      Indicateurs composites
+                    </div>
+                    {[
+                      {
+                        l: 'Marge brute',
+                        v: `${data.marge_pct}%`,
+                        ok: data.marge_pct >= 28,
+                      },
+                      {
+                        l: 'Rotation stock',
+                        v: `x${data.extra.rotation}`,
+                        ok: data.extra.rotation >= 3,
+                      },
+                      {
+                        l: 'Ventes associees',
+                        v: `${data.extra.tx_assoc}%`,
+                        ok: data.extra.tx_assoc >= 18,
+                      },
+                      {
+                        l: 'Produits dormants',
+                        v: `${data.dormants} refs`,
+                        ok: data.dormants < 50,
+                      },
+                    ].map((k, i) => (
+                      <div
+                        key={i}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          padding: '5px 0',
+                          borderBottom: `1px solid ${C.navyBd}`,
+                        }}
+                      >
+                        <span style={{ fontSize: 12, color: '#94A3B8' }}>
+                          {k.l}
+                        </span>
+                        <span
+                          style={{
+                            fontSize: 12,
+                            fontWeight: 600,
+                            color: k.ok ? C.emerald : C.amber,
+                          }}
+                        >
+                          {k.v}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </>
+            )}
+
+            {tab === 'marge' && (
+              <>
+                <div className="info-box fu">
+                  <b>Methode.</b> La marge officinale se lit en deux univers :
+                  medicament rembourse (MDL 6,93% du PFHT, plafonnee a
+                  32,50EUR/boite) et non-rembourse (marge libre, 30-60%). Repere
+                  secteur : <b>28-33% du CA</b> (FSPF 2025).
+                </div>
+                <SH label="Les deux univers de marge" />
+                <div className="mg-split fu">
+                  <div className="mg-univ rembourse">
+                    <div className="mg-tag" style={{ color: C.t3 }}>
+                      Rembourse - marge reglementee
+                    </div>
+                    <div className="mg-val">
+                      {data.marge.rembourse.marge_pct}%
+                    </div>
+                    <div className="mg-sub">
+                      {eur(data.marge.rembourse.marge_eur)} -{' '}
+                      {data.marge.rembourse.ca_pct}% du CA
+                    </div>
+                    <div className="mg-note">{data.marge.rembourse.note}</div>
+                    <span
+                      className="mg-pill"
+                      style={{
+                        background: C.amberBg,
+                        color: C.amber,
+                        border: `1px solid ${C.amber}22`,
+                      }}
+                    >
+                      Substitution {data.marge.rembourse.tx_subst}% / obj.{' '}
+                      {data.marge.rembourse.tx_subst_obj}%+
+                    </span>
+                  </div>
+                  <div className="mg-univ libre">
+                    <div className="mg-tag" style={{ color: C.emerald }}>
+                      Non-rembourse - marge libre
+                    </div>
+                    <div className="mg-val" style={{ color: C.emerald }}>
+                      {data.marge.libre.marge_pct}%
+                    </div>
+                    <div className="mg-sub">
+                      {eur(data.marge.libre.marge_eur)} -{' '}
+                      {data.marge.libre.ca_pct}% du CA
+                    </div>
+                    <div className="mg-note">{data.marge.libre.note}</div>
+                    <span
+                      className="mg-pill"
+                      style={{
+                        background: C.emeraldBg,
+                        color: C.emerald,
+                        border: `1px solid ${C.emerald}22`,
+                      }}
+                    >
+                      Vrai levier de rentabilite
+                    </span>
+                  </div>
+                </div>
+
+                <SH label="Marge libre par famille" />
+                <div className="tc fu">
+                  <div className="tc-hd">
+                    <span className="tc-ht">Familles hors rembourse</span>
+                    <span className="tc-hc">repere 30-60% FSPF</span>
+                  </div>
+                  <div style={{ padding: '0.75rem 1rem' }}>
+                    {data.marge.par_famille_libre.map((f, i) => {
+                      const col =
+                        f.reel >= 40
+                          ? C.emerald
+                          : f.reel >= 32
+                          ? C.cyan
+                          : C.amber;
+                      const st =
+                        f.reel >= 40 ? 'fort' : f.reel >= 32 ? 'ok' : 'faible';
+                      return (
+                        <div key={i} className="mg-fam">
+                          <div className="mg-fn">{f.nom}</div>
+                          <div className="mg-track">
+                            <div
+                              className="mg-fill"
+                              style={{
+                                width: `${Math.min((f.reel / 60) * 100, 100)}%`,
+                                background: col,
+                              }}
+                            />
+                          </div>
+                          <div className="mg-vals">
+                            <b style={{ color: col }}>{f.reel}%</b>
+                            <span className={`mg-stat ${st}`}>{st}</span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <SH label="Leviers de recuperation" />
+                {data.marge.leviers.map((l, i) => (
+                  <div key={i} className="lev fu">
+                    <div className="lev-gain">
+                      <div className="lev-gv">
+                        +{(l.gain_min / 1000).toFixed(1)}-
+                        {(l.gain_max / 1000).toFixed(1)}k EUR
+                      </div>
+                      <div className="lev-gl">par an est.</div>
+                    </div>
+                    <div className="lev-bd">
+                      <div className="lev-t">{l.titre}</div>
+                      <div className="lev-d">{l.detail}</div>
+                      <div className="lev-tags">
+                        <span className="ltag">{l.effort}</span>
+                        <span className="ltag">{l.delai}</span>
+                        <span className="ltag">{l.base}</span>
+                      </div>
+                      <div className="lev-src">Source : {l.source}</div>
+                    </div>
+                  </div>
+                ))}
+                <div className="disclaimer fu">
+                  <b>Transparence.</b> Gains en fourchettes estimatives. Reperes
+                  sources (FSPF, Leem, arretes). Pas une promesse de resultat.
+                </div>
+              </>
+            )}
+
+            {tab === 'analyse' && (
+              <>
+                <SH label="Graphiques" />
+                <div className="g2 fu">
+                  <div className="cc">
+                    <div className="cc-t">CA par famille</div>
+                    <ResponsiveContainer width="100%" height={220}>
+                      <BarChart
+                        data={data.chart}
+                        margin={{ top: 0, right: 0, left: -18, bottom: 0 }}
+                      >
+                        <CartesianGrid
+                          strokeDasharray="3 3"
+                          stroke={C.border}
+                        />
+                        <XAxis
+                          dataKey="name"
+                          tick={{ fontSize: 10, fill: C.t4 }}
+                        />
+                        <YAxis tick={{ fontSize: 10, fill: C.t4 }} />
+                        <Tooltip content={<TT />} />
+                        <Bar dataKey="ca" name="CA" radius={[4, 4, 0, 0]}>
+                          {data.chart.map((_, i) => (
+                            <Cell key={i} fill={PALETTE[i % PALETTE.length]} />
+                          ))}
+                        </Bar>
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                  <div className="cc">
+                    <div className="cc-t">Repartition CA</div>
+                    <ResponsiveContainer width="100%" height={220}>
+                      <PieChart>
+                        <Pie
+                          data={data.chart}
+                          dataKey="ca"
+                          nameKey="name"
+                          cx="50%"
+                          cy="50%"
+                          innerRadius={50}
+                          outerRadius={82}
+                          paddingAngle={2}
+                          label={({ name, percent }) =>
+                            `${name} ${(percent * 100).toFixed(0)}%`
+                          }
+                          labelLine={false}
+                          style={{ fontSize: 10 }}
+                        >
+                          {data.chart.map((_, i) => (
+                            <Cell key={i} fill={PALETTE[i % PALETTE.length]} />
+                          ))}
+                        </Pie>
+                        <Tooltip content={<TT />} />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+                <SH label="Familles" />
+                <div className="tc fu">
+                  <div className="tc-hd">
+                    <span className="tc-ht">
+                      CA / Stock / Marge par famille
+                    </span>
+                    <span className="tc-hc">
+                      {data.familles.length} familles
+                    </span>
+                  </div>
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Famille</th>
+                        <th>CA</th>
+                        <th>Part CA</th>
+                        <th>Part Stock</th>
+                        <th>Marge</th>
+                        <th>Trend</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {data.familles.map((f, i) => (
+                        <tr key={i}>
+                          <td style={{ fontWeight: 600 }}>{f.nom}</td>
+                          <td style={{ fontWeight: 600 }}>{eur(f.ca)}</td>
+                          <td>
+                            <PB pct={f.pct_ca} color={C.violet} />
+                          </td>
+                          <td>
+                            <PB
+                              pct={f.pct_stk}
+                              color={
+                                f.pct_stk > f.pct_ca + 3 ? C.rose : C.emerald
+                              }
+                            />
+                          </td>
+                          <td>
+                            <PB
+                              pct={f.marge}
+                              color={
+                                f.marge >= 38
+                                  ? C.emerald
+                                  : f.marge < 18
+                                  ? C.rose
+                                  : C.amber
+                              }
+                            />
+                          </td>
+                          <td
+                            style={{
+                              color: tc(f.trend),
+                              fontWeight: 700,
+                              fontSize: 14,
+                            }}
+                          >
+                            {ti(f.trend)}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </>
+            )}
+
+            {tab === 'produits' && (
+              <>
+                <SH label="Performance produits" />
+                <div className="g2 fu">
+                  <div className="tc">
+                    <div className="tc-hd">
+                      <span className="tc-ht">Top 10 produits</span>
+                      <span className="tc-hc">par CA</span>
+                    </div>
+                    <table>
+                      <thead>
+                        <tr>
+                          <th>#</th>
+                          <th>Produit</th>
+                          <th>CA</th>
+                          <th>Marge</th>
+                          <th>Evol.</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {data.top10.map((p, i) => (
+                          <tr key={i}>
+                            <td className="rk">{i + 1}</td>
+                            <td>
+                              <div style={{ fontWeight: 500 }}>{p.nom}</div>
+                              <span className="chip">{p.fam}</span>
+                            </td>
+                            <td style={{ fontWeight: 600 }}>{eur(p.ca)}</td>
+                            <td>
+                              <PB
+                                pct={p.marge}
+                                color={
+                                  p.marge >= 38
+                                    ? C.emerald
+                                    : p.marge < 20
+                                    ? C.rose
+                                    : C.cyan
+                                }
+                              />
+                            </td>
+                            <td
+                              style={{
+                                color: p.evo?.startsWith('+')
+                                  ? C.emerald
+                                  : p.evo?.startsWith('-')
+                                  ? C.rose
+                                  : C.t3,
+                                fontWeight: 600,
+                                fontSize: 11,
+                              }}
+                            >
+                              {p.evo || '-'}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  <div className="tc">
+                    <div className="tc-hd">
+                      <span className="tc-ht">Produits dormants</span>
+                      <span className="tc-hc">sans vente</span>
+                    </div>
+                    <table>
+                      <thead>
+                        <tr>
+                          <th>#</th>
+                          <th>Produit</th>
+                          <th>CA</th>
+                          <th>Stock</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {data.flop.map((p, i) => (
+                          <tr key={i}>
+                            <td className="rk">{i + 1}</td>
+                            <td>
+                              <div style={{ fontWeight: 500 }}>{p.nom}</div>
+                              <span className="chip">{p.fam}</span>
+                            </td>
+                            <td style={{ color: C.rose, fontWeight: 600 }}>
+                              {eur(p.ca)}
+                            </td>
+                            <td>
+                              <span
+                                style={{
+                                  background: C.roseBg,
+                                  color: C.rose,
+                                  padding: '2px 8px',
+                                  borderRadius: 6,
+                                  fontSize: 10,
+                                  fontWeight: 700,
+                                }}
+                              >
+                                {p.stock}u
+                              </span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </>
+            )}
+
+            {tab === 'action' && (
+              <>
+                <SH label="Plan d action - 30 jours" />
+                {data.actions.map((a, i) => (
+                  <div key={i} className="act fu">
+                    <div className="act-n">{i + 1}</div>
+                    <div className="act-bd">
+                      <div className="act-t">{a.titre}</div>
+                      <div className="act-d">{a.detail}</div>
+                      <div className="act-m">
+                        <span className={`atag ${a.prio === 'h' ? 'h' : 'm'}`}>
+                          {a.prio === 'h' ? 'haute' : 'moyenne'}
+                        </span>
+                        {a.impact && (
+                          <span className="atag g">+{a.impact}</span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+                <div className="impact-box fu">
+                  <b style={{ color: C.emerald }}>Impact cumule estime</b> —{' '}
+                  <b style={{ color: C.emerald }}>+14 000 EUR de tresorerie</b>{' '}
+                  liberee +{' '}
+                  <b style={{ color: C.emerald }}>+21 200 EUR/an de marge</b>{' '}
+                  additionnelle.
+                </div>
+              </>
+            )}
+
+            <div className="exp fu">
+              <div>
+                <div className="exp-t">
+                  Rapport Pilot Officine - {data?.periode}
+                </div>
+                <div className="exp-s">
+                  {data?.officine} - synthese + KPIs + marge + plan 30j
+                </div>
+              </div>
+              <div className="exp-b">
+                <button
+                  className="btn ghost"
+                  style={{ borderColor: '#1E3A5F', color: '#94A3B8' }}
+                  onClick={reset}
+                >
+                  Nouveau
+                </button>
+                <button
+                  className="btn accent"
+                  onClick={() => alert('Export PDF -> charlesromier@gmail.com')}
+                >
+                  PDF
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <footer className="ft">
+        pilot officine - crc pharma - beta 1.0 - charlesromier@gmail.com
+      </footer>
+    </div>
+  );
+}
