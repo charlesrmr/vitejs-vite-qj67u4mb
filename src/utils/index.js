@@ -414,7 +414,7 @@ export function buildFromFiles(filesMap) {
       const publicPrice = salesCols.prixPublic ? parseFrenchNumber(row[salesCols.prixPublic]) : null
       products.push({
         nom: String(row[salesCols.produit] || '?'),
-        ca: rowCa ?? (quantity !== null && publicPrice !== null ? quantity * publicPrice : 0),
+        ca: rowCa,
         quantite: quantity,
         prix_public: publicPrice,
         marge: rowMarginPct,
@@ -450,7 +450,11 @@ export function buildFromFiles(filesMap) {
   data.marge_pct = margePct === null ? null : Math.round(margePct * 10) / 10
   data.marge_eur = margeEur === null ? null : Math.round(margeEur)
   data.top10 = products
-    .sort((a, b) => (b.ca || b.quantite || 0) - (a.ca || a.quantite || 0))
+    .sort((a, b) => {
+      const aValue = Number.isFinite(a.ca) ? a.ca : (a.quantite || 0)
+      const bValue = Number.isFinite(b.ca) ? b.ca : (b.quantite || 0)
+      return bValue - aValue
+    })
     .slice(0, 10)
     .map(({ key, ...product }) => product)
 
@@ -508,7 +512,7 @@ export function buildFromFiles(filesMap) {
     }
   }
 
-  if (Number.isFinite(data.stock_eur) && data.stock_eur > 0) {
+  if (Number.isFinite(data.ca) && Number.isFinite(data.stock_eur) && data.stock_eur > 0) {
     data.extra.rotation = Math.round((data.ca / data.stock_eur) * 10) / 10
   }
 
