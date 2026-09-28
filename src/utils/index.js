@@ -54,21 +54,92 @@ function cleanRows(rows) {
   )
 }
 
+const HEADER_HINTS = [
+  'date vente', 'periode', 'période', 'total ttc', 'total ht',
+  'ca ttc', 'ca ht', 'marge', 'margevaleur', 'marge valeur',
+  'nom forme produit', 'designation', 'désignation', 'produit',
+  'quantite', 'quantité', 'famille', 'rayon', 'position',
+  'code prix public', 'prix public', 'stock'
+]
+
+function normalizeLoose(value) {
+  return String(value || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9%€]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
+function findHeaderIndex(matrix) {
+  const limit = Math.min(matrix.length, 12)
+  let bestIndex = 0
+  let bestScore = -1
+
+  for (let i = 0; i < limit; i += 1) {
+    const row = matrix[i] || []
+    const normalized = row.map(normalizeLoose).filter(Boolean)
+    const hintScore = normalized.reduce(
+      (score, cell) =>
+        score + (HEADER_HINTS.some((hint) => cell === normalizeLoose(hint) || cell.includes(normalizeLoose(hint))) ? 3 : 0),
+      0
+    )
+    const widthScore = normalized.length
+    const score = hintScore + widthScore
+
+    if (score > bestScore) {
+      bestScore = score
+      bestIndex = i
+    }
+  }
+
+  return bestIndex
+}
+
+function matrixToObjects(matrix) {
+  const rows = (matrix || []).filter((row) =>
+    Array.isArray(row) && row.some((value) => String(value ?? '').trim() !== '')
+  )
+  if (!rows.length) return []
+
+  const headerIndex = findHeaderIndex(rows)
+  const rawHeaders = rows[headerIndex].map((h, i) => String(h || '').trim() || `Colonne ${i + 1}`)
+  const headers = rawHeaders.map((header, i) => {
+    const duplicateCount = rawHeaders.slice(0, i).filter((h) => h === header).length
+    return duplicateCount ? `${header} ${duplicateCount + 1}` : header
+  })
+
+  return cleanRows(
+    rows.slice(headerIndex + 1).map((row) => {
+      const obj = {}
+      headers.forEach((header, i) => {
+        obj[header] = row[i] ?? ''
+      })
+      return obj
+    })
+  )
+}
+
 export function parseFile(file) {
   const name = file?.name?.toLowerCase() || ''
 
   if (name.endsWith('.csv')) {
     return new Promise((resolve, reject) => {
       Papa.parse(file, {
-        header: true,
+        header: false,
         skipEmptyLines: 'greedy',
-        transformHeader: (header) => String(header || '').trim(),
         complete: (result) => {
           if (result.errors?.length && !result.data?.length) {
             reject(new Error(result.errors[0]?.message || 'CSV illisible'))
             return
           }
-          resolve(cleanRows(result.data))
+          const rows = matrixToObjects(result.data)
+          if (!rows.length) {
+            reject(new Error('Aucune ligne exploitable détectée dans le CSV.'))
+            return
+          }
+          resolve(rows)
         },
         error: (error) => reject(error),
       })
@@ -80,11 +151,14 @@ export function parseFile(file) {
       const workbook = XLSX.read(buffer, { type: 'array', cellDates: false })
       const firstSheet = workbook.SheetNames[0]
       if (!firstSheet) throw new Error('Classeur Excel vide')
-      const rows = XLSX.utils.sheet_to_json(workbook.Sheets[firstSheet], {
+      const matrix = XLSX.utils.sheet_to_json(workbook.Sheets[firstSheet], {
+        header: 1,
         defval: '',
         raw: false,
       })
-      return cleanRows(rows)
+      const rows = matrixToObjects(matrix)
+      if (!rows.length) throw new Error('Aucune ligne exploitable détectée dans le classeur.')
+      return rows
     })
   }
 
@@ -96,17 +170,17 @@ export const parseCSV = parseFile
 
 // ── COLUMN DETECTION ─────────────────────────────────────────────
 const COLUMN_ALIASES = {
-  ca: [
-    'ca ttc', 'ca ht', 'chiffre affaires', "chiffre d'affaires",
-    'montant ttc', 'montant ht', 'montant ventes', 'total vente',
-    'total ventes', 'ca', 'ventes'
-  ],
-  produit: ['designation', 'désignation', 'libelle', 'libellé', 'produit', 'article', 'nom produit'],
-  margeEur: ['marge eur', 'marge €', 'marge euros', 'marge brute eur', 'marge brute €', 'montant marge'],
-  margePct: ['taux marge', 'taux de marge', 'marge %', 'marge pct', 'pourcentage marge'],
+  caTtc: ['total ttc', 'ca ttc', 'chiffre affaires ttc', "chiffre d'affaires ttc", 'montant ttc'],
+  caHt: ['total ht', 'ca ht', 'chiffre affaires ht', "chiffre d'affaires ht", 'montant ht'],
+  ca: ['chiffre affaires', "chiffre d'affaires", 'montant ventes', 'total vente', 'total ventes', 'ca', 'ventes'],
+  date: ['date vente', 'date', 'periode', 'période'],
+  produit: ['nom forme produit', 'designation', 'désignation', 'libelle', 'libellé', 'produit', 'article', 'nom produit'],
+  margeEur: ['margevaleur', 'marge valeur', 'marge eur', 'marge €', 'marge euros', 'marge brute eur', 'marge brute €', 'montant marge'],
+  margePct: ['marge', 'taux marge', 'taux de marge', 'marge %', 'marge pct', 'pourcentage marge'],
   famille: ['famille', 'rayon', 'categorie', 'catégorie', 'univers'],
-  cip: ['cip13', 'cip 13', 'cip7', 'cip', 'ean13', 'ean', 'gtin'],
+  cip: ['code prix public', 'code / prix public', 'cip13', 'cip 13', 'cip7', 'cip', 'ean13', 'ean', 'gtin', 'code produit'],
   quantite: ['quantite', 'quantité', 'qte', 'qté', 'volume vendu', 'unités vendues'],
+  prixPublic: ['prix public', 'prix ttc', 'pvp'],
   stockValeur: ['valeur stock', 'stock valorise', 'stock valorisé', 'valorisation stock', 'stock pmp', 'montant stock'],
   stockQte: ['quantite stock', 'quantité stock', 'qte stock', 'qté stock', 'stock physique', 'stock'],
 }
@@ -147,13 +221,17 @@ export function detectColumn(rows, type) {
 
 export function detectColumns(rows) {
   return {
+    caTtc: detectColumn(rows, 'caTtc'),
+    caHt: detectColumn(rows, 'caHt'),
     ca: detectColumn(rows, 'ca'),
+    date: detectColumn(rows, 'date'),
     produit: detectColumn(rows, 'produit'),
     margeEur: detectColumn(rows, 'margeEur'),
     margePct: detectColumn(rows, 'margePct'),
     famille: detectColumn(rows, 'famille'),
     cip: detectColumn(rows, 'cip'),
     quantite: detectColumn(rows, 'quantite'),
+    prixPublic: detectColumn(rows, 'prixPublic'),
     stockValeur: detectColumn(rows, 'stockValeur'),
     stockQte: detectColumn(rows, 'stockQte'),
   }
@@ -226,6 +304,26 @@ function buildLocalSynthesis(data) {
   return parts.join('\n\n')
 }
 
+function inferPeriod(rows, dateColumn) {
+  if (!dateColumn) return 'Période importée'
+  const dates = rows
+    .map((row) => String(row[dateColumn] || '').trim())
+    .map((value) => {
+      const match = value.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/)
+      if (!match) return null
+      const [, d, m, y] = match
+      const date = new Date(Number(y), Number(m) - 1, Number(d))
+      return Number.isNaN(date.getTime()) ? null : { date, label: value }
+    })
+    .filter(Boolean)
+    .sort((a, b) => a.date - b.date)
+
+  if (!dates.length) return 'Période importée'
+  const first = dates[0]
+  const last = dates[dates.length - 1]
+  return first.label === last.label ? first.label : `${first.label} → ${last.label}`
+}
+
 function emptyRealData() {
   return {
     isDemo: false,
@@ -233,6 +331,8 @@ function emptyRealData() {
     periode: 'Période du fichier',
     lgo: 'LGO importé',
     ca: null,
+    ca_ht: null,
+    ca_ttc: null,
     marge_pct: null,
     marge_eur: null,
     stock_eur: null,
@@ -268,14 +368,20 @@ export function buildFromFiles(filesMap) {
   if (!ventes.length) throw new Error('Le fichier ventes est vide ou illisible.')
 
   const salesCols = detectColumns(ventes)
-  if (!salesCols.ca) {
-    throw new Error("Impossible d'identifier la colonne de chiffre d'affaires. Un mapping manuel sera nécessaire.")
+  const caDisplayCol = salesCols.caTtc || salesCols.ca || salesCols.caHt
+  const caMarginBaseCol = salesCols.caHt || salesCols.ca || salesCols.caTtc
+
+  if (!caDisplayCol && !(salesCols.produit && salesCols.quantite)) {
+    throw new Error("Impossible d'identifier les données principales de l'export. Un mapping manuel sera nécessaire.")
   }
 
   const data = emptyRealData()
   data.detectedColumns.ventes = salesCols
+  data.periode = inferPeriod(ventes, salesCols.date)
 
   let ca = 0
+  let caHt = 0
+  let caTtc = 0
   let totalMarginEur = 0
   let hasMarginEur = false
   let weightedMargin = 0
@@ -283,9 +389,14 @@ export function buildFromFiles(filesMap) {
   const products = []
 
   ventes.forEach((row) => {
-    const rowCa = parseFrenchNumber(row[salesCols.ca])
-    if (rowCa === null) return
-    ca += rowCa
+    const rowCa = caDisplayCol ? parseFrenchNumber(row[caDisplayCol]) : null
+    const rowCaBase = caMarginBaseCol ? parseFrenchNumber(row[caMarginBaseCol]) : rowCa
+    const rowCaHt = salesCols.caHt ? parseFrenchNumber(row[salesCols.caHt]) : null
+    const rowCaTtc = salesCols.caTtc ? parseFrenchNumber(row[salesCols.caTtc]) : null
+
+    if (rowCa !== null) ca += rowCa
+    if (rowCaHt !== null) caHt += rowCaHt
+    if (rowCaTtc !== null) caTtc += rowCaTtc
 
     const rowMarginEur = salesCols.margeEur ? parseFrenchNumber(row[salesCols.margeEur]) : null
     const rowMarginPct = salesCols.margePct ? parseFrenchNumber(row[salesCols.margePct]) : null
@@ -293,15 +404,19 @@ export function buildFromFiles(filesMap) {
     if (rowMarginEur !== null) {
       totalMarginEur += rowMarginEur
       hasMarginEur = true
-    } else if (rowMarginPct !== null && rowCa > 0) {
-      weightedMargin += rowMarginPct * rowCa
-      weightedBase += rowCa
+    } else if (rowMarginPct !== null && rowCaBase !== null && rowCaBase > 0) {
+      weightedMargin += rowMarginPct * rowCaBase
+      weightedBase += rowCaBase
     }
 
     if (salesCols.produit) {
+      const quantity = salesCols.quantite ? parseFrenchNumber(row[salesCols.quantite]) : null
+      const publicPrice = salesCols.prixPublic ? parseFrenchNumber(row[salesCols.prixPublic]) : null
       products.push({
         nom: String(row[salesCols.produit] || '?'),
-        ca: rowCa,
+        ca: rowCa ?? (quantity !== null && publicPrice !== null ? quantity * publicPrice : 0),
+        quantite: quantity,
+        prix_public: publicPrice,
         marge: rowMarginPct,
         fam: salesCols.famille ? String(row[salesCols.famille] || '—') : '—',
         evo: '',
@@ -312,7 +427,7 @@ export function buildFromFiles(filesMap) {
     }
   })
 
-  if (ca <= 0) throw new Error("Aucun chiffre d'affaires exploitable n'a été trouvé.")
+  if (ca <= 0 && !products.length) throw new Error("Aucune donnée exploitable n'a été trouvée.")
 
   let margePct = null
   let margeEur = null
@@ -320,7 +435,8 @@ export function buildFromFiles(filesMap) {
 
   if (hasMarginEur) {
     margeEur = totalMarginEur
-    margePct = (totalMarginEur / ca) * 100
+    const marginBase = caHt > 0 ? caHt : (weightedBase > 0 ? weightedBase : ca)
+    margePct = marginBase > 0 ? (totalMarginEur / marginBase) * 100 : null
     marginMode = 'eur'
   } else if (weightedBase > 0) {
     margePct = weightedMargin / weightedBase
@@ -328,15 +444,19 @@ export function buildFromFiles(filesMap) {
     marginMode = 'pct'
   }
 
-  data.ca = Math.round(ca)
+  data.ca = ca > 0 ? Math.round(ca) : null
+  data.ca_ht = caHt > 0 ? Math.round(caHt) : null
+  data.ca_ttc = caTtc > 0 ? Math.round(caTtc) : null
   data.marge_pct = margePct === null ? null : Math.round(margePct * 10) / 10
   data.marge_eur = margeEur === null ? null : Math.round(margeEur)
   data.top10 = products
-    .sort((a, b) => b.ca - a.ca)
+    .sort((a, b) => (b.ca || b.quantite || 0) - (a.ca || a.quantite || 0))
     .slice(0, 10)
     .map(({ key, ...product }) => product)
 
-  data.familles = buildFamilies(ventes, salesCols, ca, marginMode)
+  data.familles = caDisplayCol
+    ? buildFamilies(ventes, { ...salesCols, ca: caDisplayCol }, ca, marginMode)
+    : []
   data.chart = data.familles.slice(0, 8).map((f) => ({
     name: f.nom,
     ca: f.ca,
