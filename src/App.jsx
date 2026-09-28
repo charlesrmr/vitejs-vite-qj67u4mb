@@ -516,7 +516,7 @@ export default function App() {
                 <div className="g2">
                   <div className="synth fu">
                     <div className="synth-tag">
-                      AI synthesis - Pilot Officine
+                      {data.isDemo ? 'AI synthesis - Pilot Officine' : 'Synthèse Pilot Officine'}
                     </div>
                     <div className="synth-b">{syn || data.synthesis}</div>
                   </div>
@@ -875,33 +875,39 @@ export default function App() {
                             <PB pct={f.pct_ca} color={C.violet} />
                           </td>
                           <td>
-                            <PB
-                              pct={f.pct_stk}
-                              color={
-                                f.pct_stk > f.pct_ca + 3 ? C.rose : C.emerald
-                              }
-                            />
+                            {Number.isFinite(f.pct_stk) ? (
+                              <PB
+                                pct={f.pct_stk}
+                                color={f.pct_stk > f.pct_ca + 3 ? C.rose : C.emerald}
+                              />
+                            ) : (
+                              <span className="chip">N/D</span>
+                            )}
                           </td>
                           <td>
-                            <PB
-                              pct={f.marge}
-                              color={
-                                f.marge >= 38
-                                  ? C.emerald
-                                  : f.marge < 18
-                                  ? C.rose
-                                  : C.amber
-                              }
-                            />
+                            {Number.isFinite(f.marge) ? (
+                              <PB
+                                pct={f.marge}
+                                color={
+                                  f.marge >= 38
+                                    ? C.emerald
+                                    : f.marge < 18
+                                    ? C.rose
+                                    : C.amber
+                                }
+                              />
+                            ) : (
+                              <span className="chip">N/D</span>
+                            )}
                           </td>
                           <td
                             style={{
-                              color: tc(f.trend),
+                              color: f.trend ? tc(f.trend) : C.t3,
                               fontWeight: 700,
                               fontSize: 14,
                             }}
                           >
-                            {ti(f.trend)}
+                            {f.trend ? ti(f.trend) : 'N/D'}
                           </td>
                         </tr>
                       ))}
@@ -940,16 +946,20 @@ export default function App() {
                             </td>
                             <td style={{ fontWeight: 600 }}>{eur(p.ca)}</td>
                             <td>
-                              <PB
-                                pct={p.marge}
-                                color={
-                                  p.marge >= 38
-                                    ? C.emerald
-                                    : p.marge < 20
-                                    ? C.rose
-                                    : C.cyan
-                                }
-                              />
+                              {Number.isFinite(p.marge) ? (
+                                <PB
+                                  pct={p.marge}
+                                  color={
+                                    p.marge >= 38
+                                      ? C.emerald
+                                      : p.marge < 20
+                                      ? C.rose
+                                      : C.cyan
+                                  }
+                                />
+                              ) : (
+                                <span className="chip">N/D</span>
+                              )}
                             </td>
                             <td
                               style={{
