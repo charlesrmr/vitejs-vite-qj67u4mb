@@ -13,7 +13,7 @@ import {
 } from 'recharts';
 import { C, PALETTE } from './tokens';
 import { DEMO } from './data/demo';
-import { eur, num, parseCSV, buildFromFiles, getAISynthesis } from './utils';
+import { eur, num, parseFile, buildFromFiles, getAISynthesis } from './utils';
 import './App.css';
 
 function ScoreRing({ score }) {
@@ -218,11 +218,17 @@ export default function App() {
   const [data, setData] = useState(null);
   const [syn, setSyn] = useState('');
   const [tab, setTab] = useState('synthese');
+  const [error, setError] = useState('');
 
   const sf = (k) => (f) => setFiles((p) => ({ ...p, [k]: f }));
 
   const run = useCallback(
     async (demo = false) => {
+      setError('');
+      if (!demo && !files.ventes) {
+        setError('Ajoutez un export ventes avant de lancer l’analyse.');
+        return;
+      }
       setStep('loading');
       setLs(0);
       try {
@@ -234,7 +240,7 @@ export default function App() {
         if (!demo) {
           const parsed = {};
           for (const [k, f] of Object.entries(files)) {
-            if (f) parsed[k] = await parseCSV(f);
+            if (f) parsed[k] = await parseFile(f);
           }
           res = buildFromFiles(parsed);
         }
@@ -248,10 +254,11 @@ export default function App() {
         await new Promise((r) => setTimeout(r, 200));
         setStep('dashboard');
         setTab('synthese');
-      } catch {
-        setData(DEMO);
-        setSyn(DEMO.synthesis);
-        setStep('dashboard');
+      } catch (err) {
+        setData(null);
+        setSyn('');
+        setError(err?.message || 'Impossible d’analyser ce fichier. Vérifiez son format.');
+        setStep('upload');
         setTab('synthese');
       }
     },
@@ -263,6 +270,7 @@ export default function App() {
     setData(null);
     setSyn('');
     setFiles({ ventes: null, stock: null });
+    setError('');
   };
   const tc = (t) => (t === 'up' ? C.emerald : t === 'down' ? C.rose : C.t3);
   const ti = (t) => (t === 'up' ? 'haut' : t === 'down' ? 'bas' : '-');
@@ -296,8 +304,8 @@ export default function App() {
               plus qu un tableau Excel.
             </h1>
             <p className="up-s">
-              Importez vos fichiers et recevez votre diagnostic strategique
-              complet en 60 secondes.
+              Importez vos fichiers et obtenez une première lecture fiable de
+              vos indicateurs de gestion.
             </p>
             <div className="slots">
               <Slot
@@ -318,17 +326,17 @@ export default function App() {
               Un seul fichier suffit pour demarrer -{' '}
               <b>le stock est optionnel</b>
             </p>
-            <button className="btn-go" onClick={() => run(false)}>
+            {error && <div className="up-error">{error}</div>}
+            <button className="btn-go" onClick={() => run(false)} disabled={!files.ventes}>
               Analyser mon officine
             </button>
             <button className="btn-demo" onClick={() => run(true)}>
               Tester avec les donnees de demonstration
             </button>
             <div className="trust">
-              <span className="trust-i">donnees locales</span>
-              <span className="trust-i">resultat en 60s</span>
-              <span className="trust-i">rapport PDF</span>
-              <span className="trust-i">RGPD</span>
+              <span className="trust-i">analyse locale</span>
+              <span className="trust-i">CSV + Excel</span>
+              <span className="trust-i">aucune donnée patient requise</span>
             </div>
           </div>
         </div>
