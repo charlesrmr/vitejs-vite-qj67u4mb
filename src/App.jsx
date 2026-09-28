@@ -274,6 +274,9 @@ export default function App() {
   };
   const tc = (t) => (t === 'up' ? C.emerald : t === 'down' ? C.rose : C.t3);
   const ti = (t) => (t === 'up' ? 'haut' : t === 'down' ? 'bas' : '-');
+  const fp = (v) => (Number.isFinite(v) ? `${v}%` : 'N/D');
+  const fx = (v) => (Number.isFinite(v) ? `x${v}` : 'N/D');
+  const fe = (v) => (Number.isFinite(v) ? `${v}EUR` : 'N/D');
 
   return (
     <div className="app">
@@ -374,7 +377,7 @@ export default function App() {
               </button>
               <button
                 className="btn accent"
-                onClick={() => alert('Export PDF -> charlesromier@gmail.com')}
+                onClick={() => alert('Export PDF : fonctionnalité en préparation')}
               >
                 PDF
               </button>
@@ -407,35 +410,36 @@ export default function App() {
                     },
                     {
                       l: 'Marge Brute',
-                      v: `${data.marge_pct}%`,
+                      v: fp(data.marge_pct),
                       f: eur(data.marge_eur),
                       ac: C.cyan,
-                      bd: {
-                        t:
-                          data.marge_pct >= 28
-                            ? 'dans la norme'
-                            : 'sous la norme',
-                        x: data.marge_pct >= 28 ? 'g' : 'r',
-                      },
+                      bd: Number.isFinite(data.marge_pct)
+                        ? {
+                            t: data.marge_pct >= 28 ? 'dans la norme' : 'sous la norme',
+                            x: data.marge_pct >= 28 ? 'g' : 'r',
+                          }
+                        : null,
                     },
                     {
                       l: 'Stock immobilise',
                       v: eur(data.stock_eur),
-                      f: `rotation x${data.extra.rotation}`,
-                      ac: data.stock_eur / data.ca > 0.6 ? C.rose : C.emerald,
-                      bd: {
-                        t: `${Math.round(
-                          (data.stock_eur / data.ca) * 100
-                        )}% du CA`,
-                        x: data.stock_eur / data.ca > 0.6 ? 'w' : 'g',
-                      },
+                      f: Number.isFinite(data.extra.rotation) ? `rotation x${data.extra.rotation}` : 'export stock requis',
+                      ac: Number.isFinite(data.stock_eur) && data.stock_eur / data.ca > 0.6 ? C.rose : C.emerald,
+                      bd: Number.isFinite(data.stock_eur)
+                        ? {
+                            t: `${Math.round((data.stock_eur / data.ca) * 100)}% du CA`,
+                            x: data.stock_eur / data.ca > 0.6 ? 'w' : 'g',
+                          }
+                        : null,
                     },
                     {
                       l: 'Produits dormants',
                       v: num(data.dormants),
-                      f: 'sans vente',
+                      f: Number.isFinite(data.dormants) ? 'sans vente' : 'stock + référence requis',
                       ac: C.rose,
-                      bd: { t: 'action requise', x: 'r' },
+                      bd: Number.isFinite(data.dormants) && data.dormants > 0
+                        ? { t: 'action requise', x: 'r' }
+                        : null,
                     },
                   ].map((k, i) => (
                     <div key={i} className="card kpi fu">
@@ -460,19 +464,19 @@ export default function App() {
                   {[
                     {
                       l: 'Rotation stock',
-                      v: `x${data.extra.rotation}`,
+                      v: fx(data.extra.rotation),
                       f: 'obj. >3x',
                       ac: data.extra.rotation >= 3 ? C.emerald : C.amber,
                     },
                     {
                       l: 'Panier moyen',
-                      v: `${data.extra.panier}EUR`,
+                      v: fe(data.extra.panier),
                       f: 'par passage',
                       ac: C.cyan,
                     },
                     {
                       l: 'Tx ventes assoc.',
-                      v: `${data.extra.tx_assoc}%`,
+                      v: fp(data.extra.tx_assoc),
                       f: 'obj. >18%',
                       ac: data.extra.tx_assoc >= 18 ? C.emerald : C.amber,
                     },
@@ -537,8 +541,10 @@ export default function App() {
                   </div>
                 </div>
 
-                <SH label="Score de sante" />
-                <div
+                {data.isDemo ? (
+                  <>
+                    <SH label="Score de sante" />
+                    <div
                   style={{
                     background: C.navy,
                     borderRadius: 14,
@@ -610,11 +616,53 @@ export default function App() {
                       </div>
                     ))}
                   </div>
-                </div>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <SH label="Qualité des données" />
+                    <div className="info-box fu">
+                      Les indicateurs affichés ci-dessus proviennent uniquement des fichiers importés.
+                      Les scores composites et benchmarks de démonstration ne sont pas appliqués aux données réelles.
+                    </div>
+                  </>
+                )}
               </>
             )}
 
-            {tab === 'marge' && (
+            {tab === 'marge' && !data.isDemo && (
+              <>
+                <div className="info-box fu">
+                  <b>Marge calculée sur vos données.</b> {Number.isFinite(data.marge_pct)
+                    ? `Taux de marge : ${data.marge_pct}% — ${eur(data.marge_eur)}.`
+                    : "Aucune colonne de marge exploitable n'a été détectée."}
+                </div>
+                {data.familles.length > 0 && (
+                  <>
+                    <SH label="Marge par famille" />
+                    <div className="tc fu">
+                      <table>
+                        <thead>
+                          <tr><th>Famille</th><th>CA</th><th>Part CA</th><th>Marge</th></tr>
+                        </thead>
+                        <tbody>
+                          {data.familles.map((fam, i) => (
+                            <tr key={i}>
+                              <td style={{ fontWeight: 600 }}>{fam.nom}</td>
+                              <td>{eur(fam.ca)}</td>
+                              <td>{fam.pct_ca}%</td>
+                              <td>{fam.marge ? `${fam.marge}%` : 'N/D'}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </>
+                )}
+              </>
+            )}
+
+            {tab === 'marge' && data.isDemo && (
               <>
                 <div className="info-box fu">
                   <b>Methode.</b> La marge officinale se lit en deux univers :
@@ -969,7 +1017,17 @@ export default function App() {
               </>
             )}
 
-            {tab === 'action' && (
+            {tab === 'action' && !data.isDemo && (
+              <>
+                <SH label="Plan d action - 30 jours" />
+                <div className="info-box fu">
+                  Le plan d'action automatique n'est pas encore activé sur les données réelles.
+                  Cette étape sera générée après validation des calculs et de la qualité des exports LGO.
+                </div>
+              </>
+            )}
+
+            {tab === 'action' && data.isDemo && (
               <>
                 <SH label="Plan d action - 30 jours" />
                 {data.actions.map((a, i) => (
@@ -1018,7 +1076,7 @@ export default function App() {
                 </button>
                 <button
                   className="btn accent"
-                  onClick={() => alert('Export PDF -> charlesromier@gmail.com')}
+                  onClick={() => alert('Export PDF : fonctionnalité en préparation')}
                 >
                   PDF
                 </button>
