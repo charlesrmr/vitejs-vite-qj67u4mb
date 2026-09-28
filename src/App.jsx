@@ -800,6 +800,14 @@ export default function App() {
 
             {tab === 'analyse' && (
               <>
+                {!data.chart.length && !data.familles.length ? (
+                  <div className="info-box fu">
+                    Aucune ventilation par famille n'est disponible dans les exports fournis.
+                    Le chiffre d'affaires et la marge restent analysables ; un export par famille/rayon
+                    permettra d'enrichir cet onglet.
+                  </div>
+                ) : (
+                  <>
                 <SH label="Graphiques" />
                 <div className="g2 fu">
                   <div className="cc">
@@ -924,11 +932,20 @@ export default function App() {
                     </tbody>
                   </table>
                 </div>
+                  </>
+                )}
               </>
             )}
 
             {tab === 'produits' && (
               <>
+                {!data.top10.length && !data.flop.length ? (
+                  <div className="info-box fu">
+                    Aucun détail produit n'est disponible dans l'export principal.
+                    Ajoutez l'export « Top produits » pour afficher les références les plus délivrées.
+                  </div>
+                ) : (
+                  <>
                 <SH label="Performance produits" />
                 <div className="g2 fu">
                   <div className="tc">
@@ -1036,6 +1053,8 @@ export default function App() {
                     </table>
                   </div>
                 </div>
+                  </>
+                )}
               </>
             )}
 
