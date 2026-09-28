@@ -285,7 +285,10 @@ function buildFamilies(rows, columns, totalCa, marginMode) {
 
 function buildLocalSynthesis(data) {
   const parts = []
-  if (Number.isFinite(data.ca)) parts.push(`Le chiffre d'affaires analysé est de ${eur(data.ca)}.`)
+  if (Number.isFinite(data.ca)) {
+    const caLabel = Number.isFinite(data.ca_ttc) ? 'CA TTC' : (Number.isFinite(data.ca_ht) ? 'CA HT' : "chiffre d'affaires")
+    parts.push(`Le ${caLabel} analysé est de ${eur(data.ca)}.`)
+  }
   if (Number.isFinite(data.marge_pct)) {
     parts.push(`La marge brute calculée sur l'ensemble des lignes exploitables est de ${data.marge_pct}% (${eur(data.marge_eur)}).`)
   } else {
@@ -360,6 +363,7 @@ function emptyRealData() {
     },
     synthesis: '',
     detectedColumns: {},
+    qualityWarnings: [],
   }
 }
 
@@ -458,6 +462,19 @@ export function buildFromFiles(filesMap) {
     .slice(0, 10)
     .map(({ key, ...product }) => product)
 
+  const quantities = products
+    .map((product) => product.quantite)
+    .filter((value) => Number.isFinite(value) && value >= 0)
+    .sort((a, b) => b - a)
+  if (quantities.length >= 2) {
+    const [largest, second] = quantities
+    if (largest > 1_000_000 && largest > Math.max(second * 1000, 1_000_000)) {
+      data.qualityWarnings.push(
+        `Quantité aberrante détectée (${num(largest)}). Vérifiez l'export source avant d'interpréter les volumes produits.`
+      )
+    }
+  }
+
   data.familles = caDisplayCol
     ? buildFamilies(ventes, { ...salesCols, ca: caDisplayCol }, ca, marginMode)
     : []
@@ -517,6 +534,13 @@ export function buildFromFiles(filesMap) {
   }
 
   data.alerts = []
+  data.qualityWarnings.forEach((warning) => {
+    data.alerts.push({
+      type: 'r',
+      title: 'Contrôle qualité des données',
+      body: warning,
+    })
+  })
   if (data.marge_pct !== null) {
     data.alerts.push({
       type: data.marge_pct < 28 ? 'a' : 'g',
