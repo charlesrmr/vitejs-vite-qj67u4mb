@@ -206,6 +206,7 @@ export function detectColumn(rows, type) {
     if (exact) return exact
   }
   for (const alias of aliases) {
+    if (alias.length < 4) continue
     const close = cols.find((c) => {
       const n = normalizeHeader(c)
       return n.startsWith(alias) || n.endsWith(alias)
@@ -213,6 +214,7 @@ export function detectColumn(rows, type) {
     if (close) return close
   }
   for (const alias of aliases) {
+    if (alias.length < 4) continue
     const partial = cols.find((c) => normalizeHeader(c).includes(alias))
     if (partial) return partial
   }
