@@ -277,6 +277,7 @@ export default function App() {
   const fp = (v) => (Number.isFinite(v) ? `${v}%` : 'N/D');
   const fx = (v) => (Number.isFinite(v) ? `x${v}` : 'N/D');
   const fe = (v) => (Number.isFinite(v) ? `${v}EUR` : 'N/D');
+  const hasProductCa = Boolean(data?.top10?.some((p) => Number.isFinite(p.ca) && p.ca > 0));
 
   return (
     <div className="app">
@@ -402,9 +403,11 @@ export default function App() {
                 <div className="g4">
                   {[
                     {
-                      l: 'CA Total',
+                      l: data.isDemo ? 'CA Total' : (Number.isFinite(data.ca_ttc) ? 'CA TTC' : (Number.isFinite(data.ca_ht) ? 'CA HT' : 'CA')),
                       v: eur(data.ca),
-                      f: 'toutes familles',
+                      f: !data.isDemo && Number.isFinite(data.ca_ht) && Number.isFinite(data.ca_ttc)
+                        ? `HT : ${eur(data.ca_ht)}`
+                        : 'période analysée',
                       ac: C.violet,
                       bd: null,
                     },
@@ -931,7 +934,7 @@ export default function App() {
                         <tr>
                           <th>#</th>
                           <th>Produit</th>
-                          <th>CA</th>
+                          <th>{hasProductCa ? 'CA' : 'Qté'}</th>
                           <th>Marge</th>
                           <th>Evol.</th>
                         </tr>
@@ -944,7 +947,9 @@ export default function App() {
                               <div style={{ fontWeight: 500 }}>{p.nom}</div>
                               <span className="chip">{p.fam}</span>
                             </td>
-                            <td style={{ fontWeight: 600 }}>{eur(p.ca)}</td>
+                            <td style={{ fontWeight: 600 }}>
+                              {hasProductCa ? eur(p.ca) : num(p.quantite)}
+                            </td>
                             <td>
                               {Number.isFinite(p.marge) ? (
                                 <PB
