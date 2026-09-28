@@ -196,10 +196,10 @@ function buildFamilies(rows, columns, totalCa, marginMode) {
       return {
         nom: item.nom,
         ca: Math.round(item.ca),
-        pct_ca: pct(item.ca, totalCa) ?? 0,
-        pct_stk: 0,
-        marge: marge === null ? 0 : Math.round(marge * 10) / 10,
-        trend: 'stable',
+        pct_ca: pct(item.ca, totalCa),
+        pct_stk: null,
+        marge: marge === null ? null : Math.round(marge * 10) / 10,
+        trend: null,
       }
     })
     .sort((a, b) => b.ca - a.ca)
@@ -340,7 +340,7 @@ export function buildFromFiles(filesMap) {
   data.chart = data.familles.slice(0, 8).map((f) => ({
     name: f.nom,
     ca: f.ca,
-    marge: f.marge || 0,
+    marge: f.marge ?? 0,
   }))
 
   const stockRows = filesMap.stock || []
