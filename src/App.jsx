@@ -951,7 +951,7 @@ export default function App() {
                   <div className="tc">
                     <div className="tc-hd">
                       <span className="tc-ht">Top 10 produits</span>
-                      <span className="tc-hc">par CA</span>
+                      <span className="tc-hc">{hasProductCa ? 'par CA' : 'par quantité'}</span>
                     </div>
                     <table>
                       <thead>
