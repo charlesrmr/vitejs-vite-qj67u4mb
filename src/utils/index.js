@@ -371,7 +371,8 @@ function emptyRealData() {
 
 export function buildFromFiles(filesMap) {
   const ventes = filesMap.ventes || []
-  if (!ventes.length) throw new Error('Le fichier ventes est vide ou illisible.')
+  const productReportRows = filesMap.produits || []
+  if (!ventes.length) throw new Error("Le fichier d'activité / ventes est vide ou illisible.")
 
   const salesCols = detectColumns(ventes)
   const caDisplayCol = salesCols.caTtc || salesCols.ca || salesCols.caHt
@@ -432,6 +433,34 @@ export function buildFromFiles(filesMap) {
       })
     }
   })
+
+  if (productReportRows.length) {
+    const productCols = detectColumns(productReportRows)
+    data.detectedColumns.produits = productCols
+
+    if (productCols.produit && productCols.quantite) {
+      productReportRows.forEach((row) => {
+        const quantity = parseFrenchNumber(row[productCols.quantite])
+        const publicPrice = productCols.prixPublic ? parseFrenchNumber(row[productCols.prixPublic]) : null
+        products.push({
+          nom: String(row[productCols.produit] || '?'),
+          ca: null,
+          quantite: quantity,
+          prix_public: publicPrice,
+          marge: null,
+          fam: productCols.famille ? String(row[productCols.famille] || '—') : '—',
+          evo: '',
+          key: productCols.cip
+            ? String(row[productCols.cip] || '').trim()
+            : String(row[productCols.produit] || '').trim().toLowerCase(),
+        })
+      })
+    } else {
+      data.qualityWarnings.push(
+        "Le fichier produits a été lu, mais les colonnes produit/quantité n'ont pas été reconnues."
+      )
+    }
+  }
 
   if (ca <= 0 && !products.length) throw new Error("Aucune donnée exploitable n'a été trouvée.")
 
@@ -547,7 +576,7 @@ export function buildFromFiles(filesMap) {
     data.alerts.push({
       type: data.marge_pct < 28 ? 'a' : 'g',
       title: `Marge calculée : ${data.marge_pct}%`,
-      body: 'Calcul réalisé sur les lignes exploitables de l’export ventes.',
+      body: "Calcul réalisé sur les lignes exploitables de l'export d'activité.",
     })
   }
   if (data.stock_eur !== null) {
