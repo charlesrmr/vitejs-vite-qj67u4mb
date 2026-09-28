@@ -25,7 +25,7 @@
    .up-s { font-size: 15px; color: #6B7280; line-height: 1.65; margin-bottom: 2.5rem; max-width: 480px; margin-left: auto; margin-right: auto; }
    
    /* SLOTS */
-   .slots { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; max-width: 500px; margin: 0 auto 10px; }
+   .slots { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; max-width: 680px; margin: 0 auto 10px; }
    .slot { background: #fff; border: 1.5px dashed #E8ECF2; border-radius: 14px; padding: 20px 16px; cursor: pointer; transition: all .2s; position: relative; text-align: left; }
    .slot:hover { border-color: rgba(109,40,217,.4); background: #F3EEFF; transform: translateY(-2px); box-shadow: 0 8px 24px rgba(109,40,217,.08); }
    .slot.drag { border-color: #6D28D9; background: #F3EEFF; }
@@ -90,7 +90,7 @@
    /* GRIDS */
    .g2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
    .g4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 12px; }
-   @media (max-width: 780px) { .g4 { grid-template-columns: 1fr 1fr; } .g2 { grid-template-columns: 1fr; } }
+   @media (max-width: 780px) { .g4 { grid-template-columns: 1fr 1fr; } .g2 { grid-template-columns: 1fr; } .slots { grid-template-columns: 1fr; max-width: 500px; } }
    
    /* CARDS */
    .card    { background: #fff; border: 1px solid #E8ECF2; border-radius: 14px; padding: 1.1rem; transition: all .2s; }
