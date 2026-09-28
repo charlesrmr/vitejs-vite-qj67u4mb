@@ -1,4 +1,5 @@
 export const DEMO = {
+  isDemo: true,
   officine: 'Pharmacie du Marché',
   periode:  'Juin 2025',
   lgo:      'Winpharma',
