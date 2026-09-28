@@ -212,7 +212,7 @@ const STEPS = [
 ];
 
 export default function App() {
-  const [files, setFiles] = useState({ ventes: null, stock: null });
+  const [files, setFiles] = useState({ ventes: null, produits: null, stock: null });
   const [step, setStep] = useState('upload');
   const [ls, setLs] = useState(0);
   const [data, setData] = useState(null);
@@ -269,7 +269,7 @@ export default function App() {
     setStep('upload');
     setData(null);
     setSyn('');
-    setFiles({ ventes: null, stock: null });
+    setFiles({ ventes: null, produits: null, stock: null });
     setError('');
   };
   const tc = (t) => (t === 'up' ? C.emerald : t === 'down' ? C.rose : C.t3);
@@ -313,22 +313,29 @@ export default function App() {
             </p>
             <div className="slots">
               <Slot
-                label="Export Ventes"
-                hint="CA, marge, familles, produits"
+                label="Activité / ventes"
+                hint="CA, marge, période"
                 file={files.ventes}
                 onFile={sf('ventes')}
               />
               <Slot
+                label="Top produits"
+                hint="Produits, codes, quantités"
+                optional
+                file={files.produits}
+                onFile={sf('produits')}
+              />
+              <Slot
                 label="Etat du Stock"
-                hint="Pour l analyse dormants"
+                hint="Valeur, quantités, dormants"
                 optional
                 file={files.stock}
                 onFile={sf('stock')}
               />
             </div>
             <p className="up-note">
-              Un seul fichier suffit pour demarrer -{' '}
-              <b>le stock est optionnel</b>
+              Le fichier activité suffit pour démarrer —{' '}
+              <b>produits et stock enrichissent le diagnostic</b>
             </p>
             {error && <div className="up-error">{error}</div>}
             <button className="btn-go" onClick={() => run(false)} disabled={!files.ventes}>
