@@ -217,6 +217,17 @@ export default function AdminPanel() {
   const [error, setError] = useState('');
   const [filter, setFilter] = useState('all');
   const [search, setSearch] = useState('');
+  const [health, setHealth] = useState(null);
+
+  const loadHealth = async () => {
+    try {
+      const response = await fetch('/api/health', { cache: 'no-store' });
+      const data = await response.json().catch(() => ({}));
+      setHealth(data);
+    } catch {
+      setHealth({ ok: false, storage: 'unavailable' });
+    }
+  };
 
   const loadList = async (activeToken = token) => {
     if (!activeToken) return;
@@ -233,7 +244,10 @@ export default function AdminPanel() {
     }
   };
 
-  useEffect(() => { if (token) loadList(token); }, [token]);
+  useEffect(() => {
+    loadHealth();
+    if (token) loadList(token);
+  }, [token]);
 
   useEffect(() => {
     if (!token) return undefined;
@@ -442,8 +456,12 @@ export default function AdminPanel() {
     <div className="adm-app">
       <header className="adm-header">
         <div className="adm-brand"><div className="hd-mk">P</div><div><b>Pilot'Officine</b><span>Back-office · relecture</span></div></div>
+        <div className="adm-header-health">
+          <span className={`adm-health-dot${health?.ok && health?.storage === 'ready' ? ' ok' : ''}`} />
+          <small>{health?.ok && health?.storage === 'ready' ? 'Backend prêt' : 'Backend à vérifier'}</small>
+        </div>
         <div className="adm-header-actions">
-          <button onClick={() => loadList(token)}>Actualiser</button>
+          <button onClick={() => { loadHealth(); loadList(token); }}>Actualiser</button>
           <button onClick={exportCsv}>Exporter CSV</button>
           <button onClick={() => { sessionStorage.removeItem('pilot_admin_token'); setToken(''); setSelected(null); }}>Verrouiller</button>
         </div>
@@ -487,6 +505,28 @@ export default function AdminPanel() {
               <span>BACK-OFFICE</span>
               <h1>Les dossiers à relire,<br />sans bruit autour.</h1>
               <p>Sélectionnez une officine à gauche. Les exports originaux, la pré-analyse et la fiche client restent réunis dans le même dossier.</p>
+
+              <div className="adm-readiness">
+                <div className="adm-readiness-head">
+                  <b>État du MVP</b>
+                  <button onClick={loadHealth}>Revérifier</button>
+                </div>
+                {[
+                  ['Stockage privé', health?.storage === 'ready'],
+                  ['Accès administrateur', health?.adminConfigured],
+                  ['Emails transactionnels', health?.notificationsConfigured],
+                  ['Notification opérateur', health?.operatorNotificationConfigured],
+                  ['URL publique', health?.publicUrlConfigured],
+                ].map(([label, ready]) => (
+                  <div className="adm-readiness-row" key={label}>
+                    <span>{label}</span>
+                    <strong className={ready ? 'ready' : 'missing'}>{ready ? 'Prêt' : 'À configurer'}</strong>
+                  </div>
+                ))}
+                <small>
+                  Les emails sont optionnels pour fonctionner, mais recommandés avant l'ouverture aux pharmacies fondatrices.
+                </small>
+              </div>
             </div>
           ) : (
             <>
