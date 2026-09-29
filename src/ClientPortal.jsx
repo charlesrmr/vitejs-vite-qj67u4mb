@@ -120,6 +120,14 @@ export function ClientReport({ dossier, onBack }) {
           <div><span>Stock sans vente</span><b>{Number.isFinite(a.dormant_stock_eur) ? eur(a.dormant_stock_eur) : num(a.dormants)}</b><small>{Number.isFinite(a.dormant_stock_pct) ? `${a.dormant_stock_pct}% du stock valorisé` : 'si rapprochement disponible'}</small></div>
         </div>
 
+        {!!a.qualityWarnings?.length && (
+          <section className="cr-section cr-data-quality">
+            <span>PÉRIMÈTRE DE LECTURE</span>
+            <h2>Points de vigilance sur les données</h2>
+            <ul>{a.qualityWarnings.map((warning, i) => <li key={i}>{warning}</li>)}</ul>
+          </section>
+        )}
+
         <section className="cr-section cr-summary">
           <span>SYNTHÈSE DIRIGEANT</span>
           <h2>Ce qu'il faut retenir</h2>
