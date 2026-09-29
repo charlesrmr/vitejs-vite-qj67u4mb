@@ -8,14 +8,23 @@ import {
 } from 'node:crypto';
 
 const REGION = 'eu-central-1';
-const CONTEXT = process.env.CONTEXT || 'dev';
-const STORE_SUFFIX = CONTEXT === 'production' ? '' : '-preview';
-const storeName = (base) => `${base}${STORE_SUFFIX}`;
+
+function requestStoreSuffix(req) {
+  try {
+    const requestHost = new URL(req.url).hostname;
+    const primaryHost = process.env.URL ? new URL(process.env.URL).hostname : '';
+    return primaryHost && requestHost === primaryHost ? '' : '-preview';
+  } catch {
+    return '-preview';
+  }
+}
+
+const storeName = (base, req) => `${base}${requestStoreSuffix(req)}`;
 const stores = {
-  accounts: () => getStore({ name: storeName('pilot-accounts'), region: REGION, consistency: 'strong' }),
-  sessions: () => getStore({ name: storeName('pilot-sessions'), region: REGION, consistency: 'strong' }),
-  dossiers: () => getStore({ name: storeName('pilot-dossiers'), region: REGION, consistency: 'strong' }),
-  files: () => getStore({ name: storeName('pilot-files'), region: REGION, consistency: 'strong' }),
+  accounts: (req) => getStore({ name: storeName('pilot-accounts', req), region: REGION, consistency: 'strong' }),
+  sessions: (req) => getStore({ name: storeName('pilot-sessions', req), region: REGION, consistency: 'strong' }),
+  dossiers: (req) => getStore({ name: storeName('pilot-dossiers', req), region: REGION, consistency: 'strong' }),
+  files: (req) => getStore({ name: storeName('pilot-files', req), region: REGION, consistency: 'strong' }),
 };
 
 export const STORE = stores;
@@ -95,11 +104,11 @@ function bearer(req) {
   return auth.startsWith('Bearer ') ? auth.slice(7).trim() : '';
 }
 
-export async function createSession(account) {
+export async function createSession(account, req) {
   const token = newToken();
   const tokenHash = sha256(token);
   const expiresAt = new Date(Date.now() + 30 * 24 * 3600 * 1000).toISOString();
-  await stores.sessions().setJSON(`session/${tokenHash}`, {
+  await stores.sessions(req).setJSON(`session/${tokenHash}`, {
     accountId: account.id,
     accountKey: account.key,
     email: account.profile.email,
@@ -112,14 +121,14 @@ export async function createSession(account) {
 export async function requireUser(req) {
   const token = bearer(req);
   if (!token) return { error: json({ error: 'Authentification requise.' }, 401) };
-  const session = await stores.sessions().get(`session/${sha256(token)}`, {
+  const session = await stores.sessions(req).get(`session/${sha256(token)}`, {
     type: 'json',
     consistency: 'strong',
   });
   if (!session || !session.expiresAt || new Date(session.expiresAt).getTime() < Date.now()) {
     return { error: json({ error: 'Session expirée ou invalide.' }, 401) };
   }
-  const account = await stores.accounts().get(session.accountKey, {
+  const account = await stores.accounts(req).get(session.accountKey, {
     type: 'json',
     consistency: 'strong',
   });
@@ -141,9 +150,9 @@ export function requireAdmin(req) {
   return { ok: true };
 }
 
-export async function getOwnedDossier(id, accountId) {
+export async function getOwnedDossier(id, accountId, req) {
   if (!id) return null;
-  const dossier = await stores.dossiers().get(`dossier/${id}.json`, {
+  const dossier = await stores.dossiers(req).get(`dossier/${id}.json`, {
     type: 'json',
     consistency: 'strong',
   });
@@ -151,9 +160,9 @@ export async function getOwnedDossier(id, accountId) {
   return dossier;
 }
 
-export async function saveDossier(dossier) {
+export async function saveDossier(dossier, req) {
   dossier.updatedAt = nowIso();
-  await stores.dossiers().setJSON(`dossier/${dossier.id}.json`, dossier);
+  await stores.dossiers(req).setJSON(`dossier/${dossier.id}.json`, dossier);
   return dossier;
 }
 
