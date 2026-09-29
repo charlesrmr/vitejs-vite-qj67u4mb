@@ -1203,7 +1203,7 @@ export default function App() {
             <div className="slots">
               <Slot
                 label="Activité / ventes"
-                hint="CA, marge, période"
+                hint="CA, marge, période · PDF accepté"
                 file={files.ventes}
                 onFile={sf('ventes')}
               />
