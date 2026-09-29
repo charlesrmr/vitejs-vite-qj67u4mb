@@ -1348,6 +1348,8 @@ export default function App() {
   const fx = (v) => (Number.isFinite(v) ? `x${v}` : 'N/D');
   const fe = (v) => (Number.isFinite(v) ? `${v}EUR` : 'N/D');
   const hasProductCa = Boolean(data?.top10?.some((p) => Number.isFinite(p.ca) && p.ca > 0));
+  const productRankingMode = data?.product_ranking_mode || (hasProductCa ? 'ca' : 'quantity');
+  const isMarginRanking = productRankingMode === 'margin';
   const realActions = (() => {
     if (!data || data.isDemo) return [];
     const actions = [];
@@ -1377,12 +1379,16 @@ export default function App() {
     }
     if (data.top10?.length) {
       actions.push({
-        titre: hasProductCa
-          ? 'Faire une revue des produits les plus contributifs en CA'
-          : 'Faire une revue des produits les plus vendus en quantité',
-        detail: hasProductCa
-          ? `Le fichier permet d'isoler les ${Math.min(data.top10.length, 10)} premières références par CA. Vérifiez leur disponibilité, leur marge lorsqu'elle est fournie et leur évolution sur plusieurs périodes.`
-          : `Le fichier permet d'isoler les ${Math.min(data.top10.length, 10)} premières références par quantité. Sans CA par produit, il ne permet pas de conclure sur leur contribution économique.`,
+        titre: isMarginRanking
+          ? 'Faire une revue des produits les plus contributifs en marge'
+          : hasProductCa
+            ? 'Faire une revue des produits les plus contributifs en CA'
+            : 'Faire une revue des produits les plus vendus en quantité',
+        detail: isMarginRanking
+          ? `Le fichier permet d'isoler les ${Math.min(data.top10.length, 10)} premières références par marge brute en euros. Vérifiez leur poids, leur disponibilité et leur stabilité sur plusieurs périodes.`
+          : hasProductCa
+            ? `Le fichier permet d'isoler les ${Math.min(data.top10.length, 10)} premières références par CA. Vérifiez leur disponibilité, leur marge lorsqu'elle est fournie et leur évolution sur plusieurs périodes.`
+            : `Le fichier permet d'isoler les ${Math.min(data.top10.length, 10)} premières références par quantité. Sans CA par produit, il ne permet pas de conclure sur leur contribution économique.`,
         prio: 'm',
       });
     }
@@ -2432,15 +2438,15 @@ export default function App() {
                   <div className="tc">
                     <div className="tc-hd">
                       <span className="tc-ht">Top 10 produits</span>
-                      <span className="tc-hc">{hasProductCa ? 'par CA' : 'par quantité'}</span>
+                      <span className="tc-hc">{isMarginRanking ? 'par marge' : (hasProductCa ? 'par CA' : 'par quantité')}</span>
                     </div>
                     <table>
                       <thead>
                         <tr>
                           <th>#</th>
                           <th>Produit</th>
-                          <th>{hasProductCa ? 'CA' : 'Qté'}</th>
-                          <th>Marge</th>
+                          <th>{isMarginRanking ? 'Marge €' : (hasProductCa ? 'CA' : 'Qté')}</th>
+                          <th>Taux marge</th>
                           <th>Evol.</th>
                         </tr>
                       </thead>
@@ -2453,7 +2459,7 @@ export default function App() {
                               <span className="chip">{p.fam}</span>
                             </td>
                             <td style={{ fontWeight: 600 }}>
-                              {hasProductCa ? eur(p.ca) : num(p.quantite)}
+                              {isMarginRanking ? eur(p.marge_eur) : (hasProductCa ? eur(p.ca) : num(p.quantite))}
                             </td>
                             <td>
                               {Number.isFinite(p.marge) ? (
