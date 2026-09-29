@@ -38,4 +38,4 @@ export default async (req) => {
   }
 };
 
-export const config = { path: '/api/health' };
+export const config = { path: '/api/health', region: 'fra' };
