@@ -19,6 +19,42 @@ const statusLabel = {
   reviewed: 'Validé',
 };
 
+function seedReview(dossier) {
+  const analysis = dossier?.analysis || {};
+  const alerts = Array.isArray(analysis.alerts) ? analysis.alerts : [];
+  const warnings = Array.isArray(analysis.qualityWarnings) ? analysis.qualityWarnings : [];
+
+  const findings = alerts.slice(0, 5).map((alert) => ({
+    title: alert.title || '',
+    body: alert.body || '',
+    metric: '',
+  }));
+
+  const priorities = alerts
+    .filter((alert) => alert?.type === 'r' || alert?.type === 'a')
+    .slice(0, 3)
+    .map((alert) => ({
+      title: alert.title || '',
+      body: alert.body || '',
+      metric: 'À confirmer',
+    }));
+
+  const missing = [...warnings];
+  if (!Number.isFinite(analysis.stock_eur)) missing.push('Stock valorisé non disponible dans les exports soumis.');
+  if (!analysis.familles?.length) missing.push('Ventilation famille / rayon absente ou non exploitable.');
+  if (!analysis.top10?.length) missing.push('Détail produits insuffisant pour une lecture des références.');
+
+  return {
+    ...blankReview(),
+    executiveSummary: analysis.synthesis || '',
+    findings: [...findings, ...Array(5).fill(null).map(blankItem)].slice(0, 5),
+    priorities: [...priorities, ...Array(3).fill(null).map(blankItem)].slice(0, 3),
+    actions: Array(6).fill(null).map(blankItem),
+    missingData: [...new Set(missing.filter(Boolean))].join('\n'),
+    privateNotes: '',
+  };
+}
+
 async function adminFetch(path, token, options = {}) {
   const response = await fetch(path, {
     ...options,
@@ -209,14 +245,18 @@ export default function AdminPanel() {
     try {
       const data = await adminFetch(`/api/admin/dossier?id=${encodeURIComponent(id)}`, token);
       setSelected(data.dossier);
-      const existing = data.dossier.review || {};
-      setReview({
-        ...blankReview(),
-        ...existing,
-        findings: [...(existing.findings || []), ...Array(5).fill(null).map(blankItem)].slice(0, 5),
-        priorities: [...(existing.priorities || []), ...Array(3).fill(null).map(blankItem)].slice(0, 3),
-        actions: [...(existing.actions || []), ...Array(6).fill(null).map(blankItem)].slice(0, 6),
-      });
+      const existing = data.dossier.review;
+      if (existing) {
+        setReview({
+          ...blankReview(),
+          ...existing,
+          findings: [...(existing.findings || []), ...Array(5).fill(null).map(blankItem)].slice(0, 5),
+          priorities: [...(existing.priorities || []), ...Array(3).fill(null).map(blankItem)].slice(0, 3),
+          actions: [...(existing.actions || []), ...Array(6).fill(null).map(blankItem)].slice(0, 6),
+        });
+      } else {
+        setReview(seedReview(data.dossier));
+      }
     } catch (err) {
       setError(err.message);
     } finally {
