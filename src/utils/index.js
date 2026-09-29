@@ -848,6 +848,17 @@ export function buildFromFiles(filesMap, columnMappings = {}) {
     const productCols = { ...detectColumns(productReportRows), ...(columnMappings.produits || {}) }
     data.detectedColumns.produits = productCols
 
+    if (productCols.cip) {
+      const uncodedProductRows = productReportRows.filter(
+        (row) => !String(row?.[productCols.cip] || '').trim()
+      ).length
+      if (uncodedProductRows > 0) {
+        data.qualityWarnings.push(
+          `${uncodedProductRows} ligne(s) du rapport produits n'ont pas de CIP/EAN. Elles sont conservées dans le classement (honoraires, services ou références non codées possibles) mais doivent être interprétées séparément des produits codés.`
+        )
+      }
+    }
+
     if (productReportMeta?.reportType === 'top-products') {
       const periodStart = productReportMeta?.periodStart || null
       const periodEnd = productReportMeta?.periodEnd || null
