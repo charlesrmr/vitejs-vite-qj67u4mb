@@ -14,13 +14,19 @@ export default async (req) => {
       storageScope = isDeployPreview ? 'preview' : 'production';
     } catch {}
 
+    const context = String(process.env.CONTEXT || '').toLowerCase();
+    const notificationsConfigured = Boolean(process.env.RESEND_API_KEY && process.env.PILOT_EMAIL_FROM);
+    const allowNonProd = String(process.env.PILOT_ALLOW_NONPROD_EMAILS || '').toLowerCase() === 'true';
+    const emailDeliveryEnabled = notificationsConfigured && (!context || context === 'production' || allowNonProd);
+
     return json({
       ok: true,
       service: 'PilotOfficine',
       storage: 'ready',
       storageScope,
       adminConfigured: Boolean(process.env.PILOT_ADMIN_TOKEN),
-      notificationsConfigured: Boolean(process.env.RESEND_API_KEY && process.env.PILOT_EMAIL_FROM),
+      notificationsConfigured,
+      emailDeliveryEnabled,
       operatorNotificationConfigured: Boolean(process.env.PILOT_NOTIFY_TO),
       publicUrlConfigured: Boolean(process.env.PILOT_PUBLIC_URL),
       environment: process.env.CONTEXT || null,
@@ -29,12 +35,18 @@ export default async (req) => {
       checkedAt: new Date().toISOString(),
     });
   } catch {
+    const context = String(process.env.CONTEXT || '').toLowerCase();
+    const notificationsConfigured = Boolean(process.env.RESEND_API_KEY && process.env.PILOT_EMAIL_FROM);
+    const allowNonProd = String(process.env.PILOT_ALLOW_NONPROD_EMAILS || '').toLowerCase() === 'true';
+    const emailDeliveryEnabled = notificationsConfigured && (!context || context === 'production' || allowNonProd);
+
     return json({
       ok: false,
       service: 'PilotOfficine',
       storage: 'unavailable',
       adminConfigured: Boolean(process.env.PILOT_ADMIN_TOKEN),
-      notificationsConfigured: Boolean(process.env.RESEND_API_KEY && process.env.PILOT_EMAIL_FROM),
+      notificationsConfigured,
+      emailDeliveryEnabled,
       operatorNotificationConfigured: Boolean(process.env.PILOT_NOTIFY_TO),
       publicUrlConfigured: Boolean(process.env.PILOT_PUBLIC_URL),
       environment: process.env.CONTEXT || null,
