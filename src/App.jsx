@@ -217,7 +217,6 @@ function Landing({ onStart, onDemo }) {
     ['Quels fichiers faut-il fournir ?', "Un export d'activité est suffisant pour démarrer. Un top produits et un état de stock détaillé enrichissent ensuite le diagnostic."],
     ['Quels formats sont acceptés ?', 'CSV, XLS et XLSX. Pendant la phase fondatrice, certains PDF peuvent aussi être traités manuellement.'],
     ['Faut-il transmettre des données patients ?', 'Non. Pilot\'Officine a besoin de données de gestion : activité, marge, produits, stock et familles lorsque ces informations sont disponibles.'],
-    ['Quels LGO sont compatibles ?', 'Le moteur est conçu pour s\'adapter à plusieurs structures d\'export. La compatibilité est actuellement validée progressivement sur des exports réels.'],
     ['Que se passe-t-il si une donnée manque ?', 'Elle est indiquée comme indisponible. Pilot\'Officine ne remplace jamais une donnée manquante par une valeur de démonstration.'],
     ['Combien coûte Pilot\'Officine ?', 'La tarification finale sera fixée après la phase fondatrice. Les premières pharmacies bénéficient de conditions préférentielles.'],
   ];
@@ -241,7 +240,7 @@ function Landing({ onStart, onDemo }) {
               <button className="lp-btn secondary" onClick={onDemo}>Voir le diagnostic en action</button>
             </div>
             <div className="lp-proof">
-              <span>5 minutes pour comprendre</span>
+              <span>Quelques minutes pour y voir plus clair</span>
               <span>Quelques priorités, pas 50 KPI</span>
               <span>Aucune donnée inventée</span>
             </div>
@@ -249,8 +248,8 @@ function Landing({ onStart, onDemo }) {
 
           <div className="lp-preview-wrap">
             <div className="lp-preview-glow" />
-            <div className="lp-float lp-float-a"><small>MARGE</small><b>+1,8 pt</b><span>potentiel détecté</span></div>
-            <div className="lp-float lp-float-b"><small>STOCK</small><b>18,4 k€</b><span>à challenger</span></div>
+            <div className="lp-float lp-float-a"><small>MARGE</small><b>Signal</b><span>point à vérifier</span></div>
+            <div className="lp-float lp-float-b"><small>STOCK</small><b>Zone</b><span>à analyser</span></div>
             <div className="lp-preview">
               <div className="lp-preview-window">
                 <span /><span /><span />
@@ -297,109 +296,79 @@ function Landing({ onStart, onDemo }) {
         </div>
       </section>
 
-      <section className="lp-manifesto">
-        <div className="lp-manifesto-track">
-          <span>MOINS DE TABLEAUX</span><i>+</i>
-          <span>PLUS DE DÉCISIONS</span><i>+</i>
-          <span>MOINS DE BRUIT</span><i>+</i>
-          <span>PLUS DE PRIORITÉS</span>
+      <section className="lp-trust-strip">
+        <div className="lp-shell lp-trust-inner">
+          <div className="lp-trust-mark">CR</div>
+          <div className="lp-trust-copy">
+            <strong>Conçu par un pharmacien. Nourri par le terrain.</strong>
+            <span>Charles Romier · CRC Pharma · ancien cofondateur du Comptoir des Pharmacies</span>
+          </div>
+          <div className="lp-trust-pill">Testé sur des exports LGO anonymisés</div>
         </div>
       </section>
 
-      <section className="lp-section lp-editorial">
+      <section className="lp-product-section">
         <div className="lp-shell">
-          <div className="lp-editorial-head">
-            <span>Le vrai problème</span>
-            <h2>Le chiffre n'est pas le problème.<br /><em>C'est de savoir quoi en faire.</em></h2>
-          </div>
-          <div className="lp-editorial-list">
-            <div className="lp-editorial-row">
-              <b>01</b>
-              <h3>Votre marge bouge.</h3>
-              <p>Mais est-ce une variation normale, un problème de mix ou un signal à traiter maintenant ?</p>
+          <div className="lp-product-head">
+            <div>
+              <span>Le produit, pour de vrai</span>
+              <h2>Une lecture courte.<br />Des décisions visibles.</h2>
             </div>
-            <div className="lp-editorial-row">
-              <b>02</b>
-              <h3>Votre stock immobilise du cash.</h3>
-              <p>Mais quelles références méritent réellement une décision et lesquelles tournent correctement ?</p>
-            </div>
-            <div className="lp-editorial-row">
-              <b>03</b>
-              <h3>Votre LGO sait beaucoup de choses.</h3>
-              <p>Pilot'Officine fait le tri pour que vous sachiez où regarder avant votre prochaine décision.</p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section className="lp-diagnostic-stage">
-        <div className="lp-shell">
-          <div className="lp-stage-head">
-            <span>Un diagnostic, pas un reporting</span>
-            <h2>En quelques minutes, passez de « j'ai des chiffres » à « je sais quoi regarder ».</h2>
-            <p>Voici le type de lecture que Pilot'Officine doit faire ressortir. Peu d'informations, mais celles qui appellent une décision.</p>
+            <p>
+              Ci-dessous, ce n'est pas une deuxième maquette marketing : ce sont les données
+              utilisées par la démonstration actuelle de Pilot'Officine.
+            </p>
           </div>
 
-          <div className="lp-stage-board">
-            <div className="lp-stage-rail">
-              <div className="active"><i>01</i><span>Synthèse</span></div>
-              <div><i>02</i><span>Marge</span></div>
-              <div><i>03</i><span>Stock</span></div>
-              <div><i>04</i><span>Produits</span></div>
-              <div><i>05</i><span>Actions</span></div>
+          <div className="lp-product-frame">
+            <div className="lp-product-bar">
+              <div className="lp-product-brand"><i>P</i><span>Pilot'Officine</span></div>
+              <div className="lp-product-meta">{DEMO.officine} · {DEMO.periode} · {DEMO.lgo}</div>
+              <button onClick={onDemo}>Ouvrir le vrai dashboard →</button>
             </div>
 
-            <div className="lp-stage-main">
-              <div className="lp-stage-topline">
-                <div>
-                  <small>EXEMPLE FICTIF · SYNTHÈSE DIRIGEANT</small>
-                  <h3>Trois signaux. Trois décisions.</h3>
+            <div className="lp-product-tabs">
+              <span className="active">Synthèse</span><span>Marge</span><span>Analyse</span><span>Produits</span><span>Actions</span>
+            </div>
+
+            <div className="lp-product-body">
+              <div className="lp-product-kpis">
+                <article><span>CA</span><b>{eur(DEMO.ca)}</b><small>période analysée</small></article>
+                <article><span>Marge brute</span><b>{DEMO.marge_pct}%</b><small>{eur(DEMO.marge_eur)}</small></article>
+                <article><span>Stock</span><b>{eur(DEMO.stock_eur)}</b><small>valorisé</small></article>
+                <article><span>Dormants</span><b>{num(DEMO.dormants)}</b><small>références</small></article>
+              </div>
+
+              <div className="lp-product-grid">
+                <div className="lp-product-synth">
+                  <div className="lp-product-label">Synthèse dirigeant</div>
+                  <p>{DEMO.synthesis.split('\n\n')[0]}</p>
+                  <p>{DEMO.synthesis.split('\n\n')[2]}</p>
                 </div>
-                <span className="lp-stage-score">Lecture 5 min</span>
-              </div>
-
-              <div className="lp-stage-priority">
-                <div className="lp-stage-rank">01</div>
-                <div>
-                  <small>À REGARDER EN PREMIER</small>
-                  <h4>Le stock augmente alors que l'activité ralentit.</h4>
-                  <p>Le sujet n'est pas de réduire le stock partout. Il est d'identifier les familles où le cash est immobilisé sans soutenir suffisamment l'activité.</p>
+                <div className="lp-product-alerts">
+                  <div className="lp-product-label">À regarder maintenant</div>
+                  {DEMO.alerts.slice(0, 3).map((alert, i) => (
+                    <div className="lp-product-alert" key={i}>
+                      <i>{String(i + 1).padStart(2, '0')}</i>
+                      <div><strong>{alert.title}</strong><span>{alert.body}</span></div>
+                    </div>
+                  ))}
                 </div>
-                <div className="lp-stage-impact"><span>À challenger</span><b>18,4 k€</b></div>
               </div>
 
-              <div className="lp-stage-signals">
-                <article>
-                  <span>MARGE</span>
-                  <b>28,4 %</b>
-                  <small>−1,2 pt</small>
-                  <p>Vérifier le mix et les familles à marge libre.</p>
-                </article>
-                <article>
-                  <span>STOCK</span>
-                  <b>142 k€</b>
-                  <small>+9 %</small>
-                  <p>Repérer les poches de surstock avant de recommander.</p>
-                </article>
-                <article>
-                  <span>PRODUITS</span>
-                  <b>86</b>
-                  <small>à revoir</small>
-                  <p>Références faibles ou sans mouvement à challenger.</p>
-                </article>
-              </div>
-
-              <div className="lp-stage-action">
-                <span>PROCHAINE ACTION</span>
-                <p>Commencer par les deux familles où le stock progresse le plus vite, puis valider les commandes et le plan de sortie.</p>
-                <button onClick={onDemo}>Explorer le diagnostic complet →</button>
+              <div className="lp-product-bottom">
+                <div>
+                  <span>La logique</span>
+                  <strong>Voir. Comprendre. Prioriser.</strong>
+                </div>
+                <button onClick={onDemo}>Explorer la démonstration complète</button>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      <section className="lp-process">
+      <section className="lp-process lp-process-lean">
         <div className="lp-shell">
           <div className="lp-process-head">
             <span>Simple volontairement</span>
@@ -412,9 +381,6 @@ function Landing({ onStart, onDemo }) {
             <div className="lp-process-arrow">→</div>
             <div><b>03</b><h3>Décidez</h3><p>Une synthèse courte, des alertes utiles et quelques actions prioritaires.</p></div>
           </div>
-          <div className="lp-process-proof">
-            <span>CA</span><span>Marge</span><span>Évolution</span><span>Top produits</span><span>Stock</span><span>Dormants</span><span>Familles</span><span>Qualité des données</span>
-          </div>
         </div>
       </section>
 
@@ -423,14 +389,14 @@ function Landing({ onStart, onDemo }) {
         <div className="lp-shell lp-founder-grid">
           <div>
             <div className="lp-kicker gold">Cercle des pharmacies fondatrices</div>
-            <h2>Les premières officines ne seront pas des clientes comme les autres.</h2>
+            <h2>10 pharmacies vont construire Pilot'Officine avec moi.</h2>
             <p>
               Je veux construire Pilot'Officine avec quelques titulaires exigeants, sur de vrais exports,
               de vraies décisions et de vrais irritants terrain. Le but n'est pas de tester un gadget.
               Le but est de construire l'outil que j'aurais envie d'utiliser moi-même en officine.
             </p>
             <div className="lp-founder-slots">
-              <span><b>5 à 10</b> officines maximum</span>
+              <span><b>10 places</b> maximum</span>
               <span><b>1 mois</b> offert</span>
               <span><b>Accès direct</b> au fondateur</span>
             </div>
@@ -451,22 +417,6 @@ function Landing({ onStart, onDemo }) {
         </div>
       </section>
 
-      <section className="lp-section">
-        <div className="lp-shell lp-about">
-          <div className="lp-about-mark">CR</div>
-          <div>
-            <span className="lp-eyebrow">Derrière Pilot'Officine</span>
-            <h2>Charles Romier · Pharmacien · CRC Pharma</h2>
-            <p>
-              J'accompagne des titulaires sur leur performance, leur management et leurs
-              décisions stratégiques. Après avoir cofondé Le Comptoir des Pharmacies,
-              je construis Pilot'Officine avec une idée simple : rendre les données LGO
-              enfin directement utiles au dirigeant.
-            </p>
-          </div>
-        </div>
-      </section>
-
       <section className="lp-section alt">
         <div className="lp-shell">
           <div className="lp-section-head compact">
@@ -481,11 +431,11 @@ function Landing({ onStart, onDemo }) {
 
       <section className="lp-final">
         <div className="lp-shell">
-          <h2>Vos données sont déjà là.<br />La prochaine décision aussi.</h2>
-          <p>Commencez par une première lecture de vos exports LGO.</p>
+          <h2>Vos données sont déjà là.<br />Voyons ce qu'elles vous disent.</h2>
+          <p>Commencez avec vos exports actuels. Pas de migration, pas de projet informatique.</p>
           <div className="lp-actions center">
-            <button className="lp-btn primary" onClick={onStart}>Analyser mon officine</button>
-            <button className="lp-btn secondary light" onClick={onDemo}>Voir la démo</button>
+            <button className="lp-btn primary" onClick={onStart}>Tester mes exports</button>
+            <button className="lp-btn secondary light" onClick={onDemo}>Voir le produit</button>
           </div>
         </div>
       </section>
