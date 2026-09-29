@@ -369,12 +369,12 @@ function emptyRealData() {
   }
 }
 
-export function buildFromFiles(filesMap) {
+export function buildFromFiles(filesMap, columnMappings = {}) {
   const ventes = filesMap.ventes || []
   const productReportRows = filesMap.produits || []
   if (!ventes.length) throw new Error("Le fichier d'activité / ventes est vide ou illisible.")
 
-  const salesCols = detectColumns(ventes)
+  const salesCols = { ...detectColumns(ventes), ...(columnMappings.ventes || {}) }
   const caDisplayCol = salesCols.caTtc || salesCols.ca || salesCols.caHt
   const caMarginBaseCol = salesCols.caHt || salesCols.ca || salesCols.caTtc
 
@@ -435,7 +435,7 @@ export function buildFromFiles(filesMap) {
   })
 
   if (productReportRows.length) {
-    const productCols = detectColumns(productReportRows)
+    const productCols = { ...detectColumns(productReportRows), ...(columnMappings.produits || {}) }
     data.detectedColumns.produits = productCols
 
     if (productCols.produit && productCols.quantite) {
@@ -517,7 +517,7 @@ export function buildFromFiles(filesMap) {
 
   const stockRows = filesMap.stock || []
   if (stockRows.length) {
-    const stockCols = detectColumns(stockRows)
+    const stockCols = { ...detectColumns(stockRows), ...(columnMappings.stock || {}) }
     data.detectedColumns.stock = stockCols
 
     if (stockCols.stockValeur) {
