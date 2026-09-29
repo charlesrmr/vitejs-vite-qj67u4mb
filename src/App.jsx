@@ -1850,10 +1850,8 @@ export default function App() {
             {tab === 'marge' && data.isDemo && (
               <>
                 <div className="info-box fu">
-                  <b>Methode.</b> La marge officinale se lit en deux univers :
-                  medicament rembourse (MDL 6,93% du PFHT, plafonnee a
-                  32,50EUR/boite) et non-rembourse (marge libre, 30-60%). Repere
-                  secteur : <b>28-33% du CA</b> (FSPF 2025).
+                  <b>Démonstration fictive.</b> Cette vue montre comment Pilot'Officine peut séparer plusieurs univers de marge.
+                  Les taux, objectifs, gains et niveaux affichés ici ne constituent ni un benchmark sectoriel ni une recommandation.
                 </div>
                 <SH label="Les deux univers de marge" />
                 <div className="mg-split fu">
@@ -1877,8 +1875,7 @@ export default function App() {
                         border: `1px solid ${C.amber}22`,
                       }}
                     >
-                      Substitution {data.marge.rembourse.tx_subst}% / obj.{' '}
-                      {data.marge.rembourse.tx_subst_obj}%+
+                      Exemple de signal · {data.marge.rembourse.tx_subst}%
                     </span>
                   </div>
                   <div className="mg-univ libre">
@@ -1901,7 +1898,7 @@ export default function App() {
                         border: `1px solid ${C.emerald}22`,
                       }}
                     >
-                      Vrai levier de rentabilite
+                      Exemple de levier
                     </span>
                   </div>
                 </div>
@@ -1910,7 +1907,7 @@ export default function App() {
                 <div className="tc fu">
                   <div className="tc-hd">
                     <span className="tc-ht">Familles hors rembourse</span>
-                    <span className="tc-hc">repere 30-60% FSPF</span>
+                    <span className="tc-hc">valeurs fictives de démonstration</span>
                   </div>
                   <div style={{ padding: '0.75rem 1rem' }}>
                     {data.marge.par_famille_libre.map((f, i) => {
@@ -1944,7 +1941,7 @@ export default function App() {
                   </div>
                 </div>
 
-                <SH label="Leviers de recuperation" />
+                <SH label="Exemples de leviers" />
                 {data.marge.leviers.map((l, i) => (
                   <div key={i} className="lev fu">
                     <div className="lev-gain">
@@ -1952,7 +1949,7 @@ export default function App() {
                         +{(l.gain_min / 1000).toFixed(1)}-
                         {(l.gain_max / 1000).toFixed(1)}k EUR
                       </div>
-                      <div className="lev-gl">par an est.</div>
+                      <div className="lev-gl">impact fictif</div>
                     </div>
                     <div className="lev-bd">
                       <div className="lev-t">{l.titre}</div>
@@ -1967,8 +1964,8 @@ export default function App() {
                   </div>
                 ))}
                 <div className="disclaimer fu">
-                  <b>Transparence.</b> Gains en fourchettes estimatives. Reperes
-                  sources (FSPF, Leem, arretes). Pas une promesse de resultat.
+                  <b>Transparence.</b> Tous les chiffres et gains de cette démonstration sont fictifs.
+                  Ils illustrent le produit et ne sont jamais réutilisés dans une analyse réelle.
                 </div>
               </>
             )}
