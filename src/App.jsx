@@ -27,6 +27,8 @@ import {
   listMyDossiers,
   loginAccount,
   logoutAccount,
+  requestPasswordReset,
+  resetPassword,
   saveSessionToken,
   submitDossier,
   updateAccount,
@@ -772,6 +774,15 @@ export default function App() {
   const [loginPassword, setLoginPassword] = useState('');
   const [loginSaving, setLoginSaving] = useState(false);
   const [loginError, setLoginError] = useState('');
+  const [recoveryEmail, setRecoveryEmail] = useState('');
+  const [resetRequestSaving, setResetRequestSaving] = useState(false);
+  const [resetRequestError, setResetRequestError] = useState('');
+  const [resetRequestResult, setResetRequestResult] = useState(null);
+  const [resetToken] = useState(() => {
+    try { return new URLSearchParams(window.location.search).get('reset') || ''; } catch { return ''; }
+  });
+  const [resetSaving, setResetSaving] = useState(false);
+  const [resetError, setResetError] = useState('');
   const [sessionToken, setSessionToken] = useState(() => getSessionToken());
   const [account, setAccount] = useState(null);
   const [dossierId, setDossierId] = useState('');
@@ -791,7 +802,7 @@ export default function App() {
   const [files, setFiles] = useState({ ventes: null, produits: null, stock: null });
   const [parsedFiles, setParsedFiles] = useState({});
   const [mappings, setMappings] = useState({});
-  const [step, setStep] = useState('landing');
+  const [step, setStep] = useState(() => resetToken ? 'resetPassword' : 'landing');
   const [ls, setLs] = useState(0);
   const [data, setData] = useState(null);
   const [syn, setSyn] = useState('');
@@ -1146,6 +1157,49 @@ export default function App() {
     }
   };
 
+  const requestResetLink = async () => {
+    setResetRequestSaving(true);
+    setResetRequestError('');
+    setResetRequestResult(null);
+    try {
+      const result = await requestPasswordReset(recoveryEmail);
+      setResetRequestResult(result);
+    } catch (err) {
+      setResetRequestError(err?.message || 'Impossible de traiter la demande pour le moment.');
+    } finally {
+      setResetRequestSaving(false);
+    }
+  };
+
+  const completePasswordReset = async (newPassword) => {
+    setResetSaving(true);
+    setResetError('');
+    try {
+      const result = await resetPassword(resetToken, newPassword);
+      saveSessionToken(result.sessionToken);
+      setSessionToken(result.sessionToken);
+
+      const me = await getMe(result.sessionToken);
+      setAccount(me.account);
+      setProfile((prev) => ({ ...prev, ...(me.account?.profile || {}) }));
+
+      const dossierResult = await listMyDossiers(result.sessionToken);
+      setClientDossiers(dossierResult.dossiers || []);
+
+      try {
+        const url = new URL(window.location.href);
+        url.searchParams.delete('reset');
+        window.history.replaceState({}, '', url.pathname + (url.search ? url.search : ''));
+      } catch {}
+
+      setStep('portal');
+    } catch (err) {
+      setResetError(err?.message || 'Impossible de réinitialiser le mot de passe.');
+    } finally {
+      setResetSaving(false);
+    }
+  };
+
   const completeLogin = async () => {
     setLoginError('');
     setLoginSaving(true);
@@ -1363,6 +1417,33 @@ export default function App() {
           saving={loginSaving}
           error={loginError}
           onCreate={() => setStep('account')}
+          onForgot={() => {
+            setRecoveryEmail(loginEmail);
+            setResetRequestResult(null);
+            setResetRequestError('');
+            setStep('forgotPassword');
+          }}
+        />
+      )}
+
+      {step === 'forgotPassword' && (
+        <ForgotPasswordStep
+          email={recoveryEmail}
+          onEmail={setRecoveryEmail}
+          onSubmit={requestResetLink}
+          onBack={() => setStep('login')}
+          saving={resetRequestSaving}
+          error={resetRequestError}
+          result={resetRequestResult}
+        />
+      )}
+
+      {step === 'resetPassword' && (
+        <ResetPasswordStep
+          token={resetToken}
+          onSubmit={completePasswordReset}
+          saving={resetSaving}
+          error={resetError}
         />
       )}
 
