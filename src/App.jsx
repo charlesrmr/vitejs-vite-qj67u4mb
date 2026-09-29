@@ -16,15 +16,19 @@ import { DEMO } from './data/demo';
 import { eur, num, parseFile, detectColumns, buildFromFiles, getAISynthesis } from './utils';
 import {
   createAccount,
+  clearSession,
   createDossier,
+  getDossier,
   getMe,
   getSessionToken,
+  listMyDossiers,
   loginAccount,
   saveSessionToken,
   submitDossier,
   uploadAllFiles,
 } from './api';
 import AdminPanel from './AdminPanel';
+import { ClientPortal, ClientReport } from './ClientPortal';
 import './App.css';
 
 function ScoreRing({ score }) {
@@ -712,6 +716,10 @@ export default function App() {
   const [reviewSending, setReviewSending] = useState(false);
   const [reviewSent, setReviewSent] = useState(false);
   const [reviewError, setReviewError] = useState('');
+  const [clientDossiers, setClientDossiers] = useState([]);
+  const [portalLoading, setPortalLoading] = useState(false);
+  const [portalError, setPortalError] = useState('');
+  const [selectedClientDossier, setSelectedClientDossier] = useState(null);
   const [files, setFiles] = useState({ ventes: null, produits: null, stock: null });
   const [parsedFiles, setParsedFiles] = useState({});
   const [mappings, setMappings] = useState({});
