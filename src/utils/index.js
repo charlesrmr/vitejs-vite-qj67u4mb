@@ -1,6 +1,5 @@
 import Papa from 'papaparse'
 import * as XLSX from 'xlsx'
-import * as pdfjsLib from 'pdfjs-dist'
 import pdfWorker from 'pdfjs-dist/build/pdf.worker.min.mjs?url'
 import { DEMO } from '../data/demo'
 import { parseKnownPdfInventory } from './pdfInventory'
@@ -124,7 +123,8 @@ function matrixToObjects(matrix) {
   )
 }
 
-function loadPdfJs() {
+async function loadPdfJs() {
+  const pdfjsLib = await import('pdfjs-dist')
   pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker
   return pdfjsLib
 }
@@ -176,7 +176,7 @@ function pdfItemsToMatrix(items) {
 }
 
 async function parsePdfFile(file) {
-  const pdfjs = loadPdfJs()
+  const pdfjs = await loadPdfJs()
   const buffer = await file.arrayBuffer()
   const pdf = await pdfjs.getDocument({ data: new Uint8Array(buffer) }).promise
   const matrix = []
