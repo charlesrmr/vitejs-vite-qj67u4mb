@@ -13,7 +13,7 @@ import {
 } from 'recharts';
 import { C, PALETTE } from './tokens';
 import { DEMO } from './data/demo';
-import { eur, num, parseFile, buildFromFiles, getAISynthesis } from './utils';
+import { eur, num, parseFile, detectColumns, buildFromFiles, getAISynthesis } from './utils';
 import './App.css';
 
 function ScoreRing({ score }) {
@@ -210,6 +210,81 @@ const STEPS = [
   'Synthese en cours...',
   'Rapport pret',
 ];
+
+
+const MAPPING_CONFIG = {
+  ventes: {
+    title: 'Activité / ventes',
+    subtitle: 'Le cœur du diagnostic',
+    fields: [
+      ['date', 'Date / période'],
+      ['caTtc', 'CA TTC'],
+      ['caHt', 'CA HT'],
+      ['ca', 'CA (colonne unique)'],
+      ['margeEur', 'Marge €'],
+      ['margePct', 'Marge %'],
+      ['famille', 'Famille / rayon'],
+      ['produit', 'Produit'],
+      ['cip', 'CIP / EAN'],
+      ['quantite', 'Quantité'],
+    ],
+  },
+  produits: {
+    title: 'Top produits',
+    subtitle: 'Pour enrichir le classement produits',
+    fields: [
+      ['produit', 'Produit'],
+      ['cip', 'CIP / EAN'],
+      ['quantite', 'Quantité'],
+      ['prixPublic', 'Prix public'],
+      ['famille', 'Famille / rayon'],
+    ],
+  },
+  stock: {
+    title: 'Stock',
+    subtitle: 'Pour valorisation et rapprochement',
+    fields: [
+      ['produit', 'Produit'],
+      ['cip', 'CIP / EAN'],
+      ['stockValeur', 'Valeur stock'],
+      ['stockQte', 'Quantité stock'],
+      ['famille', 'Famille / rayon'],
+    ],
+  },
+};
+
+function ColumnMappingCard({ type, rows, mapping, onChange }) {
+  const cfg = MAPPING_CONFIG[type];
+  const columns = Object.keys(rows?.[0] || {});
+  return (
+    <div className="map-card">
+      <div className="map-card-head">
+        <div>
+          <div className="map-card-title">{cfg.title}</div>
+          <div className="map-card-sub">{cfg.subtitle}</div>
+        </div>
+        <span className="map-count">{columns.length} colonnes</span>
+      </div>
+      <div className="map-list">
+        {cfg.fields.map(([key, label]) => {
+          const value = mapping?.[key] || '';
+          return (
+            <label className="map-row" key={key}>
+              <div className="map-row-label">
+                <span>{label}</span>
+                <small className={value ? 'ok' : ''}>{value ? 'détecté' : 'non détecté'}</small>
+              </div>
+              <select value={value} onChange={(e) => onChange(key, e.target.value || null)}>
+                <option value="">Non disponible</option>
+                {columns.map((column) => <option key={column} value={column}>{column}</option>)}
+              </select>
+            </label>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
 
 
 function Landing({ onStart, onDemo }) {
