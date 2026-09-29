@@ -10,7 +10,7 @@ export default async (req) => {
   let body;
   try { body = await req.json(); } catch { return json({ error: 'Requête invalide.' }, 400); }
   const id = String(body?.dossierId || '');
-  const dossier = await STORE.dossiers().get(`dossier/${id}.json`, {
+  const dossier = await STORE.dossiers(req).get(`dossier/${id}.json`, {
     type: 'json', consistency: 'strong',
   });
   if (!dossier) return json({ error: 'Dossier introuvable.' }, 404);
@@ -42,7 +42,7 @@ export default async (req) => {
   dossier.review = review;
   dossier.status = status;
   dossier.reviewedAt = status === 'reviewed' ? nowIso() : dossier.reviewedAt || null;
-  await saveDossier(dossier);
+  await saveDossier(dossier, req);
 
   return json({ ok: true, dossier });
 };
