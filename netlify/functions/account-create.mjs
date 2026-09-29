@@ -23,6 +23,18 @@ export default async (req) => {
   const existing = await store.get(accountKey, { type: 'json', consistency: 'strong' });
   if (existing) return json({ error: 'Un compte existe déjà avec cet email.' }, 409);
 
+  const configuredLimit = Number(process.env.PILOT_MAX_ACCOUNTS || 10);
+  const maxAccounts = Number.isFinite(configuredLimit)
+    ? Math.min(1000, Math.max(1, Math.floor(configuredLimit)))
+    : 10;
+  const { blobs: accountBlobs } = await store.list({ prefix: 'account/' });
+  if ((accountBlobs || []).length >= maxAccounts) {
+    return json({
+      error: `Le cercle pilote a atteint sa capacité actuelle de ${maxAccounts} pharmacies. Contactez Pilot'Officine pour être ajouté à la prochaine ouverture.`,
+      code: 'PILOT_CAPACITY_REACHED',
+    }, 403);
+  }
+
   const passwordData = hashPassword(password);
   const account = {
     id: newId('acct'),
