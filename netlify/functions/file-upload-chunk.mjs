@@ -3,6 +3,8 @@ import {
 } from '../lib/pilot.mjs';
 
 const MAX_CHUNK = 4 * 1024 * 1024;
+const MAX_FILE = 25 * 1024 * 1024;
+const ALLOWED_EXTENSIONS = ['.pdf', '.csv', '.xlsx', '.xls'];
 
 export default async (req) => {
   if (req.method !== 'POST') return json({ error: 'Méthode non autorisée.' }, 405);
@@ -21,8 +23,15 @@ export default async (req) => {
   if (!dossierId || !uploadId || !['ventes', 'produits', 'stock'].includes(slot)) {
     return json({ error: 'Métadonnées d’upload invalides.' }, 400);
   }
-  if (!Number.isInteger(chunkIndex) || !Number.isInteger(chunkCount) || chunkIndex < 0 || chunkCount < 1 || chunkIndex >= chunkCount) {
-    return json({ error: 'Index de chunk invalide.' }, 400);
+  if (!Number.isInteger(chunkIndex) || !Number.isInteger(chunkCount) || chunkIndex < 0 || chunkCount < 1 || chunkIndex >= chunkCount || chunkCount > 10) {
+    return json({ error: 'Découpage du fichier invalide.' }, 400);
+  }
+  if (!Number.isFinite(fileSize) || fileSize <= 0 || fileSize > MAX_FILE) {
+    return json({ error: 'Fichier trop volumineux. Limite pilote : 25 Mo par fichier.' }, 413);
+  }
+  const lowerName = fileName.toLowerCase();
+  if (!ALLOWED_EXTENSIONS.some((ext) => lowerName.endsWith(ext))) {
+    return json({ error: 'Format refusé. Utilisez PDF, CSV, XLS ou XLSX.' }, 415);
   }
 
   const dossier = await getOwnedDossier(dossierId, auth.account.id);
