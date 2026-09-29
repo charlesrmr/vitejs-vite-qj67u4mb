@@ -10,13 +10,13 @@ export default async (req) => {
   const email = normalizeEmail(body?.email);
   const password = String(body?.password || '');
   const key = `account/${sha256(email)}.json`;
-  const account = await STORE.accounts().get(key, { type: 'json', consistency: 'strong' });
+  const account = await STORE.accounts(req).get(key, { type: 'json', consistency: 'strong' });
 
   if (!account || !verifyPassword(password, account.passwordSalt, account.passwordHash)) {
     return json({ error: 'Email ou mot de passe incorrect.' }, 401);
   }
 
-  const session = await createSession(account);
+  const session = await createSession(account, req);
   return json({
     ok: true,
     sessionToken: session.token,
