@@ -43,6 +43,9 @@ export default async (req) => {
 
   const dossier = await getOwnedDossier(dossierId, auth.account.id, req);
   if (!dossier) return json({ error: 'Dossier introuvable.' }, 404);
+  if (dossier.status !== 'draft') {
+    return json({ error: 'Ce dossier a déjà été envoyé et ne peut plus recevoir de nouveaux fichiers.' }, 409);
+  }
 
   const data = await req.arrayBuffer();
   if (!data.byteLength || data.byteLength > MAX_CHUNK) {
@@ -67,6 +70,12 @@ export default async (req) => {
   const complete = chunkIndex === chunkCount - 1;
 
   if (complete) {
+    const prefix = `dossier/${dossierId}/${uploadId}/chunk-`;
+    const uploaded = await STORE.files(req).list({ prefix });
+    if ((uploaded.blobs || []).length !== chunkCount) {
+      return json({ error: 'Upload incomplet : un ou plusieurs morceaux du fichier sont manquants.' }, 409);
+    }
+
     dossier.files = dossier.files || {};
     const previous = dossier.files[slot];
 
