@@ -626,6 +626,52 @@ export default function App() {
   const fx = (v) => (Number.isFinite(v) ? `x${v}` : 'N/D');
   const fe = (v) => (Number.isFinite(v) ? `${v}EUR` : 'N/D');
   const hasProductCa = Boolean(data?.top10?.some((p) => Number.isFinite(p.ca) && p.ca > 0));
+  const realActions = (() => {
+    if (!data || data.isDemo) return [];
+    const actions = [];
+    if (Number.isFinite(data.marge_pct)) {
+      actions.push({
+        titre: 'Suivre la marge comme point de référence',
+        detail: `La période importée ressort à ${data.marge_pct}% de marge (${eur(data.marge_eur)}). Comparez ce niveau à la prochaine période avant d'en tirer une tendance.`,
+        prio: 'm',
+      });
+    }
+    if (Number.isFinite(data.dormants) && data.dormants > 0) {
+      actions.push({
+        titre: `Revoir ${data.dormants} référence(s) sans vente sur la période`,
+        detail: 'Le rapprochement ventes / stock les signale comme sans vente sur la période importée. Vérifiez saisonnalité, lancement récent et profondeur de stock avant décision.',
+        prio: 'h',
+      });
+    } else if (Number.isFinite(data.stock_eur)) {
+      actions.push({
+        titre: 'Qualifier le stock avant de décider',
+        detail: `Le stock valorisé importé est de ${eur(data.stock_eur)}. Un export détaillé par référence permettra d'identifier les lignes sans vente et les concentrations de valeur.`,
+        prio: 'm',
+      });
+    }
+    if (data.top10?.length) {
+      actions.push({
+        titre: 'Faire une revue des produits les plus contributifs',
+        detail: `Le fichier permet déjà d'isoler les ${Math.min(data.top10.length, 10)} premières références. Vérifiez leur disponibilité, leur marge lorsqu'elle est fournie et leur évolution sur plusieurs périodes.`,
+        prio: 'm',
+      });
+    }
+    if (!data.familles?.length) {
+      actions.push({
+        titre: 'Ajouter une ventilation famille / rayon',
+        detail: 'Elle permettra de voir quelles familles portent le CA et la marge au lieu de rester au niveau global.',
+        prio: 'm',
+      });
+    }
+    if (!data.top10?.length) {
+      actions.push({
+        titre: 'Ajouter un export Top produits',
+        detail: 'Vous pourrez alors analyser les références les plus délivrées et préparer le rapprochement avec le stock.',
+        prio: 'm',
+      });
+    }
+    return actions.slice(0, 5);
+  })();
   const salesMap = mappings.ventes || {};
   const mappingReady = Boolean(
     salesMap.caTtc ||
@@ -832,23 +878,19 @@ export default function App() {
                       v: fp(data.marge_pct),
                       f: eur(data.marge_eur),
                       ac: C.cyan,
-                      bd: Number.isFinite(data.marge_pct)
-                        ? {
-                            t: data.marge_pct >= 28 ? 'dans la norme' : 'sous la norme',
-                            x: data.marge_pct >= 28 ? 'g' : 'r',
-                          }
+                      bd: !data.isDemo && Number.isFinite(data.marge_pct)
+                        ? { t: 'calcul disponible', x: 'b' }
+                        : data.isDemo && Number.isFinite(data.marge_pct)
+                        ? { t: 'démo', x: 'b' }
                         : null,
                     },
                     {
                       l: 'Stock immobilise',
                       v: eur(data.stock_eur),
                       f: Number.isFinite(data.extra.rotation) ? `rotation x${data.extra.rotation}` : 'export stock requis',
-                      ac: Number.isFinite(data.stock_eur) && data.stock_eur / data.ca > 0.6 ? C.rose : C.emerald,
+                      ac: C.emerald,
                       bd: Number.isFinite(data.stock_eur)
-                        ? {
-                            t: `${Math.round((data.stock_eur / data.ca) * 100)}% du CA`,
-                            x: data.stock_eur / data.ca > 0.6 ? 'w' : 'g',
-                          }
+                        ? { t: 'stock importé', x: 'b' }
                         : null,
                     },
                     {
@@ -1051,12 +1093,39 @@ export default function App() {
 
             {tab === 'marge' && !data.isDemo && (
               <>
-                <div className="info-box fu">
-                  <b>Marge calculée sur vos données.</b> {Number.isFinite(data.marge_pct)
-                    ? `Taux de marge : ${data.marge_pct}% — ${eur(data.marge_eur)}.`
-                    : "Aucune colonne de marge exploitable n'a été détectée."}
+                <SH label="Lecture de la marge" />
+                <div className="g4 fu">
+                  <div className="card kpi">
+                    <div className="kpi-ac" style={{ background: C.violet }} />
+                    <div className="kpi-l">CA analysé</div>
+                    <div className="kpi-v">{eur(data.ca)}</div>
+                    <div className="kpi-f">{Number.isFinite(data.ca_ttc) ? 'TTC' : Number.isFinite(data.ca_ht) ? 'HT' : 'base importée'}</div>
+                  </div>
+                  <div className="card kpi">
+                    <div className="kpi-ac" style={{ background: C.cyan }} />
+                    <div className="kpi-l">Marge €</div>
+                    <div className="kpi-v">{eur(data.marge_eur)}</div>
+                    <div className="kpi-f">{Number.isFinite(data.marge_eur) ? 'calculée sur les lignes exploitables' : 'colonne marge requise'}</div>
+                  </div>
+                  <div className="card kpi">
+                    <div className="kpi-ac" style={{ background: C.emerald }} />
+                    <div className="kpi-l">Marge %</div>
+                    <div className="kpi-v">{fp(data.marge_pct)}</div>
+                    <div className="kpi-f">{Number.isFinite(data.marge_pct) ? 'point de référence de la période' : 'non calculable'}</div>
+                  </div>
+                  <div className="card kpi">
+                    <div className="kpi-ac" style={{ background: C.amber }} />
+                    <div className="kpi-l">Ventilation familles</div>
+                    <div className="kpi-v">{data.familles.length || 'N/D'}</div>
+                    <div className="kpi-f">{data.familles.length ? 'familles détectées' : 'export famille / rayon requis'}</div>
+                  </div>
                 </div>
-                {data.familles.length > 0 && (
+                <div className="info-box fu">
+                  {Number.isFinite(data.marge_pct)
+                    ? <>Pilot'Officine peut déjà mesurer la marge globale. <b>Une seule période ne suffit pas pour conclure à une hausse ou une baisse.</b> L'intérêt suivant est de comparer plusieurs périodes et, si possible, de ventiler par famille.</>
+                    : <>Aucune colonne de marge exploitable n'a été confirmée. Revenez au mapping si votre export contient une colonne de marge € ou de marge %.</>}
+                </div>
+                {data.familles.length > 0 ? (
                   <>
                     <SH label="Marge par famille" />
                     <div className="tc fu">
@@ -1069,14 +1138,19 @@ export default function App() {
                             <tr key={i}>
                               <td style={{ fontWeight: 600 }}>{fam.nom}</td>
                               <td>{eur(fam.ca)}</td>
-                              <td>{fam.pct_ca}%</td>
-                              <td>{fam.marge ? `${fam.marge}%` : 'N/D'}</td>
+                              <td>{Number.isFinite(fam.pct_ca) ? `${fam.pct_ca}%` : 'N/D'}</td>
+                              <td>{Number.isFinite(fam.marge) ? `${fam.marge}%` : 'N/D'}</td>
                             </tr>
                           ))}
                         </tbody>
                       </table>
                     </div>
                   </>
+                ) : (
+                  <div className="tab-next fu">
+                    <div><span>Pour aller plus loin</span><strong>Ajoutez une ventilation famille / rayon</strong><p>Vous verrez alors quelles familles portent réellement votre CA et votre marge.</p></div>
+                    <button onClick={() => setStep('upload')}>Compléter mes exports →</button>
+                  </div>
                 )}
               </>
             )}
@@ -1210,10 +1284,18 @@ export default function App() {
             {tab === 'analyse' && (
               <>
                 {!data.chart.length && !data.familles.length ? (
-                  <div className="info-box fu">
-                    Aucune ventilation par famille n'est disponible dans les exports fournis.
-                    Le chiffre d'affaires et la marge restent analysables ; un export par famille/rayon
-                    permettra d'enrichir cet onglet.
+                  <div className="analysis-empty fu">
+                    <div className="analysis-empty-copy">
+                      <span>Analyse disponible</span>
+                      <h3>Le global est lisible. La ventilation manque encore.</h3>
+                      <p>On peut déjà suivre le CA, la marge et la période importée. Pour comprendre <b>où</b> se crée ou se perd la performance, il faut une colonne famille / rayon.</p>
+                    </div>
+                    <div className="analysis-empty-kpis">
+                      <div><small>CA</small><b>{eur(data.ca)}</b></div>
+                      <div><small>Marge</small><b>{fp(data.marge_pct)}</b></div>
+                      <div><small>Période</small><b>{data.periode}</b></div>
+                    </div>
+                    <button onClick={() => setStep('upload')}>Ajouter un export plus détaillé →</button>
                   </div>
                 ) : (
                   <>
@@ -1349,9 +1431,18 @@ export default function App() {
             {tab === 'produits' && (
               <>
                 {!data.top10.length && !data.flop.length ? (
-                  <div className="info-box fu">
-                    Aucun détail produit n'est disponible dans l'export principal.
-                    Ajoutez l'export « Top produits » pour afficher les références les plus délivrées.
+                  <div className="analysis-empty fu">
+                    <div className="analysis-empty-copy">
+                      <span>Produits</span>
+                      <h3>Le fichier activité ne contient pas le détail des références.</h3>
+                      <p>Ajoutez l'export <b>Top produits</b> pour afficher les références les plus délivrées, leurs quantités et préparer le rapprochement avec le stock.</p>
+                    </div>
+                    <div className="analysis-empty-kpis">
+                      <div><small>CA disponible</small><b>{eur(data.ca)}</b></div>
+                      <div><small>Références lues</small><b>0</b></div>
+                      <div><small>Fichier attendu</small><b>Top produits</b></div>
+                    </div>
+                    <button onClick={() => setStep('upload')}>Ajouter le Top produits →</button>
                   </div>
                 ) : (
                   <>
@@ -1469,11 +1560,24 @@ export default function App() {
 
             {tab === 'action' && !data.isDemo && (
               <>
-                <SH label="Plan d action - 30 jours" />
+                <SH label="Priorités à valider" />
                 <div className="info-box fu">
-                  Le plan d'action automatique n'est pas encore activé sur les données réelles.
-                  Cette étape sera générée après validation des calculs et de la qualité des exports LGO.
+                  Ces propositions sont générées uniquement à partir des données réellement disponibles. <b>Aucun impact financier n'est inventé.</b>
                 </div>
+                {realActions.map((a, i) => (
+                  <div key={i} className="act fu">
+                    <div className="act-n">{i + 1}</div>
+                    <div className="act-bd">
+                      <div className="act-t">{a.titre}</div>
+                      <div className="act-d">{a.detail}</div>
+                      <div className="act-m">
+                        <span className={`atag ${a.prio === 'h' ? 'h' : 'm'}`}>
+                          {a.prio === 'h' ? 'à vérifier en priorité' : 'à compléter'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </>
             )}
 
