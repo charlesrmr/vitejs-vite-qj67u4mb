@@ -229,26 +229,28 @@ function Landing({ onStart, onDemo }) {
         <div className="lp-orb lp-orb-b" />
         <div className="lp-shell lp-hero-grid">
           <div className="lp-hero-copy">
-            <div className="lp-kicker">Pilot'Officine · le pilotage utile, enfin.</div>
-            <h1>Votre LGO vous donne des chiffres.<br /><em>Pilot'Officine vous dit où regarder.</em></h1>
+            <div className="lp-kicker">Pilot'Officine · vos chiffres deviennent des décisions</div>
+            <h1>Vous avez déjà les chiffres.<br /><em>Il vous manque les priorités.</em></h1>
             <p>
-              Marge qui se tasse. Stock qui gonfle. Produits qui dorment.
-              Pilot'Officine transforme vos exports en un diagnostic clair,
-              hiérarchisé et directement exploitable.
+              Pilot'Officine lit vos exports LGO, fait ressortir les signaux qui comptent
+              et transforme vos données en décisions concrètes sur la marge, le stock
+              et la performance de l'officine.
             </p>
             <div className="lp-actions">
-              <button className="lp-btn primary" onClick={onStart}>Voir ce que mes données révèlent</button>
-              <button className="lp-btn secondary" onClick={onDemo}>Explorer un diagnostic</button>
+              <button className="lp-btn primary" onClick={onStart}>Découvrir ce que mes données racontent</button>
+              <button className="lp-btn secondary" onClick={onDemo}>Voir le diagnostic en action</button>
             </div>
             <div className="lp-proof">
-              <span>Pas de tableau de bord de plus</span>
-              <span>Pas de chiffre inventé</span>
-              <span>Des priorités concrètes</span>
+              <span>5 minutes pour comprendre</span>
+              <span>Quelques priorités, pas 50 KPI</span>
+              <span>Aucune donnée inventée</span>
             </div>
           </div>
 
           <div className="lp-preview-wrap">
             <div className="lp-preview-glow" />
+            <div className="lp-float lp-float-a"><small>MARGE</small><b>+1,8 pt</b><span>potentiel détecté</span></div>
+            <div className="lp-float lp-float-b"><small>STOCK</small><b>18,4 k€</b><span>à challenger</span></div>
             <div className="lp-preview">
               <div className="lp-preview-window">
                 <span /><span /><span />
@@ -256,30 +258,33 @@ function Landing({ onStart, onDemo }) {
               </div>
               <div className="lp-preview-top">
                 <div>
-                  <div className="lp-preview-label">Aperçu diagnostic</div>
-                  <div className="lp-preview-title">Votre officine en un coup d'œil</div>
+                  <div className="lp-preview-label">Diagnostic dirigeant</div>
+                  <div className="lp-preview-title">Ce qui mérite votre attention</div>
                 </div>
                 <span className="lp-live">exemple fictif</span>
               </div>
-              <div className="lp-kpi-grid">
-                <div className="lp-kpi focus"><span>CA</span><b>1,25 M€</b><small>12 mois analysés</small></div>
-                <div className="lp-kpi warning"><span>Marge</span><b>29,1 %</b><small>point de vigilance</small></div>
-                <div className="lp-kpi"><span>Stock</span><b>115 k€</b><small>valorisé HT</small></div>
-                <div className="lp-kpi action"><span>Priorités</span><b>5</b><small>actions à décider</small></div>
-              </div>
-              <div className="lp-insight">
-                <div className="lp-insight-dot" />
+
+              <div className="lp-decision">
+                <div className="lp-decision-number">01</div>
                 <div>
-                  <span>Signal à regarder</span>
-                  <strong>La marge recule alors que le stock reste élevé.</strong>
-                  <small>→ Priorité : identifier les familles qui immobilisent du cash.</small>
+                  <span>Priorité du moment</span>
+                  <strong>Votre stock progresse plus vite que votre activité.</strong>
+                  <p>Avant de recommander, identifiez les références qui immobilisent du cash sans soutenir le chiffre d'affaires.</p>
                 </div>
               </div>
-              <div className="lp-mini-chart">
-                {[42,55,48,68,61,76,72,88,79,94,87,98].map((h,i) => (
-                  <span key={i} style={{height:`${h}%`}} />
-                ))}
+
+              <div className="lp-kpi-grid three">
+                <div className="lp-kpi warning"><span>Marge</span><b>28,4 %</b><small>−1,2 pt sur la période</small></div>
+                <div className="lp-kpi"><span>Stock</span><b>142 k€</b><small>valorisé HT</small></div>
+                <div className="lp-kpi action"><span>À traiter</span><b>4</b><small>priorités</small></div>
               </div>
+
+              <div className="lp-signal-row">
+                <div><span>01</span><p>Ralentir 2 familles surstockées</p></div>
+                <div><span>02</span><p>Revoir 86 références faibles</p></div>
+                <div><span>03</span><p>Protéger 3 familles à forte marge</p></div>
+              </div>
+
               <div className="lp-preview-foot">
                 <span>Synthèse</span>
                 <span>Marge</span>
@@ -296,10 +301,10 @@ function Landing({ onStart, onDemo }) {
         <div className="lp-shell">
           <div className="lp-section-head">
             <span>Le problème</span>
-            <h2>Le LGO mesure beaucoup.<br />Il décide peu.</h2>
+            <h2>Vous n'avez pas besoin de plus de chiffres.<br />Vous avez besoin de savoir lesquels regarder.</h2>
             <p>
-              Les chiffres existent déjà. Le vrai sujet est de faire ressortir ce qui
-              mérite votre attention maintenant — et ce qui peut attendre.
+              Les données sont déjà dans votre LGO. Pilot'Officine les trie, les met en perspective
+              et fait ressortir ce qui mérite votre attention maintenant et ce qui peut attendre.
             </p>
           </div>
           <div className="lp-value-grid">
