@@ -56,5 +56,6 @@ export default async (req) => {
 
 export const config = {
   path: '/api/account/reset-request',
+  region: 'fra',
   rateLimit: { windowLimit: 5, windowSize: 300, aggregateBy: ['ip', 'domain'] },
 };
