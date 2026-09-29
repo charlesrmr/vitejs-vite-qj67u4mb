@@ -728,14 +728,14 @@ export default function App() {
               />
               <Slot
                 label="Top produits"
-                hint="Produits, codes, quantités"
+                hint="Produits, codes, quantités · PDF accepté"
                 optional
                 file={files.produits}
                 onFile={sf('produits')}
               />
               <Slot
                 label="Etat du Stock"
-                hint="Valeur, quantités, dormants"
+                hint="Inventaire / stock · PDF accepté"
                 optional
                 file={files.stock}
                 onFile={sf('stock')}
