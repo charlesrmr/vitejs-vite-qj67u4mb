@@ -10,4 +10,4 @@ export default async (req) => {
   return json({ dossier: publicDossier(dossier) });
 };
 
-export const config = { path: '/api/dossier' };
+export const config = { path: '/api/dossier', region: 'fra' };
