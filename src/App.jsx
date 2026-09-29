@@ -321,7 +321,7 @@ function AccountStep({ profile, onChange, onSubmit, onDemo, saving, submitError,
   );
 }
 
-function LoginStep({ email, password, onEmail, onPassword, onSubmit, saving, error, onCreate }) {
+function LoginStep({ email, password, onEmail, onPassword, onSubmit, saving, error, onCreate, onForgot }) {
   return (
     <div className="account-page">
       <div className="login-shell">
@@ -335,7 +335,65 @@ function LoginStep({ email, password, onEmail, onPassword, onSubmit, saving, err
           </div>
           {error && <div className="account-error">{error}</div>}
           <button className="account-submit" type="submit" disabled={saving || !email || !password}>{saving ? 'Connexion...' : 'Se connecter →'}</button>
+          <button className="account-demo" type="button" onClick={onForgot}>Mot de passe oublié ?</button>
           <button className="account-demo" type="button" onClick={onCreate}>Créer un compte</button>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+
+function ForgotPasswordStep({ email, onEmail, onSubmit, onBack, saving, error, result }) {
+  return (
+    <div className="account-page">
+      <div className="login-shell">
+        <div className="account-kicker">Récupération</div>
+        <h1>Réinitialiser<br /><em>votre mot de passe.</em></h1>
+        <p>Entrez l'adresse email du compte. Par sécurité, Pilot'Officine ne confirme jamais si une adresse existe.</p>
+        <form className="account-card login-card" onSubmit={(e) => { e.preventDefault(); onSubmit(); }}>
+          <div className="account-grid">
+            <label className="full"><span>Email</span><input type="email" value={email} onChange={(e) => onEmail(e.target.value)} autoComplete="email" /></label>
+          </div>
+          {error && <div className="account-error">{error}</div>}
+          {result && (
+            <div className={result.deliveryAvailable ? 'settings-success' : 'account-error'}>
+              {result.deliveryAvailable
+                ? "Si cette adresse correspond à un compte, un lien valable 30 minutes vient d'être envoyé."
+                : "L'envoi automatique d'email n'est pas encore activé sur ce pilote. Contactez Pilot'Officine pour réinitialiser l'accès."}
+            </div>
+          )}
+          <button className="account-submit" type="submit" disabled={saving || !email}>
+            {saving ? 'Demande en cours...' : 'Envoyer le lien de réinitialisation'}
+          </button>
+          <button className="account-demo" type="button" onClick={onBack}>← Retour à la connexion</button>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+function ResetPasswordStep({ token, onSubmit, saving, error }) {
+  const [nextPassword, setNextPassword] = useState('');
+  const [confirm, setConfirm] = useState('');
+  const ready = nextPassword.length >= 8 && nextPassword === confirm && Boolean(token);
+
+  return (
+    <div className="account-page">
+      <div className="login-shell">
+        <div className="account-kicker">Nouveau mot de passe</div>
+        <h1>Choisissez un nouvel<br /><em>accès sécurisé.</em></h1>
+        <p>Le lien est à usage unique. Après validation, les anciennes sessions seront fermées.</p>
+        <form className="account-card login-card" onSubmit={(e) => { e.preventDefault(); if (ready) onSubmit(nextPassword); }}>
+          <div className="account-grid">
+            <label className="full"><span>Nouveau mot de passe</span><input type="password" value={nextPassword} onChange={(e) => setNextPassword(e.target.value)} autoComplete="new-password" /></label>
+            <label className="full"><span>Confirmer</span><input type="password" value={confirm} onChange={(e) => setConfirm(e.target.value)} autoComplete="new-password" /></label>
+          </div>
+          {nextPassword && confirm && nextPassword !== confirm && <div className="account-error">Les mots de passe ne correspondent pas.</div>}
+          {error && <div className="account-error">{error}</div>}
+          <button className="account-submit" type="submit" disabled={saving || !ready}>
+            {saving ? 'Mise à jour...' : 'Définir mon nouveau mot de passe →'}
+          </button>
         </form>
       </div>
     </div>
