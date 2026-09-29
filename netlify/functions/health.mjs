@@ -20,6 +20,9 @@ export default async (req) => {
       storage: 'ready',
       storageScope,
       adminConfigured: Boolean(process.env.PILOT_ADMIN_TOKEN),
+      notificationsConfigured: Boolean(process.env.RESEND_API_KEY && process.env.PILOT_EMAIL_FROM),
+      operatorNotificationConfigured: Boolean(process.env.PILOT_NOTIFY_TO),
+      publicUrlConfigured: Boolean(process.env.PILOT_PUBLIC_URL),
       checkedAt: new Date().toISOString(),
     });
   } catch {
@@ -28,6 +31,9 @@ export default async (req) => {
       service: 'PilotOfficine',
       storage: 'unavailable',
       adminConfigured: Boolean(process.env.PILOT_ADMIN_TOKEN),
+      notificationsConfigured: Boolean(process.env.RESEND_API_KEY && process.env.PILOT_EMAIL_FROM),
+      operatorNotificationConfigured: Boolean(process.env.PILOT_NOTIFY_TO),
+      publicUrlConfigured: Boolean(process.env.PILOT_PUBLIC_URL),
     }, 503);
   }
 };
