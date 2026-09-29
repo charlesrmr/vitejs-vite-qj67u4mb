@@ -33,6 +33,9 @@ export default async (req) => {
         await STORE.files(req).delete(fileChunkKey(dossier.id, file.uploadId, i));
       }
     }
+    if (dossier.report?.key) {
+      await STORE.files(req).delete(dossier.report.key);
+    }
     await STORE.dossiers(req).delete(dossierKey(dossier.id));
   }
 
