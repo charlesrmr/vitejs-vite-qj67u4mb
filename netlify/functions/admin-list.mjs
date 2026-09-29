@@ -14,18 +14,21 @@ export default async (req) => {
 
   dossiers.sort((a, b) => String(b.updatedAt).localeCompare(String(a.updatedAt)));
 
-  const configuredLimit = Number(process.env.PILOT_MAX_ACCOUNTS || 10);
-  const maxAccounts = Number.isFinite(configuredLimit)
+  const configuredLimit = Number(process.env.PILOT_MAX_FOUNDERS || 10);
+  const maxFounders = Number.isFinite(configuredLimit)
     ? Math.min(1000, Math.max(1, Math.floor(configuredLimit)))
     : 10;
-  const { blobs: accountBlobs } = await STORE.accounts(req).list({ prefix: 'account/' });
-  const accountCount = (accountBlobs || []).length;
+  const participantAccounts = new Set(
+    dossiers
+      .filter((d) => d?.accountId && d.status && d.status !== 'draft')
+      .map((d) => d.accountId)
+  );
 
   return json({
     capacity: {
-      accounts: accountCount,
-      max: maxAccounts,
-      remaining: Math.max(0, maxAccounts - accountCount),
+      participants: participantAccounts.size,
+      max: maxFounders,
+      remaining: Math.max(0, maxFounders - participantAccounts.size),
     },
     dossiers: dossiers.map((d) => ({
       id: d.id,
