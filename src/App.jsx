@@ -28,8 +28,10 @@ import {
   listMyDossiers,
   loginAccount,
   logoutAccount,
+  requestEmailVerification,
   requestPasswordReset,
   resetPassword,
+  verifyEmail,
   saveSessionToken,
   submitDossier,
   updateAccount,
@@ -782,6 +784,14 @@ export default function App() {
   const [resetToken] = useState(() => {
     try { return new URLSearchParams(window.location.search).get('reset') || ''; } catch { return ''; }
   });
+  const [verifyToken] = useState(() => {
+    try { return new URLSearchParams(window.location.search).get('verify') || ''; } catch { return ''; }
+  });
+  const [verificationSaving, setVerificationSaving] = useState(false);
+  const [verificationResult, setVerificationResult] = useState(null);
+  const [verifySaving, setVerifySaving] = useState(false);
+  const [verifyError, setVerifyError] = useState('');
+  const [verifySuccess, setVerifySuccess] = useState(false);
   const [resetSaving, setResetSaving] = useState(false);
   const [resetError, setResetError] = useState('');
   const [sessionToken, setSessionToken] = useState(() => getSessionToken());
@@ -805,7 +815,7 @@ export default function App() {
   const [files, setFiles] = useState({ ventes: null, produits: null, stock: null });
   const [parsedFiles, setParsedFiles] = useState({});
   const [mappings, setMappings] = useState({});
-  const [step, setStep] = useState(() => resetToken ? 'resetPassword' : 'landing');
+  const [step, setStep] = useState(() => verifyToken ? 'verifyEmail' : resetToken ? 'resetPassword' : 'landing');
   const [ls, setLs] = useState(0);
   const [data, setData] = useState(null);
   const [syn, setSyn] = useState('');
