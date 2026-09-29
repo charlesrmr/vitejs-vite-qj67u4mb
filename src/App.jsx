@@ -720,7 +720,6 @@ export default function App() {
   const [reviewSent, setReviewSent] = useState(false);
   const [patientDataConfirmed, setPatientDataConfirmed] = useState(false);
   const [reviewError, setReviewError] = useState('');
-  const [patientDataConfirmed, setPatientDataConfirmed] = useState(false);
   const [clientDossiers, setClientDossiers] = useState([]);
   const [portalLoading, setPortalLoading] = useState(false);
   const [portalError, setPortalError] = useState('');
