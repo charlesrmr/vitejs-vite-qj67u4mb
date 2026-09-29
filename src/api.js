@@ -159,3 +159,8 @@ export async function deleteDossier(token, dossierId) {
     body: { dossierId, confirm: 'SUPPRIMER' },
   });
 }
+
+
+export async function logoutAccount(token) {
+  return apiRequest('/api/account/logout', { method: 'POST', token, body: {} });
+}
