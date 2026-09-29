@@ -1016,3 +1016,15 @@
   .review-output { grid-template-columns: 1fr; }
   .review-actions { flex-direction: column-reverse; align-items: stretch; }
 }
+
+.account-error {
+  margin: 0 0 10px;
+  border: 1px solid rgba(225,29,72,.16);
+  background: #FFF1F3;
+  color: #BE123C;
+  border-radius: 9px;
+  padding: 9px 10px;
+  font-size: 9.5px;
+  line-height: 1.45;
+  text-align: left;
+}
