@@ -28,11 +28,18 @@ export default async (req) => {
   );
 
   if (account && deliveryAvailable) {
+    const { blobs } = await STORE.resets(req).list({ prefix: 'reset/' });
+    for (const blob of blobs) {
+      const previous = await STORE.resets(req).get(blob.key, { type: 'json', consistency: 'strong' });
+      if (previous?.accountId === account.id) await STORE.resets(req).delete(blob.key);
+    }
+
     const token = newToken();
     const tokenHash = sha256(token);
     const expiresAt = new Date(Date.now() + 30 * 60 * 1000).toISOString();
+    const resetKey = `reset/${tokenHash}.json`;
 
-    await STORE.resets(req).setJSON(`reset/${tokenHash}.json`, {
+    await STORE.resets(req).setJSON(resetKey, {
       accountKey,
       accountId: account.id,
       email,
@@ -40,7 +47,8 @@ export default async (req) => {
       expiresAt,
     });
 
-    await sendPilotEmail(passwordResetEmail(account, token));
+    const delivery = await sendPilotEmail(passwordResetEmail(account, token));
+    if (!delivery.sent) await STORE.resets(req).delete(resetKey);
   }
 
   return json({ ok: true, deliveryAvailable });
