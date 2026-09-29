@@ -23,6 +23,9 @@ export default async (req) => {
       notificationsConfigured: Boolean(process.env.RESEND_API_KEY && process.env.PILOT_EMAIL_FROM),
       operatorNotificationConfigured: Boolean(process.env.PILOT_NOTIFY_TO),
       publicUrlConfigured: Boolean(process.env.PILOT_PUBLIC_URL),
+      environment: process.env.CONTEXT || null,
+      commitRef: process.env.COMMIT_REF || null,
+      deployId: process.env.DEPLOY_ID || null,
       checkedAt: new Date().toISOString(),
     });
   } catch {
@@ -34,6 +37,9 @@ export default async (req) => {
       notificationsConfigured: Boolean(process.env.RESEND_API_KEY && process.env.PILOT_EMAIL_FROM),
       operatorNotificationConfigured: Boolean(process.env.PILOT_NOTIFY_TO),
       publicUrlConfigured: Boolean(process.env.PILOT_PUBLIC_URL),
+      environment: process.env.CONTEXT || null,
+      commitRef: process.env.COMMIT_REF || null,
+      deployId: process.env.DEPLOY_ID || null,
     }, 503);
   }
 };
