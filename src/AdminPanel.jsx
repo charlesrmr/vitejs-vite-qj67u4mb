@@ -563,15 +563,15 @@ export default function AdminPanel() {
                   </div>
                 </div>
                 {[
-                  ['Stockage privé', health?.storage === 'ready'],
-                  ['Accès administrateur', health?.adminConfigured],
-                  ['Emails transactionnels', health?.notificationsConfigured],
-                  ['Notification opérateur', health?.operatorNotificationConfigured],
-                  ['URL publique', health?.publicUrlConfigured],
-                ].map(([label, ready]) => (
+                  ['Stockage privé', health?.storage === 'ready', null],
+                  ['Accès administrateur', health?.adminConfigured, null],
+                  ['Emails transactionnels', health?.emailDeliveryEnabled, health?.notificationsConfigured && !health?.emailDeliveryEnabled ? 'Désactivés ici' : null],
+                  ['Notification opérateur', health?.operatorNotificationConfigured, null],
+                  ['URL publique', health?.publicUrlConfigured, null],
+                ].map(([label, ready, note]) => (
                   <div className="adm-readiness-row" key={label}>
                     <span>{label}</span>
-                    <strong className={ready ? 'ready' : 'missing'}>{ready ? 'Prêt' : 'À configurer'}</strong>
+                    <strong className={ready ? 'ready' : 'missing'}>{ready ? 'Prêt' : note || 'À configurer'}</strong>
                   </div>
                 ))}
                 <small>
