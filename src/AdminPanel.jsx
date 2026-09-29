@@ -210,6 +210,7 @@ export default function AdminPanel() {
   });
   const [inputToken, setInputToken] = useState(token);
   const [dossiers, setDossiers] = useState([]);
+  const [capacity, setCapacity] = useState(null);
   const [selected, setSelected] = useState(null);
   const [review, setReview] = useState(blankReview());
   const [loading, setLoading] = useState(false);
@@ -257,6 +258,7 @@ export default function AdminPanel() {
     try {
       const data = await adminFetch('/api/admin/dossiers', activeToken);
       setDossiers(data.dossiers || []);
+      setCapacity(data.capacity || null);
     } catch (err) {
       setError(err.message);
       setDossiers([]);
@@ -286,6 +288,7 @@ export default function AdminPanel() {
       sessionStorage.setItem('pilot_admin_token', inputToken);
       setToken(inputToken);
       setDossiers(data.dossiers || []);
+      setCapacity(data.capacity || null);
     } catch (err) {
       setError(err.message);
     }
@@ -508,7 +511,10 @@ export default function AdminPanel() {
       <div className="adm-layout">
         <aside className="adm-sidebar">
           <div className="adm-side-head">
-            <div><span>DOSSIERS</span><b>{visible.length}</b></div>
+            <div>
+              <span>DOSSIERS</span><b>{visible.length}</b>
+              {capacity && <small>{capacity.remaining} place{capacity.remaining > 1 ? 's' : ''} fondatrice{capacity.remaining > 1 ? 's' : ''} restante{capacity.remaining > 1 ? 's' : ''}</small>}
+            </div>
             <select value={filter} onChange={(e) => setFilter(e.target.value)}>
               <option value="all">Tous</option>
               <option value="submitted">À relire</option>
