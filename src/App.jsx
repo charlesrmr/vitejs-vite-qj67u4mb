@@ -297,7 +297,7 @@ function AccountStep({ profile, onChange, onSubmit, onDemo, saving, submitError,
               checked={profile.consent}
               onChange={(e) => onChange('consent', e.target.checked)}
             />
-            <span>J'accepte que ces informations soient utilisées pour traiter ma demande de diagnostic et me recontacter à ce sujet.</span>
+            <span>J'accepte que ces informations soient utilisées pour traiter ma demande de diagnostic et me recontacter à ce sujet. <a href="/confidentialite.html" target="_blank" rel="noreferrer">Voir la notice de confidentialité</a>.</span>
           </label>
 
           {submitError && <div className="account-error">{submitError}</div>}
@@ -2187,7 +2187,7 @@ export default function App() {
       )}
 
       <footer className="ft">
-        pilot officine - crc pharma - beta 1.0 - charlesromier@gmail.com
+        pilot officine · crc pharma · pilote · charlesromier@gmail.com · <a href="/confidentialite.html">confidentialité</a>
       </footer>
     </div>
   );
