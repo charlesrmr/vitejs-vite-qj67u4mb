@@ -491,6 +491,11 @@ function buildLocalSynthesis(data) {
     const sign = data.activity.latestVsPreviousPct >= 0 ? '+' : ''
     parts.push(`Entre les deux derniers mois suffisamment renseignés, le CA moyen par jour actif évolue de ${sign}${data.activity.latestVsPreviousPct}%.`)
   }
+  if (data.familles?.length) {
+    const first = data.familles[0]
+    const top3 = data.familles.slice(0, 3).reduce((sum, item) => sum + (Number(item.pct_ca) || 0), 0)
+    parts.push(`La première famille est ${first.nom} avec ${first.pct_ca ?? 'N/D'}% du CA ventilé ; les 3 premières familles représentent ${Math.round(top3 * 10) / 10}% du CA ventilé.`)
+  }
   if (Number.isFinite(data.marge_pct)) {
     parts.push(`La marge brute calculée sur l'ensemble des lignes exploitables est de ${data.marge_pct}% (${eur(data.marge_eur)}).`)
   } else {
