@@ -19,7 +19,17 @@ export default async (req) => {
 
   if (drafts.length) {
     drafts.sort((a, b) => String(b.updatedAt).localeCompare(String(a.updatedAt)));
-    return json({ ok: true, dossier: drafts[0], reused: true });
+    const latest = drafts[0];
+    const hasFiles = Object.values(latest.files || {}).some((file) => file?.complete);
+
+    if (!hasFiles) {
+      return json({ ok: true, dossier: latest, reused: true });
+    }
+
+    return json({
+      error: 'Un brouillon avec des fichiers existe déjà. Supprimez-le depuis votre espace avant de créer un nouveau diagnostic.',
+      existingDraftId: latest.id,
+    }, 409);
   }
 
   const dossier = {
