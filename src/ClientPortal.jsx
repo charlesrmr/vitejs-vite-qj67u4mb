@@ -108,6 +108,9 @@ export function AccountSettings({
   onSaveProfile,
   onChangePassword,
   onDeleteAccount,
+  onRequestVerification,
+  verificationSaving,
+  verificationResult,
 }) {
   const [form, setForm] = useState(account?.profile || {});
   const [currentPassword, setCurrentPassword] = useState('');
@@ -173,6 +176,40 @@ export function AccountSettings({
               <button className="primary" type="submit" disabled={saving}>{saving ? 'Enregistrement...' : 'Enregistrer mes informations'}</button>
             </div>
           </form>
+        </section>
+
+        <section className="settings-card">
+          <div className="settings-card-head">
+            <span>EMAIL</span>
+            <h2>Vérification de l'adresse</h2>
+            <p>La vérification confirme que l'adresse email du compte vous appartient.</p>
+          </div>
+          <div className="email-verification-row">
+            <div>
+              <b>{account?.profile?.email}</b>
+              <span className={account?.emailVerifiedAt ? 'verified' : 'unverified'}>
+                {account?.emailVerifiedAt
+                  ? 'Adresse vérifiée · ' + new Date(account.emailVerifiedAt).toLocaleDateString('fr-FR')
+                  : 'Adresse non vérifiée'}
+              </span>
+            </div>
+            {!account?.emailVerifiedAt && (
+              <button type="button" onClick={onRequestVerification} disabled={verificationSaving}>
+                {verificationSaving ? 'Envoi...' : 'Envoyer le lien de vérification'}
+              </button>
+            )}
+          </div>
+          {verificationResult && (
+            <div className={verificationResult.sent || verificationResult.alreadyVerified ? 'settings-success compact' : 'settings-inline-info'}>
+              {verificationResult.alreadyVerified
+                ? 'Cette adresse est déjà vérifiée.'
+                : verificationResult.deliveryAvailable === false
+                ? "L'email transactionnel n'est pas encore configuré sur ce pilote."
+                : verificationResult.sent
+                ? 'Lien de vérification envoyé. Il reste valable 24 heures.'
+                : "Le lien n'a pas pu être envoyé. Réessayez plus tard."}
+            </div>
+          )}
         </section>
 
         <section className="settings-card">
