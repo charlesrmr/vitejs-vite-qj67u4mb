@@ -151,6 +151,139 @@ function Slot({ label, hint, optional, file, onFile }) {
   );
 }
 
+
+const EMPTY_PROFILE = {
+  firstName: '',
+  lastName: '',
+  email: '',
+  phone: '',
+  pharmacyName: '',
+  address: '',
+  postalCode: '',
+  city: '',
+  lgo: '',
+  role: 'Titulaire',
+  teamSize: '',
+  context: '',
+  consent: false,
+};
+
+function AccountStep({ profile, onChange, onSubmit, onDemo }) {
+  const requiredReady = Boolean(
+    profile.firstName.trim() &&
+    profile.lastName.trim() &&
+    profile.email.trim() &&
+    profile.phone.trim() &&
+    profile.pharmacyName.trim() &&
+    profile.address.trim() &&
+    profile.postalCode.trim() &&
+    profile.city.trim() &&
+    profile.lgo.trim() &&
+    profile.consent
+  );
+
+  const field = (key) => ({
+    value: profile[key],
+    onChange: (e) => onChange(key, e.target.value),
+  });
+
+  return (
+    <div className="account-page">
+      <div className="account-shell">
+        <div className="account-copy">
+          <div className="account-kicker">Étape 1 · Votre officine</div>
+          <h1>Créons votre compte<br /><em>Pilot'Officine.</em></h1>
+          <p>
+            Ces informations servent à identifier votre dossier, préparer la relecture
+            et vous restituer le diagnostic de votre officine.
+          </p>
+
+          <div className="account-promise">
+            <div><b>01</b><span>Vos coordonnées</span><small>pour identifier et restituer le dossier</small></div>
+            <div><b>02</b><span>Vos exports LGO</span><small>pour produire la pré-analyse</small></div>
+            <div><b>03</b><span>Relecture Pilot'Officine</span><small>avant le diagnostic PDF final</small></div>
+          </div>
+        </div>
+
+        <form className="account-card" onSubmit={(e) => { e.preventDefault(); if (requiredReady) onSubmit(); }}>
+          <div className="account-card-head">
+            <span>COMPTE PILOTE</span>
+            <strong>Vous et votre pharmacie</strong>
+            <p>Quelques informations suffisent. Les champs marqués * sont nécessaires au dossier.</p>
+          </div>
+
+          <div className="account-grid">
+            <label><span>Prénom *</span><input {...field('firstName')} autoComplete="given-name" placeholder="Claire" /></label>
+            <label><span>Nom *</span><input {...field('lastName')} autoComplete="family-name" placeholder="Bernardy" /></label>
+            <label><span>Email *</span><input {...field('email')} type="email" autoComplete="email" placeholder="vous@pharmacie.fr" /></label>
+            <label><span>Téléphone *</span><input {...field('phone')} type="tel" autoComplete="tel" placeholder="06 00 00 00 00" /></label>
+            <label className="full"><span>Nom de la pharmacie *</span><input {...field('pharmacyName')} placeholder="Pharmacie des Jardins" /></label>
+            <label className="full"><span>Adresse de l'officine *</span><input {...field('address')} autoComplete="street-address" placeholder="2 rue des Jardins" /></label>
+            <label><span>Code postal *</span><input {...field('postalCode')} autoComplete="postal-code" placeholder="57000" /></label>
+            <label><span>Ville *</span><input {...field('city')} autoComplete="address-level2" placeholder="Metz" /></label>
+
+            <label>
+              <span>LGO *</span>
+              <select {...field('lgo')}>
+                <option value="">Sélectionner</option>
+                <option>Winpharma</option>
+                <option>LGPI / id.</option>
+                <option>Smart RX</option>
+                <option>LEO</option>
+                <option>Pharmaland</option>
+                <option>Caduciel</option>
+                <option>Autre</option>
+              </select>
+            </label>
+            <label>
+              <span>Votre rôle</span>
+              <select {...field('role')}>
+                <option>Titulaire</option>
+                <option>Cotitulaire</option>
+                <option>Pharmacien adjoint</option>
+                <option>Responsable / manager</option>
+                <option>Autre</option>
+              </select>
+            </label>
+            <label className="full">
+              <span>Taille de l'équipe <small>optionnel</small></span>
+              <select {...field('teamSize')}>
+                <option value="">Non renseigné</option>
+                <option>1 à 3 personnes</option>
+                <option>4 à 6 personnes</option>
+                <option>7 à 10 personnes</option>
+                <option>11 personnes et +</option>
+              </select>
+            </label>
+            <label className="full">
+              <span>Un contexte à connaître ? <small>optionnel</small></span>
+              <textarea {...field('context')} rows="3" placeholder="Transfert récent, recrutement, tension de trésorerie, objectif particulier..." />
+            </label>
+          </div>
+
+          <label className="account-consent">
+            <input
+              type="checkbox"
+              checked={profile.consent}
+              onChange={(e) => onChange('consent', e.target.checked)}
+            />
+            <span>J'accepte que ces informations soient utilisées pour traiter ma demande de diagnostic et me recontacter à ce sujet.</span>
+          </label>
+
+          <button className="account-submit" type="submit" disabled={!requiredReady}>
+            Continuer vers mes exports →
+          </button>
+          <button className="account-demo" type="button" onClick={onDemo}>Voir la démonstration sans créer de compte</button>
+
+          <div className="account-foot">
+            Aucune donnée patient n'est demandée. En phase pilote, ce formulaire prépare votre dossier avant l'activation du stockage sécurisé côté serveur.
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
 function PB({ pct, color }) {
   return (
     <div className="pb">
