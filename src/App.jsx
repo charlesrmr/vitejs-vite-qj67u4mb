@@ -1845,6 +1845,42 @@ export default function App() {
 
             {tab === 'analyse' && (
               <>
+                {!data.isDemo && data.activity?.monthly?.length > 0 && (
+                  <>
+                    <SH label="Activité dans le temps" />
+                    <div className="g2 fu">
+                      <div className="cc">
+                        <div className="cc-t">CA moyen par jour présent dans l'export</div>
+                        <ResponsiveContainer width="100%" height={220}>
+                          <BarChart
+                            data={data.activity.monthly}
+                            margin={{ top: 6, right: 8, left: -8, bottom: 0 }}
+                          >
+                            <CartesianGrid strokeDasharray="3 3" stroke={C.border} />
+                            <XAxis dataKey="key" tick={{ fontSize: 10, fill: C.t4 }} />
+                            <YAxis tick={{ fontSize: 10, fill: C.t4 }} />
+                            <Tooltip
+                              formatter={(value) => eur(value)}
+                              labelFormatter={(label) => `Mois ${label}`}
+                            />
+                            <Bar dataKey="dailyCaAvg" name="CA moyen / jour" fill={C.violet} radius={[4, 4, 0, 0]} />
+                          </BarChart>
+                        </ResponsiveContainer>
+                      </div>
+                      <div className="analysis-signal-card">
+                        <span>LECTURE DESCRIPTIVE</span>
+                        <strong>{eur(data.activity.dailyCaAvg)} / jour présent</strong>
+                        <p>
+                          Calculé sur {num(data.activity.days)} jour(s) contenus dans le fichier.
+                          {Number.isFinite(data.activity.latestVsPreviousPct)
+                            ? ` Entre les deux derniers mois exploitables, le CA moyen/jour évolue de ${data.activity.latestVsPreviousPct >= 0 ? '+' : ''}${data.activity.latestVsPreviousPct}%.`
+                            : ' Une comparaison mensuelle fiable nécessite au moins deux mois suffisamment renseignés.'}
+                        </p>
+                        <small>Ce signal décrit le fichier importé ; il ne constitue pas un benchmark sectoriel.</small>
+                      </div>
+                    </div>
+                  </>
+                )}
                 {!data.chart.length && !data.familles.length ? (
                   <div className="analysis-empty fu">
                     <div className="analysis-empty-copy">
