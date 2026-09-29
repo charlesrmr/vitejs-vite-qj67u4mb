@@ -322,6 +322,12 @@ export default function AdminPanel() {
     () => dossiers.filter((d) => filter === 'all' || d.status === filter),
     [dossiers, filter]
   );
+  const reviewReady = Boolean(
+    review.executiveSummary.trim().length >= 20 &&
+    review.findings.filter((x) => x.title || x.body).length >= 1 &&
+    review.priorities.filter((x) => x.title || x.body).length >= 3 &&
+    review.actions.filter((x) => x.title || x.body).length >= 1
+  );
 
   if (!token) {
     return (
@@ -394,7 +400,7 @@ export default function AdminPanel() {
                 </div>
                 <div className="adm-dossier-head-actions">
                   <button onClick={() => save('in_review')} disabled={saving}>Enregistrer</button>
-                  <button className="primary" onClick={() => save('reviewed')} disabled={saving}>Valider le diagnostic</button>
+                  <button className="primary" onClick={() => save('reviewed')} disabled={saving || !reviewReady}>Valider le diagnostic</button>
                 </div>
               </div>
 
@@ -456,9 +462,13 @@ export default function AdminPanel() {
                   <label><span>Notes privées · jamais dans le PDF</span><textarea rows="5" value={review.privateNotes} onChange={(e) => setReview((p) => ({ ...p, privateNotes: e.target.value }))} /></label>
                 </div>
 
+                <div className={`adm-quality-gate${reviewReady ? ' ready' : ''}`}>
+                  <span>{reviewReady ? 'Prêt à valider' : 'Validation incomplète'}</span>
+                  <small>Synthèse · ≥1 constat · 3 priorités · ≥1 action</small>
+                </div>
                 <div className="adm-review-actions">
                   <button onClick={() => save('in_review')} disabled={saving}>{saving ? 'Enregistrement...' : 'Enregistrer le brouillon'}</button>
-                  <button className="primary" onClick={() => save('reviewed')} disabled={saving}>Valider le diagnostic</button>
+                  <button className="primary" onClick={() => save('reviewed')} disabled={saving || !reviewReady}>Valider le diagnostic</button>
                   {selected.status === 'reviewed' && <button className="print" onClick={() => window.print()}>Imprimer / enregistrer le PDF</button>}
                 </div>
               </section>
