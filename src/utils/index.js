@@ -477,6 +477,9 @@ function buildLocalSynthesis(data) {
     const caLabel = Number.isFinite(data.ca_ttc) ? 'CA TTC' : (Number.isFinite(data.ca_ht) ? 'CA HT' : "chiffre d'affaires")
     parts.push(`Le ${caLabel} analysé est de ${eur(data.ca)}.`)
   }
+  if (Number.isFinite(data.activity?.dailyCaAvg) && Number.isFinite(data.activity?.days)) {
+    parts.push(`Le CA moyen est de ${eur(data.activity.dailyCaAvg)} par jour présent dans l'export, sur ${data.activity.days} jour(s) exploitable(s).`)
+  }
   if (Number.isFinite(data.marge_pct)) {
     parts.push(`La marge brute calculée sur l'ensemble des lignes exploitables est de ${data.marge_pct}% (${eur(data.marge_eur)}).`)
   } else {
@@ -486,9 +489,9 @@ function buildLocalSynthesis(data) {
   else parts.push("Aucun stock valorisé exploitable n'a été fourni.")
 
   if (Number.isFinite(data.dormants)) {
-    parts.push(`${data.dormants} référence(s) en stock n'ont pas de vente correspondante dans la période analysée.`)
+    parts.push(`${data.dormants} référence(s) en stock n'ont pas de vente correspondante dans la période importée. Ce signal ne suffit pas, à lui seul, à qualifier un produit de dormant.`)
   } else {
-    parts.push("Les produits dormants nécessitent un rapprochement exploitable entre ventes et stock.")
+    parts.push("L'identification des références en stock sans vente nécessite un rapprochement exploitable entre ventes et stock.")
   }
 
   parts.push("Cette synthèse est calculée uniquement à partir des fichiers importés ; aucune donnée de démonstration n'est utilisée.")
@@ -677,7 +680,27 @@ export function buildFromFiles(filesMap, columnMappings = {}) {
   data.ca_ttc = caTtc > 0 ? Math.round(caTtc) : null
   data.marge_pct = margePct === null ? null : Math.round(margePct * 10) / 10
   data.marge_eur = margeEur === null ? null : Math.round(margeEur)
-  data.top10 = products
+  const quantities = products
+    .map((product) => product.quantite)
+    .filter((value) => Number.isFinite(value) && value >= 0)
+    .sort((a, b) => b - a)
+
+  let anomalousQuantity = null
+  if (quantities.length >= 2) {
+    const [largest, second] = quantities
+    if (largest > 1_000_000 && largest > Math.max(second * 1000, 1_000_000)) {
+      anomalousQuantity = largest
+      data.qualityWarnings.push(
+        `Quantité aberrante détectée (${num(largest)}). La ligne est exclue du classement produits mais conservée pour le contrôle de cohérence.`
+      )
+    }
+  }
+
+  const rankableProducts = anomalousQuantity === null
+    ? products
+    : products.filter((product) => product.quantite !== anomalousQuantity)
+
+  data.top10 = [...rankableProducts]
     .sort((a, b) => {
       const aValue = Number.isFinite(a.ca) ? a.ca : (a.quantite || 0)
       const bValue = Number.isFinite(b.ca) ? b.ca : (b.quantite || 0)
@@ -685,19 +708,6 @@ export function buildFromFiles(filesMap, columnMappings = {}) {
     })
     .slice(0, 10)
     .map(({ key, ...product }) => product)
-
-  const quantities = products
-    .map((product) => product.quantite)
-    .filter((value) => Number.isFinite(value) && value >= 0)
-    .sort((a, b) => b - a)
-  if (quantities.length >= 2) {
-    const [largest, second] = quantities
-    if (largest > 1_000_000 && largest > Math.max(second * 1000, 1_000_000)) {
-      data.qualityWarnings.push(
-        `Quantité aberrante détectée (${num(largest)}). Vérifiez l'export source avant d'interpréter les volumes produits.`
-      )
-    }
-  }
 
   data.familles = caDisplayCol
     ? buildFamilies(
@@ -775,11 +785,18 @@ export function buildFromFiles(filesMap, columnMappings = {}) {
       body: warning,
     })
   })
+  if (Number.isFinite(data.activity?.dailyCaAvg) && Number.isFinite(data.activity?.days)) {
+    data.alerts.push({
+      type: 'b',
+      title: `CA moyen / jour présent : ${eur(data.activity.dailyCaAvg)}`,
+      body: `Calcul descriptif sur ${data.activity.days} jour(s) contenus dans l'export ; ce n'est pas un benchmark de performance.`,
+    })
+  }
   if (data.marge_pct !== null) {
     data.alerts.push({
-      type: data.marge_pct < 28 ? 'a' : 'g',
+      type: 'b',
       title: `Marge calculée : ${data.marge_pct}%`,
-      body: "Calcul réalisé sur les lignes exploitables de l'export d'activité.",
+      body: "Calcul réalisé sur les lignes exploitables de l'export d'activité, sans comparaison à une norme externe.",
     })
   }
   if (data.stock_eur !== null) {
@@ -791,9 +808,9 @@ export function buildFromFiles(filesMap, columnMappings = {}) {
   }
   if (data.dormants !== null) {
     data.alerts.push({
-      type: data.dormants > 0 ? 'a' : 'g',
-      title: `${data.dormants} produit(s) dormant(s) détecté(s)`,
-      body: 'Rapprochement entre les références du stock et les ventes de la période importée.',
+      type: 'b',
+      title: `${data.dormants} référence(s) en stock sans vente sur la période`,
+      body: "Signal de rapprochement stock/ventes. Il doit être qualifié avant d'être interprété comme dormance réelle.",
     })
   }
 
