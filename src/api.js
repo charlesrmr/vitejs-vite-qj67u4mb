@@ -164,3 +164,28 @@ export async function deleteDossier(token, dossierId) {
 export async function logoutAccount(token) {
   return apiRequest('/api/account/logout', { method: 'POST', token, body: {} });
 }
+
+
+export async function updateAccount(token, profile) {
+  return apiRequest('/api/account/update', {
+    method: 'POST',
+    token,
+    body: { profile },
+  });
+}
+
+export async function changePassword(token, currentPassword, newPassword) {
+  return apiRequest('/api/account/password', {
+    method: 'POST',
+    token,
+    body: { currentPassword, newPassword },
+  });
+}
+
+export async function deleteAccount(token, password) {
+  return apiRequest('/api/account/delete', {
+    method: 'POST',
+    token,
+    body: { password, confirm: 'SUPPRIMER MON COMPTE' },
+  });
+}
