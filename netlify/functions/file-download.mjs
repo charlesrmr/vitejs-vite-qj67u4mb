@@ -54,6 +54,9 @@ export default async (req) => {
       'content-type': meta.contentType || 'application/octet-stream',
       'content-disposition': disposition(meta.fileName),
       'cache-control': 'private, no-store',
+      'x-content-type-options': 'nosniff',
+      'content-security-policy': "default-src 'none'; sandbox",
+      'referrer-policy': 'no-referrer',
     },
   });
 };
