@@ -664,7 +664,7 @@ function Landing({ onStart, onDemo }) {
         <div className="lp-shell">
           <div className="lp-product-head">
             <div>
-              <span>Le produit, pour de vrai</span>
+              <span>Le produit, en situation</span>
               <h2>Une pré-analyse rapide.<br />Un diagnostic relu.</h2>
             </div>
           </div>
@@ -673,7 +673,7 @@ function Landing({ onStart, onDemo }) {
             <div className="lp-product-bar">
               <div className="lp-product-brand"><i>P</i><span>Pilot'Officine</span></div>
               <div className="lp-product-meta">{DEMO.officine} · {DEMO.periode} · {DEMO.lgo}</div>
-              <button onClick={onDemo}>Ouvrir le vrai dashboard →</button>
+              <button onClick={onDemo}>Ouvrir la démonstration →</button>
             </div>
 
             <div className="lp-product-tabs">
