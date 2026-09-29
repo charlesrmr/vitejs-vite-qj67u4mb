@@ -22,4 +22,4 @@ export default async (req) => {
   return json({ ok: true, dossier }, 201);
 };
 
-export const config = { path: '/api/dossier/create', region: 'fra' };
+export const config = { path: '/api/dossier/create' };
