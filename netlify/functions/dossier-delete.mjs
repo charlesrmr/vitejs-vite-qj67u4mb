@@ -33,4 +33,4 @@ export default async (req) => {
   return json({ ok: true });
 };
 
-export const config = { path: '/api/dossier/delete', region: 'fra' };
+export const config = { path: '/api/dossier/delete' };
