@@ -5,10 +5,10 @@ export default async (req) => {
   const auth = await requireUser(req);
   if (auth.error) return auth.error;
 
-  const { blobs } = await STORE.dossiers().list({ prefix: 'dossier/' });
+  const { blobs } = await STORE.dossiers(req).list({ prefix: 'dossier/' });
   const dossiers = [];
   for (const blob of blobs) {
-    const item = await STORE.dossiers().get(blob.key, { type: 'json', consistency: 'strong' });
+    const item = await STORE.dossiers(req).get(blob.key, { type: 'json', consistency: 'strong' });
     if (item?.accountId === auth.account.id) dossiers.push(item);
   }
   dossiers.sort((a, b) => String(b.updatedAt).localeCompare(String(a.updatedAt)));
