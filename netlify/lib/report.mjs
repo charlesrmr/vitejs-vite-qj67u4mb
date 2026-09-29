@@ -16,12 +16,11 @@ const C = {
 function safe(value) {
   return String(value ?? '')
     .replace(/[–—]/g, '-')
-    .replace(/[’]/g, "'")
+    .replace(/[’‘]/g, "'")
+    .replace(/[“”]/g, '"')
     .replace(/…/g, '...')
     .replace(/€/g, ' EUR')
-    .normalize('NFKD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/[^\x20-\x7E]/g, '?');
+    .replace(/[^\x20-\x7E\xA0-\xFF]/g, '?');
 }
 
 function money(value) {
@@ -114,14 +113,14 @@ export async function buildReviewedPdf(dossier) {
     });
 
     page.drawRectangle({ x: MARGIN, y: 230, width: 58, height: 3, color: C.violet });
-    page.drawText('Des chiffres aux priorites.', {
+    page.drawText('Des chiffres aux priorités.', {
       x: MARGIN,
       y: 185,
       size: 21,
       font: bold,
       color: C.white,
     });
-    page.drawText('Pre-analyse automatisee · Relecture humaine · Restitution validee', {
+    page.drawText('Pré-analyse automatisée · Relecture humaine · Restitution validée', {
       x: MARGIN,
       y: 162,
       size: 9.5,
@@ -245,29 +244,29 @@ export async function buildReviewedPdf(dossier) {
     y -= boxHeight + 26;
   }
 
-  sectionTitle('Synthese dirigeant', "Ce qu'il faut retenir");
-  paragraph(review.executiveSummary || 'Synthese en cours de finalisation.');
+  sectionTitle('Synthèse dirigeant', "Ce qu'il faut retenir");
+  paragraph(review.executiveSummary || 'Synthèse en cours de finalisation.');
 
-  sectionTitle('Constats', 'Ce que montrent les donnees');
+  sectionTitle('Constats', 'Ce que montrent les données');
   itemList(review.findings || []);
 
-  sectionTitle('Priorites', 'Les 3 sujets a traiter maintenant');
+  sectionTitle('Priorités', 'Les 3 sujets à traiter maintenant');
   itemList(review.priorities || []);
 
-  sectionTitle('Plan 30 jours', "Passer des constats a l'action");
+  sectionTitle('Plan 30 jours', "Passer des constats à l'action");
   itemList(review.actions || []);
 
   if (review.missingData) {
-    sectionTitle('Pour aller plus loin', 'Donnees a completer');
+    sectionTitle('Pour aller plus loin', 'Données à compléter');
     paragraph(review.missingData);
   }
 
   // Data quality appendix when relevant
   if (analysis.qualityWarnings?.length) {
-    sectionTitle('Perimetre de lecture', 'Points de vigilance sur les donnees');
+    sectionTitle('Périmètre de lecture', 'Points de vigilance sur les données');
     itemList(
       analysis.qualityWarnings.slice(0, 8).map((warning) => ({
-        title: 'Controle de qualite',
+        title: 'Contrôle de qualité',
         body: warning,
       }))
     );
