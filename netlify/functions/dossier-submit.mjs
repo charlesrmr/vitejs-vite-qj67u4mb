@@ -17,8 +17,12 @@ export default async (req) => {
 
   const dossier = await getOwnedDossier(body?.dossierId, auth.account.id, req);
   if (!dossier) return json({ error: 'Dossier introuvable.' }, 404);
+  if (body?.patientDataConfirmed !== true) {
+    return json({ error: 'Confirmez que les fichiers ne contiennent aucune donnée nominative patient.' }, 400);
+  }
 
   dossier.analysis = cleanAnalysis(body?.analysis || {});
+  dossier.privacyConfirmedAt = nowIso();
   dossier.status = 'submitted';
   dossier.submittedAt = nowIso();
   await saveDossier(dossier, req);
