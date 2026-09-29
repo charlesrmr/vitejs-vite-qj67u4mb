@@ -1,7 +1,7 @@
 import {
   STORE, createSession, hashPassword, json, newId, normalizeEmail,
   nowIso, publicAccount, sanitizeProfile, sha256, validateProfile,
-} from './_pilot.mjs';
+} from '../lib/pilot.mjs';
 
 export default async (req) => {
   if (req.method !== 'POST') return json({ error: 'Méthode non autorisée.' }, 405);
