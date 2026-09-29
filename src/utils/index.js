@@ -823,8 +823,7 @@ export function buildFromFiles(filesMap, columnMappings = {}) {
       productCols.caHt ||
       productCols.caTtc ||
       productCols.ca ||
-      productCols.margeEur ||
-      productCols.margePct
+      productCols.margeEur
     )
 
     if (productCols.produit && hasProductRankingMetric) {
