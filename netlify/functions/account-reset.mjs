@@ -43,7 +43,12 @@ export default async (req) => {
     if (session?.accountId === account.id) await STORE.sessions(req).delete(blob.key);
   }
 
-  await STORE.resets(req).delete(key);
+  const { blobs: resetBlobs } = await STORE.resets(req).list({ prefix: 'reset/' });
+  for (const blob of resetBlobs) {
+    const item = await STORE.resets(req).get(blob.key, { type: 'json', consistency: 'strong' });
+    if (item?.accountId === account.id) await STORE.resets(req).delete(blob.key);
+  }
+
   const session = await createSession(account, req);
 
   return json({
