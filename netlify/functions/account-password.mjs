@@ -31,6 +31,12 @@ export default async (req) => {
   auth.account.updatedAt = new Date().toISOString();
   await STORE.accounts(req).setJSON(auth.account.key, auth.account);
 
+  const { blobs: resetBlobs } = await STORE.resets(req).list({ prefix: 'reset/' });
+  for (const blob of resetBlobs) {
+    const reset = await STORE.resets(req).get(blob.key, { type: 'json', consistency: 'strong' });
+    if (reset?.accountId === auth.account.id) await STORE.resets(req).delete(blob.key);
+  }
+
   const { blobs } = await STORE.sessions(req).list({ prefix: 'session/' });
   for (const blob of blobs) {
     const session = await STORE.sessions(req).get(blob.key, { type: 'json', consistency: 'strong' });
