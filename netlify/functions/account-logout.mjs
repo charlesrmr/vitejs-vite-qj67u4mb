@@ -9,4 +9,4 @@ export default async (req) => {
   return json({ ok: true });
 };
 
-export const config = { path: '/api/account/logout', region: 'fra' };
+export const config = { path: '/api/account/logout' };
