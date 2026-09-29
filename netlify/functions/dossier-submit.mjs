@@ -28,6 +28,30 @@ export default async (req) => {
     return json({ error: 'Confirmez que les fichiers ne contiennent aucune donnée nominative patient.' }, 400);
   }
 
+  const configuredLimit = Number(process.env.PILOT_MAX_FOUNDERS || 10);
+  const maxFounders = Number.isFinite(configuredLimit)
+    ? Math.min(1000, Math.max(1, Math.floor(configuredLimit)))
+    : 10;
+
+  const { blobs } = await STORE.dossiers(req).list({ prefix: 'dossier/' });
+  const participantAccounts = new Set();
+  for (const blob of blobs || []) {
+    const item = await STORE.dossiers(req).get(blob.key, {
+      type: 'json',
+      consistency: 'strong',
+    });
+    if (item?.accountId && item.status && item.status !== 'draft') {
+      participantAccounts.add(item.accountId);
+    }
+  }
+
+  if (!participantAccounts.has(auth.account.id) && participantAccounts.size >= maxFounders) {
+    return json({
+      error: `Le cercle fondateur a atteint sa capacité actuelle de ${maxFounders} pharmacies. Votre compte reste actif et votre dossier peut être conservé en brouillon en attendant une prochaine ouverture.`,
+      code: 'PILOT_COHORT_FULL',
+    }, 403);
+  }
+
   dossier.analysis = cleanAnalysis(body?.analysis || {});
   dossier.privacyConfirmedAt = nowIso();
   dossier.status = 'submitted';
