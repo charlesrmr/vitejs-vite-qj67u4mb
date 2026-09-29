@@ -2006,7 +2006,7 @@ export default function App() {
                             {Number.isFinite(f.pct_stk) ? (
                               <PB
                                 pct={f.pct_stk}
-                                color={f.pct_stk > f.pct_ca + 3 ? C.rose : C.emerald}
+                                color={data.isDemo ? (f.pct_stk > f.pct_ca + 3 ? C.rose : C.emerald) : C.violet}
                               />
                             ) : (
                               <span className="chip">N/D</span>
@@ -2017,11 +2017,9 @@ export default function App() {
                               <PB
                                 pct={f.marge}
                                 color={
-                                  f.marge >= 38
-                                    ? C.emerald
-                                    : f.marge < 18
-                                    ? C.rose
-                                    : C.amber
+                                  data.isDemo
+                                    ? (f.marge >= 38 ? C.emerald : f.marge < 18 ? C.rose : C.amber)
+                                    : C.cyan
                                 }
                               />
                             ) : (
@@ -2098,10 +2096,8 @@ export default function App() {
                                 <PB
                                   pct={p.marge}
                                   color={
-                                    p.marge >= 38
-                                      ? C.emerald
-                                      : p.marge < 20
-                                      ? C.rose
+                                    data.isDemo
+                                      ? (p.marge >= 38 ? C.emerald : p.marge < 20 ? C.rose : C.cyan)
                                       : C.cyan
                                   }
                                 />
