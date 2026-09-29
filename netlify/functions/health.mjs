@@ -5,10 +5,18 @@ export default async (req) => {
 
   try {
     await STORE.dossiers(req).list({ prefix: '__health__/' });
+    let storageScope = 'preview';
+    try {
+      const requestHost = new URL(req.url).hostname;
+      const primaryHost = process.env.URL ? new URL(process.env.URL).hostname : '';
+      storageScope = primaryHost && requestHost === primaryHost ? 'production' : 'preview';
+    } catch {}
+
     return json({
       ok: true,
       service: 'PilotOfficine',
       storage: 'ready',
+      storageScope,
       adminConfigured: Boolean(process.env.PILOT_ADMIN_TOKEN),
       checkedAt: new Date().toISOString(),
     });
