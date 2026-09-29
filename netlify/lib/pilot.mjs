@@ -8,11 +8,14 @@ import {
 } from 'node:crypto';
 
 const REGION = 'eu-central-1';
+const CONTEXT = process.env.CONTEXT || 'dev';
+const STORE_SUFFIX = CONTEXT === 'production' ? '' : '-preview';
+const storeName = (base) => `${base}${STORE_SUFFIX}`;
 const stores = {
-  accounts: () => getStore({ name: 'pilot-accounts', region: REGION, consistency: 'strong' }),
-  sessions: () => getStore({ name: 'pilot-sessions', region: REGION, consistency: 'strong' }),
-  dossiers: () => getStore({ name: 'pilot-dossiers', region: REGION, consistency: 'strong' }),
-  files: () => getStore({ name: 'pilot-files', region: REGION, consistency: 'strong' }),
+  accounts: () => getStore({ name: storeName('pilot-accounts'), region: REGION, consistency: 'strong' }),
+  sessions: () => getStore({ name: storeName('pilot-sessions'), region: REGION, consistency: 'strong' }),
+  dossiers: () => getStore({ name: storeName('pilot-dossiers'), region: REGION, consistency: 'strong' }),
+  files: () => getStore({ name: storeName('pilot-files'), region: REGION, consistency: 'strong' }),
 };
 
 export const STORE = stores;
