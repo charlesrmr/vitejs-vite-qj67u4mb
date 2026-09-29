@@ -1,6 +1,6 @@
 export const DEMO = {
   isDemo: true,
-  officine: 'Pharmacie du Marché',
+  officine: 'Pharmacie Exemple',
   periode:  'Juin 2025',
   lgo:      'Winpharma',
   ca:       213480,
@@ -18,25 +18,25 @@ export const DEMO = {
   },
 
   top10: [
-    { nom: 'Doliprane 1000mg ×8',      fam: 'OTC',          ca: 5840, marge: 32, evo: '+8%'  },
-    { nom: 'Amoxicilline 500mg',        fam: 'Antibiotiques', ca: 4210, marge: 16, evo: '+2%'  },
-    { nom: 'Avène Hydrance Riche',      fam: 'Dermo',        ca: 3980, marge: 44, evo: '+14%' },
-    { nom: 'Efferalgan 500mg ×16',      fam: 'OTC',          ca: 3540, marge: 29, evo: '-3%'  },
-    { nom: 'Cétirizine 10mg ×7',        fam: 'Antiallerg.',  ca: 3280, marge: 37, evo: '+22%' },
-    { nom: 'Mustela Bébé lait 500ml',   fam: 'Bébé',         ca: 2980, marge: 39, evo: '+5%'  },
-    { nom: 'Smecta 3g ×30',             fam: 'Gastro',       ca: 2640, marge: 34, evo: '=0%'  },
-    { nom: 'Voltarène gel 2% 100g',     fam: 'Rhumato.',     ca: 2380, marge: 26, evo: '-5%'  },
-    { nom: 'Magné B6 ×50',              fam: 'Compléments',  ca: 2180, marge: 46, evo: '+11%' },
-    { nom: 'Rhinofluimucil spray',      fam: 'ORL',          ca: 1960, marge: 37, evo: '+7%'  },
+    { nom: 'Antalgique OTC A',      fam: 'OTC',          ca: 5840, marge: 32, evo: '+8%'  },
+    { nom: 'Prescription B',        fam: 'Antibiotiques', ca: 4210, marge: 16, evo: '+2%'  },
+    { nom: 'Soin dermocosmétique C',      fam: 'Dermo',        ca: 3980, marge: 44, evo: '+14%' },
+    { nom: 'Antalgique OTC D',      fam: 'OTC',          ca: 3540, marge: 29, evo: '-3%'  },
+    { nom: 'Antiallergique E',        fam: 'Antiallerg.',  ca: 3280, marge: 37, evo: '+22%' },
+    { nom: 'Soin bébé F',   fam: 'Bébé',         ca: 2980, marge: 39, evo: '+5%'  },
+    { nom: 'Conseil digestif G',             fam: 'Gastro',       ca: 2640, marge: 34, evo: '=0%'  },
+    { nom: 'Soin articulaire H',     fam: 'Rhumato.',     ca: 2380, marge: 26, evo: '-5%'  },
+    { nom: 'Complément I',              fam: 'Compléments',  ca: 2180, marge: 46, evo: '+11%' },
+    { nom: 'Produit ORL J',      fam: 'ORL',          ca: 1960, marge: 37, evo: '+7%'  },
   ],
 
   flop: [
-    { nom: 'Arsenicum album 9CH ×80',   fam: 'Homéopathie',  ca: 8,  stock: 180 },
-    { nom: 'Crème solaire SPF50 enfant',fam: 'Dermo',        ca: 14, stock: 96  },
-    { nom: 'Gelée royale bio 10g',      fam: 'Compléments',  ca: 22, stock: 72  },
-    { nom: 'Oméga-3 Premium ×60',       fam: 'Compléments',  ca: 28, stock: 84  },
-    { nom: 'Spiruline 500mg ×120',      fam: 'Compléments',  ca: 36, stock: 60  },
-    { nom: 'Mélatonine 1mg ×30',        fam: 'Compléments',  ca: 41, stock: 48  },
+    { nom: 'Référence lente A',   fam: 'Homéopathie',  ca: 8,  stock: 180 },
+    { nom: 'Référence saisonnière B',fam: 'Dermo',        ca: 14, stock: 96  },
+    { nom: 'Complément lent C',      fam: 'Compléments',  ca: 22, stock: 72  },
+    { nom: 'Complément lent D',       fam: 'Compléments',  ca: 28, stock: 84  },
+    { nom: 'Complément lent E',      fam: 'Compléments',  ca: 36, stock: 60  },
+    { nom: 'Complément lent F',        fam: 'Compléments',  ca: 41, stock: 48  },
   ],
 
   familles: [
@@ -80,11 +80,11 @@ export const DEMO = {
     rembourse: {
       ca: 84600, ca_pct: 40, marge_pct: 21.8, marge_eur: 18443,
       tx_subst: 79, tx_subst_obj: 85,
-      note: "Marge réglementée (MDL) + honoraires. Contrainte par l'arrêté : 6,93% du PFHT, plafonnée à 32,50€/boîte. Levier principal : taux de substitution générique.",
+      note: "Valeur fictive utilisée uniquement pour illustrer la séparation entre activité remboursée et marge libre.",
     },
     libre: {
       ca: 128880, ca_pct: 60, marge_pct: 34.7, marge_eur: 44721,
-      note: "Marge libre (OTC + para). Repère secteur : 30-60% selon les gammes (KPI officine 2025). C'est ici que se pilote réellement la rentabilité.",
+      note: "Valeur fictive utilisée uniquement pour montrer comment Pilot'Officine peut ventiler une marge libre par famille.",
     },
     par_famille_libre: [
       { nom: 'Compléments alimentaires', reel: 45, ca: 28800 },
@@ -94,18 +94,16 @@ export const DEMO = {
       { nom: 'Hygiène / Beauté',         reel: 29, ca:  6880 },
     ],
     leviers: [
-      { titre: "Optimiser la substitution générique",    detail: "Substitution estimée à 79% vs objectif conventionnel 85%+. Sur les molécules génériquables, la marge se calcule sur le prix du princeps.", base: "6pts × vol. génér.", gain_min: 2500, gain_max: 4500, effort: "Faible", delai: "Immédiat", source: "Leem / arrêté marge" },
-      { titre: "Mettre en concurrence les grossistes",   detail: "Remises plafonnées à 2,5% (non-génér.) et 40% du PFHT (génér.). Benchmark sur les références à fort volume.",                              base: "Écart au plafond",   gain_min: 3000, gain_max: 6000, effort: "Faible", delai: "1 mois",    source: "Leem 2025"          },
-      { titre: "Rééquilibrer le mix vers la marge libre",detail: "Compléments (45%) et Dermo (43%) sous-exploités. Déplacer 3pts de CA des familles faibles.",                                               base: "+3pts part CA libre",gain_min: 4000, gain_max: 8000, effort: "Moyen",  delai: "3-6 mois",  source: "KPI officine 2025"  },
-      { titre: "Repriser les prix OTC sous le marché",   detail: "Prix non-remboursé libres. 12 refs à forte rotation sous le prix local. Ajustement +3 à +8%.",                                             base: "12 réf. × ~5%",      gain_min: 1500, gain_max: 3000, effort: "Faible", delai: "Immédiat",  source: "Réglementation"     },
+      { titre: "Illustrer un levier de marge",            detail: "Exemple fictif de levier à confirmer à partir des données réelles de l'officine.", base: "illustration", gain_min: 2500, gain_max: 4500, effort: "Faible", delai: "Immédiat", source: "exemple fictif" },
+      { titre: "Illustrer un levier achats",              detail: "Exemple fictif : comparer les conditions sur quelques références contributrices.",                                                base: "illustration",       gain_min: 3000, gain_max: 6000, effort: "Faible", delai: "1 mois",    source: "exemple fictif"          },
+      { titre: "Illustrer un levier de mix",              detail: "Exemple fictif : observer quelles familles combinent contribution et marge.",                                                       base: "illustration",       gain_min: 4000, gain_max: 8000, effort: "Moyen",  delai: "3-6 mois",  source: "exemple fictif"  },
+      { titre: "Illustrer un levier prix",                detail: "Exemple fictif de contrôle de cohérence prix sur une sélection de références.",                                                        base: "illustration",       gain_min: 1500, gain_max: 3000, effort: "Faible", delai: "Immédiat",  source: "exemple fictif"     },
     ],
   },
 
-  synthesis: `Ce mois-ci, la pharmacie génère 213 480€ de CA avec une marge brute de 29,6% (63 190€). La distinction remboursé / marge libre est centrale : le remboursé (40% du CA) pèse à 21,8% de marge, contraint par la MDL réglementée, tandis que le non-remboursé tient à 34,7%.
+  synthesis: `Exemple fictif : l'officine de démonstration affiche 213 480 € de CA et 29,6 % de marge brute sur la période illustrée.
 
-Premier levier identifié : le taux de substitution générique est estimé à 79%, en deçà de l'objectif conventionnel de 85%+. Sur les molécules génériquables, chaque point gagné améliore directement la marge officine.
+La démonstration met volontairement en scène plusieurs types de signaux : concentration de certaines familles, références sans vente, évolution d'activité et pistes d'action.
 
-Second point d'attention : les Compléments alimentaires affichent 45% de marge pour seulement 13% du CA — c'est le gisement de valeur le plus accessible. Par ailleurs, 84 produits dormants immobilisent environ 16 800€ de trésorerie.
-
-Le plan d'action de 30 jours cible ces trois leviers par ordre d'impact réalisable.`,
+Ces chiffres, produits, gains potentiels et priorités sont entièrement fictifs. Ils servent uniquement à montrer l'interface. Sur un dossier réel, Pilot'Officine conserve uniquement les calculs issus des exports puis soumet le diagnostic à une relecture avant restitution.`,
 }
