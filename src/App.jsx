@@ -16,8 +16,10 @@ import { DEMO } from './data/demo';
 import { eur, num, parseFile, detectColumns, buildFromFiles, getAISynthesis } from './utils';
 import {
   createAccount,
+  changePassword,
   clearSession,
   createDossier,
+  deleteAccount,
   deleteDossier,
   getDossier,
   getMe,
@@ -27,10 +29,11 @@ import {
   logoutAccount,
   saveSessionToken,
   submitDossier,
+  updateAccount,
   uploadAllFiles,
 } from './api';
 import AdminPanel from './AdminPanel';
-import { ClientPortal, ClientReport } from './ClientPortal';
+import { AccountSettings, ClientPortal, ClientReport } from './ClientPortal';
 import './App.css';
 
 function ScoreRing({ score }) {
@@ -723,6 +726,9 @@ export default function App() {
   const [clientDossiers, setClientDossiers] = useState([]);
   const [portalLoading, setPortalLoading] = useState(false);
   const [portalError, setPortalError] = useState('');
+  const [settingsSaving, setSettingsSaving] = useState(false);
+  const [settingsError, setSettingsError] = useState('');
+  const [settingsSuccess, setSettingsSuccess] = useState('');
   const [selectedClientDossier, setSelectedClientDossier] = useState(null);
   const [files, setFiles] = useState({ ventes: null, produits: null, stock: null });
   const [parsedFiles, setParsedFiles] = useState({});
@@ -966,6 +972,71 @@ export default function App() {
     }
   };
 
+  const openSettings = () => {
+    setSettingsError('');
+    setSettingsSuccess('');
+    setStep('settings');
+  };
+
+  const saveAccountProfile = async (nextProfile) => {
+    if (!sessionToken) return;
+    setSettingsSaving(true);
+    setSettingsError('');
+    setSettingsSuccess('');
+    try {
+      const result = await updateAccount(sessionToken, nextProfile);
+      setAccount(result.account);
+      setProfile((prev) => ({ ...prev, ...(result.account?.profile || {}) }));
+      setSettingsSuccess('Informations mises à jour.');
+      await refreshPortal(sessionToken);
+    } catch (err) {
+      setSettingsError(err?.message || 'Impossible de mettre à jour les informations.');
+    } finally {
+      setSettingsSaving(false);
+    }
+  };
+
+  const changeAccountPassword = async (currentPassword, newPassword) => {
+    if (!sessionToken) return;
+    setSettingsSaving(true);
+    setSettingsError('');
+    setSettingsSuccess('');
+    try {
+      const result = await changePassword(sessionToken, currentPassword, newPassword);
+      saveSessionToken(result.sessionToken);
+      setSessionToken(result.sessionToken);
+      setSettingsSuccess('Mot de passe modifié. Les anciennes sessions ont été fermées.');
+    } catch (err) {
+      setSettingsError(err?.message || 'Impossible de modifier le mot de passe.');
+    } finally {
+      setSettingsSaving(false);
+    }
+  };
+
+  const deleteClientAccount = async (passwordValue) => {
+    if (!sessionToken) return;
+    const ok = window.confirm(
+      'Supprimer définitivement votre compte Pilot\'Officine, tous vos dossiers et tous vos fichiers ?\n\nCette action est irréversible.'
+    );
+    if (!ok) return;
+    setSettingsSaving(true);
+    setSettingsError('');
+    try {
+      await deleteAccount(sessionToken, passwordValue);
+      clearSession();
+      setSessionToken('');
+      setAccount(null);
+      setProfile(EMPTY_PROFILE);
+      setClientDossiers([]);
+      setSelectedClientDossier(null);
+      setStep('landing');
+    } catch (err) {
+      setSettingsError(err?.message || 'Impossible de supprimer le compte.');
+    } finally {
+      setSettingsSaving(false);
+    }
+  };
+
   const logoutClient = async () => {
     const token = sessionToken;
     clearSession();
@@ -1177,7 +1248,24 @@ export default function App() {
           onNew={startNewFromPortal}
           onOpen={openClientDossier}
           onDelete={deleteClientDossier}
+          onSettings={openSettings}
           onLogout={logoutClient}
+        />
+      )}
+
+      {step === 'settings' && account && (
+        <AccountSettings
+          account={account}
+          saving={settingsSaving}
+          error={settingsError}
+          success={settingsSuccess}
+          onBack={async () => {
+            await refreshPortal(sessionToken);
+            setStep('portal');
+          }}
+          onSaveProfile={saveAccountProfile}
+          onChangePassword={changeAccountPassword}
+          onDeleteAccount={deleteClientAccount}
         />
       )}
 
