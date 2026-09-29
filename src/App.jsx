@@ -515,6 +515,8 @@ function Landing({ onStart, onDemo }) {
 
 export default function App() {
   const [files, setFiles] = useState({ ventes: null, produits: null, stock: null });
+  const [parsedFiles, setParsedFiles] = useState({});
+  const [mappings, setMappings] = useState({});
   const [step, setStep] = useState('landing');
   const [ls, setLs] = useState(0);
   const [data, setData] = useState(null);
@@ -524,53 +526,93 @@ export default function App() {
 
   const sf = (k) => (f) => setFiles((p) => ({ ...p, [k]: f }));
 
+  const finishAnalysis = async (res) => {
+    setData(res);
+    setLs(3);
+    await new Promise((r) => setTimeout(r, 220));
+    setLs(4);
+    const s = await getAISynthesis(res);
+    setSyn(s);
+    setLs(5);
+    await new Promise((r) => setTimeout(r, 180));
+    setStep('dashboard');
+    setTab('synthese');
+  };
+
   const run = useCallback(
     async (demo = false) => {
       setError('');
-      if (!demo && !files.ventes) {
-        setError('Ajoutez un export ventes avant de lancer l’analyse.');
+      if (demo) {
+        setStep('loading');
+        setLs(2);
+        await finishAnalysis(DEMO);
         return;
       }
+
+      if (!files.ventes) {
+        setError('Ajoutez un export activité / ventes avant de continuer.');
+        return;
+      }
+
       setStep('loading');
       setLs(0);
       try {
-        await new Promise((r) => setTimeout(r, 400));
-        setLs(1);
-        await new Promise((r) => setTimeout(r, 350));
-        setLs(2);
-        let res = DEMO;
-        if (!demo) {
-          const parsed = {};
-          for (const [k, f] of Object.entries(files)) {
-            if (f) parsed[k] = await parseFile(f);
-          }
-          res = buildFromFiles(parsed);
+        const parsed = {};
+        for (const [k, f] of Object.entries(files)) {
+          if (f) parsed[k] = await parseFile(f);
         }
-        setData(res);
-        setLs(3);
-        await new Promise((r) => setTimeout(r, 300));
-        setLs(4);
-        const s = await getAISynthesis(res);
-        setSyn(s);
-        setLs(5);
-        await new Promise((r) => setTimeout(r, 200));
-        setStep('dashboard');
-        setTab('synthese');
+
+        setLs(1);
+        const detected = {};
+        Object.entries(parsed).forEach(([key, rows]) => {
+          detected[key] = detectColumns(rows);
+        });
+
+        setParsedFiles(parsed);
+        setMappings(detected);
+        setStep('mapping');
       } catch (err) {
-        setData(null);
-        setSyn('');
-        setError(err?.message || 'Impossible d’analyser ce fichier. Vérifiez son format.');
+        setParsedFiles({});
+        setMappings({});
+        setError(err?.message || 'Impossible de lire ce fichier. Vérifiez son format.');
         setStep('upload');
-        setTab('synthese');
       }
     },
     [files]
   );
 
+  const updateMapping = (fileType, field, value) => {
+    setMappings((prev) => ({
+      ...prev,
+      [fileType]: {
+        ...(prev[fileType] || {}),
+        [field]: value,
+      },
+    }));
+  };
+
+  const confirmMapping = async () => {
+    setError('');
+    setStep('loading');
+    setLs(2);
+    try {
+      const res = buildFromFiles(parsedFiles, mappings);
+      await finishAnalysis(res);
+    } catch (err) {
+      setData(null);
+      setSyn('');
+      setError(err?.message || 'Impossible d’analyser ces colonnes. Vérifiez le mapping.');
+      setStep('mapping');
+      setTab('synthese');
+    }
+  };
+
   const reset = () => {
     setStep('landing');
     setData(null);
     setSyn('');
+    setParsedFiles({});
+    setMappings({});
     setFiles({ ventes: null, produits: null, stock: null });
     setError('');
   };
