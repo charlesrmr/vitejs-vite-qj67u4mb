@@ -76,3 +76,26 @@ export function clientReadyEmail(dossier) {
     `,
   };
 }
+
+
+export function passwordResetEmail(account, token) {
+  const p = account?.profile || {};
+  const base = String(process.env.PILOT_PUBLIC_URL || '').replace(/\/$/, '');
+  const resetUrl = base.startsWith('http')
+    ? `${base}/?reset=${encodeURIComponent(token)}`
+    : '';
+  return {
+    to: p.email,
+    subject: `Réinitialiser votre mot de passe Pilot'Officine`,
+    html: `
+      <div style="font-family:Arial,sans-serif;color:#172033;line-height:1.55">
+        <h2>Réinitialisation du mot de passe</h2>
+        <p>Bonjour ${escapeHtml(p.firstName || '')},</p>
+        <p>Une demande de réinitialisation a été faite pour votre compte Pilot'Officine.</p>
+        ${resetUrl ? `<p><a href="${escapeHtml(resetUrl)}">Choisir un nouveau mot de passe</a></p>` : ''}
+        <p>Ce lien expire dans 30 minutes et ne peut être utilisé qu'une seule fois.</p>
+        <p style="font-size:12px;color:#7b8795">Si vous n'êtes pas à l'origine de cette demande, ignorez simplement cet email.</p>
+      </div>
+    `,
+  };
+}
