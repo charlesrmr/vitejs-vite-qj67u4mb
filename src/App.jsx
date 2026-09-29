@@ -1091,13 +1091,36 @@ export default function App() {
           )}
           <div className="hd-badge">pilote</div>
           {step === 'landing' && (
-            <button className="hd-cta" onClick={startAccount}>Préparer mon diagnostic</button>
+            <button className="hd-cta" onClick={startAccount}>{account ? 'Mes dossiers' : 'Préparer mon diagnostic'}</button>
           )}
         </div>
       </header>
 
       {step === 'landing' && (
         <Landing onStart={startAccount} onDemo={() => run(true)} />
+      )}
+
+      {step === 'portal' && (
+        <ClientPortal
+          account={account}
+          dossiers={clientDossiers}
+          loading={portalLoading}
+          error={portalError}
+          onRefresh={() => refreshPortal(sessionToken)}
+          onNew={startNewFromPortal}
+          onOpen={openClientDossier}
+          onLogout={logoutClient}
+        />
+      )}
+
+      {step === 'clientReport' && selectedClientDossier && (
+        <ClientReport
+          dossier={selectedClientDossier}
+          onBack={async () => {
+            await refreshPortal(sessionToken);
+            setStep('portal');
+          }}
+        />
       )}
 
       {step === 'account' && (
@@ -1325,9 +1348,13 @@ export default function App() {
 
             <div className="review-actions">
               <button className="map-back" onClick={() => setStep('dashboard')}>← Retour à la pré-analyse</button>
-              <button className="map-confirm" onClick={sendForReview} disabled={reviewSending || reviewSent}>
-                {reviewSent ? 'Dossier envoyé ✓' : reviewSending ? 'Envoi sécurisé...' : 'Envoyer pour relecture →'}
-              </button>
+              {reviewSent ? (
+                <button className="map-confirm" onClick={() => setStep('portal')}>Voir mes dossiers →</button>
+              ) : (
+                <button className="map-confirm" onClick={sendForReview} disabled={reviewSending}>
+                  {reviewSending ? 'Envoi sécurisé...' : 'Envoyer pour relecture →'}
+                </button>
+              )}
             </div>
           </div>
         </div>
