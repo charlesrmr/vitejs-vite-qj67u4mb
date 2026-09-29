@@ -45,6 +45,12 @@ export default async (req) => {
     if (reset?.accountId === auth.account.id) await STORE.resets(req).delete(blob.key);
   }
 
+  const { blobs: verificationBlobs } = await STORE.verifications(req).list({ prefix: 'verify/' });
+  for (const blob of verificationBlobs) {
+    const verification = await STORE.verifications(req).get(blob.key, { type: 'json', consistency: 'strong' });
+    if (verification?.accountId === auth.account.id) await STORE.verifications(req).delete(blob.key);
+  }
+
   const { blobs: sessionBlobs } = await STORE.sessions(req).list({ prefix: 'session/' });
   for (const blob of sessionBlobs) {
     const session = await STORE.sessions(req).get(blob.key, { type: 'json', consistency: 'strong' });
