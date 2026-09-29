@@ -132,7 +132,7 @@ function Slot({ label, hint, optional, file, onFile }) {
       <input
         ref={ref}
         type="file"
-        accept=".csv,.xlsx,.xls"
+        accept=".pdf,.csv,.xlsx,.xls"
         style={{ display: 'none' }}
         onChange={(e) => onFile(e.target.files[0])}
       />
@@ -754,7 +754,7 @@ export default function App() {
             </button>
             <div className="trust">
               <span className="trust-i">analyse locale</span>
-              <span className="trust-i">CSV + Excel</span>
+              <span className="trust-i">PDF + CSV + Excel</span>
               <span className="trust-i">aucune donnée patient requise</span>
             </div>
           </div>
