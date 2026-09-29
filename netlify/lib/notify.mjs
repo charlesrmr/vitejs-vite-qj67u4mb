@@ -99,3 +99,26 @@ export function passwordResetEmail(account, token) {
     `,
   };
 }
+
+
+export function emailVerificationEmail(account, token) {
+  const p = account?.profile || {};
+  const base = String(process.env.PILOT_PUBLIC_URL || '').replace(/\/$/, '');
+  const verifyUrl = base.startsWith('http')
+    ? `${base}/?verify=${encodeURIComponent(token)}`
+    : '';
+  return {
+    to: p.email,
+    subject: `Vérifier votre adresse email Pilot'Officine`,
+    html: `
+      <div style="font-family:Arial,sans-serif;color:#172033;line-height:1.55">
+        <h2>Vérifiez votre adresse email</h2>
+        <p>Bonjour ${escapeHtml(p.firstName || '')},</p>
+        <p>Cette vérification confirme que l'adresse utilisée pour votre compte Pilot'Officine vous appartient bien.</p>
+        ${verifyUrl ? `<p><a href="${escapeHtml(verifyUrl)}">Vérifier mon adresse email</a></p>` : ''}
+        <p>Ce lien expire dans 24 heures et ne peut être utilisé qu'une seule fois.</p>
+        <p style="font-size:12px;color:#7b8795">Si vous n'êtes pas à l'origine de cette demande, ignorez simplement cet email.</p>
+      </div>
+    `,
+  };
+}
