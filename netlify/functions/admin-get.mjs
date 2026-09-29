@@ -7,7 +7,7 @@ export default async (req) => {
   const id = new URL(req.url).searchParams.get('id');
   if (!id) return json({ error: 'Identifiant manquant.' }, 400);
 
-  const dossier = await STORE.dossiers().get(`dossier/${id}.json`, {
+  const dossier = await STORE.dossiers(req).get(`dossier/${id}.json`, {
     type: 'json', consistency: 'strong',
   });
   if (!dossier) return json({ error: 'Dossier introuvable.' }, 404);
