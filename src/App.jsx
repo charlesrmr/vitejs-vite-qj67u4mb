@@ -718,6 +718,7 @@ export default function App() {
   const [uploadProgress, setUploadProgress] = useState(null);
   const [reviewSending, setReviewSending] = useState(false);
   const [reviewSent, setReviewSent] = useState(false);
+  const [patientDataConfirmed, setPatientDataConfirmed] = useState(false);
   const [reviewError, setReviewError] = useState('');
   const [clientDossiers, setClientDossiers] = useState([]);
   const [portalLoading, setPortalLoading] = useState(false);
@@ -891,6 +892,7 @@ export default function App() {
     setFiles({ ventes: null, produits: null, stock: null });
     setFilesPersisted(false);
     setReviewSent(false);
+    setPatientDataConfirmed(false);
     return result.dossier;
   };
 
@@ -1033,7 +1035,7 @@ export default function App() {
       await submitDossier(sessionToken, dossierId, {
         ...data,
         synthesis: syn || data.synthesis,
-      });
+      }, patientDataConfirmed);
       setReviewSent(true);
       await refreshPortal(sessionToken);
     } catch (err) {
@@ -1386,9 +1388,17 @@ export default function App() {
                 <span>La pré-analyse et les exports sont maintenant enregistrés côté serveur.</span>
               </div>
             ) : (
-              <div className="review-notice">
-                <b>Avant envoi :</b> vérifiez que les fichiers déposés ne contiennent aucune donnée nominative patient.
-              </div>
+              <label className="review-privacy-check">
+                <input
+                  type="checkbox"
+                  checked={patientDataConfirmed}
+                  onChange={(e) => setPatientDataConfirmed(e.target.checked)}
+                />
+                <span>
+                  Je confirme que les fichiers déposés ne contiennent aucune donnée nominative patient
+                  (nom, prénom, coordonnées, ordonnance ou historique individuel).
+                </span>
+              </label>
             )}
 
             <div className="review-actions">
@@ -1396,7 +1406,7 @@ export default function App() {
               {reviewSent ? (
                 <button className="map-confirm" onClick={() => setStep('portal')}>Voir mes dossiers →</button>
               ) : (
-                <button className="map-confirm" onClick={sendForReview} disabled={reviewSending}>
+                <button className="map-confirm" onClick={sendForReview} disabled={reviewSending || !patientDataConfirmed}>
                   {reviewSending ? 'Envoi sécurisé...' : 'Envoyer pour relecture →'}
                 </button>
               )}
