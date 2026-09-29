@@ -48,20 +48,32 @@ export default async (req) => {
     },
   });
 
-  dossier.files = dossier.files || {};
-  dossier.files[slot] = {
-    uploadId,
-    fileName,
-    contentType,
-    fileSize,
-    chunkCount,
-    uploadedChunks: Math.max(Number(dossier.files?.[slot]?.uploadedChunks || 0), chunkIndex + 1),
-    uploadedAt: nowIso(),
-    complete: chunkIndex === chunkCount - 1,
-  };
-  await saveDossier(dossier);
+  const complete = chunkIndex === chunkCount - 1;
 
-  return json({ ok: true, chunkIndex, chunkCount, complete: chunkIndex === chunkCount - 1 });
+  if (complete) {
+    dossier.files = dossier.files || {};
+    const previous = dossier.files[slot];
+
+    if (previous?.uploadId && previous.uploadId !== uploadId && Number.isInteger(previous.chunkCount)) {
+      for (let i = 0; i < previous.chunkCount; i += 1) {
+        await STORE.files().delete(fileChunkKey(dossierId, previous.uploadId, i));
+      }
+    }
+
+    dossier.files[slot] = {
+      uploadId,
+      fileName,
+      contentType,
+      fileSize,
+      chunkCount,
+      uploadedChunks: chunkCount,
+      uploadedAt: nowIso(),
+      complete: true,
+    };
+    await saveDossier(dossier);
+  }
+
+  return json({ ok: true, chunkIndex, chunkCount, complete });
 };
 
 export const config = { path: '/api/file/upload-chunk' };
