@@ -1377,8 +1377,12 @@ export default function App() {
     }
     if (data.top10?.length) {
       actions.push({
-        titre: 'Faire une revue des produits les plus contributifs',
-        detail: `Le fichier permet déjà d'isoler les ${Math.min(data.top10.length, 10)} premières références. Vérifiez leur disponibilité, leur marge lorsqu'elle est fournie et leur évolution sur plusieurs périodes.`,
+        titre: hasProductCa
+          ? 'Faire une revue des produits les plus contributifs en CA'
+          : 'Faire une revue des produits les plus vendus en quantité',
+        detail: hasProductCa
+          ? `Le fichier permet d'isoler les ${Math.min(data.top10.length, 10)} premières références par CA. Vérifiez leur disponibilité, leur marge lorsqu'elle est fournie et leur évolution sur plusieurs périodes.`
+          : `Le fichier permet d'isoler les ${Math.min(data.top10.length, 10)} premières références par quantité. Sans CA par produit, il ne permet pas de conclure sur leur contribution économique.`,
         prio: 'm',
       });
     }
