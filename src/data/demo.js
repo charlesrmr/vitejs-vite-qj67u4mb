@@ -1,8 +1,8 @@
 export const DEMO = {
   isDemo: true,
-  officine: 'Pharmacie Exemple',
-  periode:  'Juin 2025',
-  lgo:      'Winpharma',
+  officine: 'Officine de démonstration',
+  periode:  'Période fictive',
+  lgo:      'LGO de démonstration',
   ca:       213480,
   marge_pct: 29.6,
   marge_eur: 63190,
