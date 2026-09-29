@@ -451,6 +451,47 @@ export default function AdminPanel() {
                     {selected.analysis.alerts.slice(0, 6).map((a, i) => <div key={i}><b>{a.title}</b><span>{a.body}</span></div>)}
                   </div>
                 )}
+
+                {!!selected.analysis?.qualityWarnings?.length && (
+                  <div className="adm-quality-warnings">
+                    <b>Contrôles qualité à garder en tête</b>
+                    {selected.analysis.qualityWarnings.map((warning, i) => <span key={i}>{warning}</span>)}
+                  </div>
+                )}
+
+                <div className="adm-data-grid">
+                  <div className="adm-mini-table">
+                    <div className="adm-mini-title">Top produits</div>
+                    {(selected.analysis?.top10 || []).slice(0, 10).map((p, i) => (
+                      <div className="adm-mini-row" key={i}>
+                        <i>{i + 1}</i>
+                        <span>{p.nom || 'Produit'}</span>
+                        <b>{Number.isFinite(p.ca) ? eur(p.ca) : Number.isFinite(p.quantite) ? `${num(p.quantite)} u` : 'N/D'}</b>
+                      </div>
+                    ))}
+                    {!selected.analysis?.top10?.length && <small>Aucun détail produit exploitable.</small>}
+                  </div>
+                  <div className="adm-mini-table">
+                    <div className="adm-mini-title">Familles / rayons</div>
+                    {(selected.analysis?.familles || []).slice(0, 10).map((fam, i) => (
+                      <div className="adm-mini-row" key={i}>
+                        <i>{i + 1}</i>
+                        <span>{fam.nom || 'Famille'}</span>
+                        <b>{Number.isFinite(fam.ca) ? eur(fam.ca) : 'N/D'}</b>
+                      </div>
+                    ))}
+                    {!selected.analysis?.familles?.length && <small>Aucune ventilation famille exploitable.</small>}
+                  </div>
+                </div>
+
+                {!!selected.analysis?.detectedColumns && (
+                  <details className="adm-mapping-details">
+                    <summary>Voir le mapping détecté</summary>
+                    {Object.entries(selected.analysis.detectedColumns).map(([group, cols]) => (
+                      <div key={group}><b>{group}</b><span>{Object.entries(cols || {}).filter(([,v]) => v).map(([k,v]) => `${k} → ${v}`).join(' · ') || 'Aucune colonne reconnue'}</span></div>
+                    ))}
+                  </details>
+                )}
               </section>
 
               <section className="adm-review">
