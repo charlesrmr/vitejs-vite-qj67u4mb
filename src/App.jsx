@@ -685,7 +685,7 @@ function Landing({ onStart, onDemo }) {
                 <article><span>CA</span><b>{eur(DEMO.ca)}</b><small>période analysée</small></article>
                 <article><span>Marge brute</span><b>{DEMO.marge_pct}%</b><small>{eur(DEMO.marge_eur)}</small></article>
                 <article><span>Stock</span><b>{eur(DEMO.stock_eur)}</b><small>valorisé</small></article>
-                <article><span>Dormants</span><b>{num(DEMO.dormants)}</b><small>références</small></article>
+                <article><span>Sans vente</span><b>{num(DEMO.dormants)}</b><small>sur la période</small></article>
               </div>
 
               <div className="lp-product-grid">
@@ -1864,7 +1864,7 @@ export default function App() {
                         : null,
                     },
                     {
-                      l: data.isDemo ? 'Produits dormants' : 'Sans vente période',
+                      l: 'Sans vente période',
                       v: num(data.dormants),
                       f: Number.isFinite(data.dormant_stock_eur)
                         ? eur(data.dormant_stock_eur)
@@ -1993,7 +1993,7 @@ export default function App() {
                         ok: data.extra.tx_assoc >= 18,
                       },
                       {
-                        l: 'Produits dormants',
+                        l: 'Sans vente période',
                         v: `${data.dormants} refs`,
                         ok: data.dormants < 50,
                       },
@@ -2485,7 +2485,7 @@ export default function App() {
                   </div>
                   <div className="tc">
                     <div className="tc-hd">
-                      <span className="tc-ht">{data.isDemo ? 'Produits dormants' : 'Stock sans vente sur la période'}</span>
+                      <span className="tc-ht">Stock sans vente sur la période</span>
                       <span className="tc-hc">{data.isDemo ? 'sans vente' : 'à qualifier'}</span>
                     </div>
                     <table>
