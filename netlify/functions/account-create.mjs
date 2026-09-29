@@ -19,7 +19,7 @@ export default async (req) => {
   }
 
   const accountKey = `account/${sha256(normalizeEmail(profile.email))}.json`;
-  const store = STORE.accounts();
+  const store = STORE.accounts(req);
   const existing = await store.get(accountKey, { type: 'json', consistency: 'strong' });
   if (existing) return json({ error: 'Un compte existe déjà avec cet email.' }, 409);
 
@@ -34,7 +34,7 @@ export default async (req) => {
   };
   await store.setJSON(accountKey, account, { onlyIfNew: true });
 
-  const session = await createSession(account);
+  const session = await createSession(account, req);
   return json({
     ok: true,
     sessionToken: session.token,
