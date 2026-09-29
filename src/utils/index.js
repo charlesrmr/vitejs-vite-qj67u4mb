@@ -192,7 +192,8 @@ function extractMhtmlSpreadsheetHtml(buffer) {
     throw new Error('Export XLS MHTML détecté, mais aucun tableau suffisamment structuré n’a été reconnu.')
   }
 
-  const documentText = normalizeLoose(doc.body?.textContent || '')
+  const rawDocumentText = String(doc.body?.textContent || '').replace(/\s+/g, ' ').trim()
+  const documentText = normalizeLoose(rawDocumentText)
   const reportType =
     documentText.includes('hit parade') && documentText.includes('top 50')
       ? 'top-products'
@@ -202,8 +203,17 @@ function extractMhtmlSpreadsheetHtml(buffer) {
         ? 'margin'
         : (documentText.includes('hit parade sur caht brut') ? 'ca' : null))
     : null
+  const periodMatch = rawDocumentText.match(
+    /PERIODE\s+est\s+compris(?:e)?\s+entre\s+(\d{1,2}\/\d{1,2}\/\d{4})(?:\s+\d{1,2}:\d{2}:\d{2})?\s+et\s+(\d{1,2}\/\d{1,2}\/\d{4})/i
+  )
 
-  return { html: best.table.outerHTML, reportType, reportMetric }
+  return {
+    html: best.table.outerHTML,
+    reportType,
+    reportMetric,
+    periodStart: periodMatch?.[1] || null,
+    periodEnd: periodMatch?.[2] || null,
+  }
 }
 
 async function loadPdfJs() {
@@ -341,6 +351,8 @@ export function parseFile(file) {
           value: {
             reportType: mhtmlReport.reportType,
             reportMetric: mhtmlReport.reportMetric || null,
+            periodStart: mhtmlReport.periodStart || null,
+            periodEnd: mhtmlReport.periodEnd || null,
           },
           enumerable: false,
         })
@@ -773,9 +785,24 @@ export function buildFromFiles(filesMap, columnMappings = {}) {
     data.detectedColumns.produits = productCols
 
     if (productReportRows.__pilotMeta?.reportType === 'top-products') {
+      const { periodStart, periodEnd } = productReportRows.__pilotMeta
+      const productPeriod = periodStart && periodEnd
+        ? (periodStart === periodEnd ? periodStart : `${periodStart} → ${periodEnd}`)
+        : null
       data.qualityWarnings.push(
-        "Le fichier produits est un Hit Parade / TOP 50 : il décrit uniquement les références classées dans ce rapport et ne représente pas l’ensemble des ventes."
+        `Le fichier produits est un Hit Parade / TOP 50${productPeriod ? ` sur la période ${productPeriod}` : ''} : il décrit uniquement les références classées dans ce rapport et ne représente pas l’ensemble des ventes.`
       )
+
+      if (
+        productPeriod &&
+        data.periode &&
+        !['Période importée', 'Période du fichier'].includes(data.periode) &&
+        data.periode !== productPeriod
+      ) {
+        data.qualityWarnings.push(
+          `Périodes incohérentes : l’activité couvre ${data.periode}, tandis que le TOP produits couvre ${productPeriod}. Les deux rapports ne doivent pas être comparés comme s’ils portaient sur la même période.`
+        )
+      }
     }
 
     if (productCols.produit && productCols.quantite) {
