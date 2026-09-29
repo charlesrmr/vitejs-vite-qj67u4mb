@@ -14,13 +14,20 @@ export default async (req) => {
   const dossierId = req.headers.get('x-dossier-id') || '';
   const uploadId = req.headers.get('x-upload-id') || '';
   const slot = req.headers.get('x-file-slot') || '';
-  const fileName = decodeURIComponent(req.headers.get('x-file-name') || 'fichier');
+  let fileName = req.headers.get('x-file-name') || 'fichier';
+  try { fileName = decodeURIComponent(fileName); } catch {}
+  fileName = String(fileName).replace(/[\r\n]/g, ' ').trim().slice(0, 240) || 'fichier';
   const contentType = req.headers.get('x-file-type') || 'application/octet-stream';
   const chunkIndex = Number(req.headers.get('x-chunk-index'));
   const chunkCount = Number(req.headers.get('x-chunk-count'));
   const fileSize = Number(req.headers.get('x-file-size'));
 
-  if (!dossierId || !uploadId || !['ventes', 'produits', 'stock'].includes(slot)) {
+  if (
+    !dossierId ||
+    !/^[a-z0-9_]{10,80}$/i.test(dossierId) ||
+    !/^[a-z0-9_-]{8,100}$/i.test(uploadId) ||
+    !['ventes', 'produits', 'stock'].includes(slot)
+  ) {
     return json({ error: 'Métadonnées d’upload invalides.' }, 400);
   }
   if (!Number.isInteger(chunkIndex) || !Number.isInteger(chunkCount) || chunkIndex < 0 || chunkCount < 1 || chunkIndex >= chunkCount || chunkCount > 10) {
