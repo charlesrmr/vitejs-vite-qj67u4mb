@@ -19,7 +19,27 @@ export default async (req) => {
     ? body.status
     : 'in_review';
 
-  dossier.review = sanitizeReview(body?.review || {});
+  const review = sanitizeReview(body?.review || {});
+
+  if (status === 'reviewed') {
+    const findings = review.findings.filter((item) => item.title || item.body);
+    const priorities = review.priorities.filter((item) => item.title || item.body);
+    const actions = review.actions.filter((item) => item.title || item.body);
+    if (review.executiveSummary.length < 20) {
+      return json({ error: 'Ajoutez une synthèse dirigeant avant validation.' }, 400);
+    }
+    if (findings.length < 1) {
+      return json({ error: 'Validez au moins un constat avant restitution.' }, 400);
+    }
+    if (priorities.length < 3) {
+      return json({ error: 'Le diagnostic final doit contenir 3 priorités.' }, 400);
+    }
+    if (actions.length < 1) {
+      return json({ error: 'Ajoutez au moins une action à 30 jours.' }, 400);
+    }
+  }
+
+  dossier.review = review;
   dossier.status = status;
   dossier.reviewedAt = status === 'reviewed' ? nowIso() : dossier.reviewedAt || null;
   await saveDossier(dossier);
