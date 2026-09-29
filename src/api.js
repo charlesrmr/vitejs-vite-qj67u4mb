@@ -68,11 +68,11 @@ export async function getDossier(token, dossierId) {
   return apiRequest(`/api/dossier?id=${encodeURIComponent(dossierId)}`, { token });
 }
 
-export async function submitDossier(token, dossierId, analysis) {
+export async function submitDossier(token, dossierId, analysis, patientDataConfirmed) {
   return apiRequest('/api/dossier/submit', {
     method: 'POST',
     token,
-    body: { dossierId, analysis },
+    body: { dossierId, analysis, patientDataConfirmed: Boolean(patientDataConfirmed) },
   });
 }
 
