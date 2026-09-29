@@ -44,7 +44,7 @@ export default async (req) => {
 
   dossier.review = review;
   dossier.status = status;
-  dossier.reviewedAt = status === 'reviewed' ? nowIso() : dossier.reviewedAt || null;
+  dossier.reviewedAt = status === 'reviewed' ? nowIso() : null;
   await saveDossier(dossier, req);
 
   return json({ ok: true, dossier });
