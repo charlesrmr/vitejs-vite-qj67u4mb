@@ -46,4 +46,7 @@ export default async (req) => {
   }, 201);
 };
 
-export const config = { path: '/api/account/create' };
+export const config = {
+  path: '/api/account/create',
+  rateLimit: { windowLimit: 5, windowSize: 60, aggregateBy: ['ip', 'domain'] },
+};
