@@ -1241,7 +1241,7 @@ export default function App() {
               Tester avec les donnees de demonstration
             </button>
             <div className="trust">
-              <span className="trust-i">analyse locale</span>
+              <span className="trust-i">dossier sécurisé</span>
               <span className="trust-i">PDF + CSV + Excel</span>
               <span className="trust-i">aucune donnée patient requise</span>
             </div>
@@ -1404,15 +1404,21 @@ export default function App() {
               </span>
             </div>
             <div className="dtb-r">
-              <button className="btn ghost" onClick={reset}>
-                Nouveau
+              <button className="btn ghost" onClick={async () => {
+                if (!data.isDemo && sessionToken) {
+                  await refreshPortal(sessionToken);
+                  setStep('portal');
+                } else {
+                  reset();
+                }
+              }}>
+                {data.isDemo ? 'Retour' : 'Mes dossiers'}
               </button>
-              <button
-                className="btn accent"
-                onClick={() => alert('Export PDF : fonctionnalité en préparation')}
-              >
-                PDF
-              </button>
+              {!data.isDemo && (
+                <button className="btn accent" onClick={prepareReview}>
+                  Envoyer en relecture
+                </button>
+              )}
             </div>
           </div>
 
