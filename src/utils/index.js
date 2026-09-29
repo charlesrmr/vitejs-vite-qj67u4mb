@@ -338,33 +338,50 @@ function pct(value, total) {
 }
 
 function buildFamilies(rows, columns, totalCa, marginMode) {
-  if (!columns.famille || !columns.ca) return []
+  if (!columns.famille || !columns.caDisplay) return []
   const grouped = new Map()
 
   rows.forEach((row) => {
     const name = String(row[columns.famille] || 'Non classé').trim() || 'Non classé'
-    const ca = parseFrenchNumber(row[columns.ca]) || 0
+    const displayCa = parseFrenchNumber(row[columns.caDisplay]) || 0
+    const marginBase = columns.caMargin
+      ? (parseFrenchNumber(row[columns.caMargin]) || 0)
+      : displayCa
     const marginEur = columns.margeEur ? parseFrenchNumber(row[columns.margeEur]) : null
     const marginPct = columns.margePct ? parseFrenchNumber(row[columns.margePct]) : null
 
-    if (!grouped.has(name)) grouped.set(name, { nom: name, ca: 0, margeEur: 0, hasMarginEur: false, weightedMargin: 0, weightedBase: 0 })
+    if (!grouped.has(name)) {
+      grouped.set(name, {
+        nom: name,
+        ca: 0,
+        marginBase: 0,
+        margeEur: 0,
+        hasMarginEur: false,
+        weightedMargin: 0,
+        weightedBase: 0,
+      })
+    }
     const item = grouped.get(name)
-    item.ca += ca
+    item.ca += displayCa
+    item.marginBase += marginBase
 
     if (marginMode === 'eur' && marginEur !== null) {
       item.margeEur += marginEur
       item.hasMarginEur = true
-    } else if (marginMode === 'pct' && marginPct !== null && ca > 0) {
-      item.weightedMargin += marginPct * ca
-      item.weightedBase += ca
+    } else if (marginMode === 'pct' && marginPct !== null && marginBase > 0) {
+      item.weightedMargin += marginPct * marginBase
+      item.weightedBase += marginBase
     }
   })
 
   return [...grouped.values()]
     .map((item) => {
       let marge = null
-      if (item.hasMarginEur && item.ca > 0) marge = (item.margeEur / item.ca) * 100
-      else if (item.weightedBase > 0) marge = item.weightedMargin / item.weightedBase
+      if (item.hasMarginEur && item.marginBase > 0) {
+        marge = (item.margeEur / item.marginBase) * 100
+      } else if (item.weightedBase > 0) {
+        marge = item.weightedMargin / item.weightedBase
+      }
 
       return {
         nom: item.nom,
@@ -375,7 +392,83 @@ function buildFamilies(rows, columns, totalCa, marginMode) {
         trend: null,
       }
     })
-    .sort((a, b) => b.ca - a.ca)
+    .sort((x, y) => y.ca - x.ca)
+}
+
+function parseSaleDate(value) {
+  const raw = String(value || '').trim()
+  const fr = raw.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/)
+  if (fr) {
+    const date = new Date(Number(fr[3]), Number(fr[2]) - 1, Number(fr[1]))
+    return Number.isNaN(date.getTime()) ? null : date
+  }
+
+  const iso = raw.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/)
+  if (iso) {
+    const date = new Date(Number(iso[1]), Number(iso[2]) - 1, Number(iso[3]))
+    return Number.isNaN(date.getTime()) ? null : date
+  }
+
+  return null
+}
+
+function buildActivity(rows, dateColumn, caColumn) {
+  if (!dateColumn || !caColumn) {
+    return { days: null, dailyCaAvg: null, monthly: [], latestVsPreviousPct: null }
+  }
+
+  const daily = new Map()
+  rows.forEach((row) => {
+    const date = parseSaleDate(row[dateColumn])
+    const ca = parseFrenchNumber(row[caColumn])
+    if (!date || !Number.isFinite(ca)) return
+
+    const dayKey = [
+      date.getFullYear(),
+      String(date.getMonth() + 1).padStart(2, '0'),
+      String(date.getDate()).padStart(2, '0'),
+    ].join('-')
+    daily.set(dayKey, (daily.get(dayKey) || 0) + ca)
+  })
+
+  if (!daily.size) {
+    return { days: null, dailyCaAvg: null, monthly: [], latestVsPreviousPct: null }
+  }
+
+  const monthlyMap = new Map()
+  for (const [dayKey, dayCa] of daily.entries()) {
+    const monthKey = dayKey.slice(0, 7)
+    if (!monthlyMap.has(monthKey)) monthlyMap.set(monthKey, { ca: 0, days: 0 })
+    const item = monthlyMap.get(monthKey)
+    item.ca += dayCa
+    item.days += 1
+  }
+
+  const monthly = [...monthlyMap.entries()]
+    .sort(([aKey], [bKey]) => aKey.localeCompare(bKey))
+    .map(([key, item]) => ({
+      key,
+      ca: Math.round(item.ca),
+      days: item.days,
+      dailyCaAvg: item.days ? Math.round(item.ca / item.days) : null,
+    }))
+
+  let latestVsPreviousPct = null
+  if (monthly.length >= 2) {
+    const previous = monthly[monthly.length - 2]
+    const latest = monthly[monthly.length - 1]
+    if (previous.ca > 0) {
+      latestVsPreviousPct = Math.round(((latest.ca - previous.ca) / previous.ca) * 1000) / 10
+    }
+  }
+
+  const total = [...daily.values()].reduce((sum, value) => sum + value, 0)
+  return {
+    days: daily.size,
+    dailyCaAvg: Math.round(total / daily.size),
+    monthly,
+    latestVsPreviousPct,
+  }
 }
 
 function buildLocalSynthesis(data) {
