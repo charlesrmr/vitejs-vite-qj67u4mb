@@ -226,6 +226,14 @@ export default function AdminPanel() {
 
   useEffect(() => { if (token) loadList(token); }, [token]);
 
+  useEffect(() => {
+    if (!token) return undefined;
+    const id = setInterval(() => {
+      loadList(token);
+    }, 60000);
+    return () => clearInterval(id);
+  }, [token]);
+
   const login = async (e) => {
     e.preventDefault();
     setError('');
