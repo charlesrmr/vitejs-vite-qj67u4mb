@@ -214,6 +214,7 @@ export default function AdminPanel() {
   const [review, setReview] = useState(blankReview());
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [notifying, setNotifying] = useState(false);
   const [error, setError] = useState('');
   const [filter, setFilter] = useState('all');
   const [search, setSearch] = useState('');
@@ -322,6 +323,23 @@ export default function AdminPanel() {
       setError(err.message);
     } finally {
       setSaving(false);
+    }
+  };
+
+  const notifyClient = async () => {
+    if (!selected) return;
+    setNotifying(true);
+    setError('');
+    try {
+      await adminFetch('/api/admin/notify-client', token, {
+        method: 'POST',
+        body: JSON.stringify({ dossierId: selected.id }),
+      });
+      await openDossier(selected.id);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setNotifying(false);
     }
   };
 
