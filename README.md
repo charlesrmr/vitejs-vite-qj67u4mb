@@ -42,6 +42,14 @@ Une seule variable sensible est obligatoire pour utiliser le back-office :
 PILOT_ADMIN_TOKEN=<secret long et aléatoire>
 ```
 
+La capacité du cercle fondateur est configurable avec :
+
+```
+PILOT_MAX_FOUNDERS=10
+```
+
+Si cette variable n'est pas définie, la limite est de 10 pharmacies ayant réellement envoyé au moins un dossier. La simple création d'un compte ne consomme pas de place.
+
 Variables optionnelles pour les notifications transactionnelles :
 
 ```
