@@ -55,4 +55,4 @@ export default async (req) => {
   });
 };
 
-export const config = { path: '/api/report/download' };
+export const config = { path: '/api/report/download', region: 'fra' };
