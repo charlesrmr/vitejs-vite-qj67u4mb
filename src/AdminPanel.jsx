@@ -469,6 +469,22 @@ export default function AdminPanel() {
     a.click();
     URL.revokeObjectURL(url);
   };
+  const productRankingMode =
+    selected?.analysis?.product_ranking_mode ||
+    (selected?.analysis?.top10?.some((p) => Number.isFinite(p?.ca))
+      ? 'ca'
+      : 'quantity');
+  const productRankingLabel =
+    productRankingMode === 'margin' ? 'par marge' :
+    productRankingMode === 'ca' ? 'par CA' :
+    'par quantité';
+  const productRankingValue = (product) =>
+    productRankingMode === 'margin'
+      ? (Number.isFinite(product?.marge_eur) ? eur(product.marge_eur) : 'N/D')
+      : productRankingMode === 'ca'
+        ? (Number.isFinite(product?.ca) ? eur(product.ca) : 'N/D')
+        : (Number.isFinite(product?.quantite) ? `${num(product.quantite)} u` : 'N/D');
+
   const canReview = selected?.status && selected.status !== 'draft';
   const reviewReady = Boolean(
     canReview &&
@@ -665,12 +681,12 @@ export default function AdminPanel() {
 
                 <div className="adm-data-grid">
                   <div className="adm-mini-table">
-                    <div className="adm-mini-title">Top produits</div>
+                    <div className="adm-mini-title">Top produits · {productRankingLabel}</div>
                     {(selected.analysis?.top10 || []).slice(0, 10).map((p, i) => (
                       <div className="adm-mini-row" key={i}>
                         <i>{i + 1}</i>
                         <span>{p.nom || 'Produit'}</span>
-                        <b>{Number.isFinite(p.ca) ? eur(p.ca) : Number.isFinite(p.quantite) ? `${num(p.quantite)} u` : 'N/D'}</b>
+                        <b>{productRankingValue(p)}</b>
                       </div>
                     ))}
                     {!selected.analysis?.top10?.length && <small>Aucun détail produit exploitable.</small>}
