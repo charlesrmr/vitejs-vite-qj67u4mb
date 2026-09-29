@@ -150,3 +150,12 @@ export async function uploadAllFiles({
 export function clearSession() {
   saveSessionToken('');
 }
+
+
+export async function deleteDossier(token, dossierId) {
+  return apiRequest('/api/dossier/delete', {
+    method: 'POST',
+    token,
+    body: { dossierId, confirm: 'SUPPRIMER' },
+  });
+}
