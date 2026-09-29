@@ -208,3 +208,30 @@ export function sanitizeReview(input = {}) {
 export const dossierKey = (id) => `dossier/${id}.json`;
 export const fileChunkKey = (id, uploadId, index) =>
   `dossier/${id}/${uploadId}/chunk-${String(index).padStart(5, '0')}`;
+
+
+export function publicDossier(dossier) {
+  if (!dossier) return null;
+  const review = dossier.review
+    ? {
+        executiveSummary: dossier.review.executiveSummary || '',
+        findings: dossier.review.findings || [],
+        priorities: dossier.review.priorities || [],
+        actions: dossier.review.actions || [],
+        missingData: dossier.review.missingData || '',
+      }
+    : null;
+
+  return {
+    id: dossier.id,
+    status: dossier.status,
+    profile: dossier.profile,
+    files: dossier.files || {},
+    analysis: dossier.analysis || null,
+    review,
+    createdAt: dossier.createdAt,
+    updatedAt: dossier.updatedAt,
+    submittedAt: dossier.submittedAt || null,
+    reviewedAt: dossier.reviewedAt || null,
+  };
+}
