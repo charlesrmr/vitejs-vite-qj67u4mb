@@ -63,10 +63,18 @@ export default async (req) => {
   }
 
   add('Secret administrateur', Boolean(process.env.PILOT_ADMIN_TOKEN), process.env.PILOT_ADMIN_TOKEN ? 'Configuré' : 'Absent');
+  const notificationsConfigured = Boolean(process.env.RESEND_API_KEY && process.env.PILOT_EMAIL_FROM);
+  const context = String(process.env.CONTEXT || '').toLowerCase();
+  const allowNonProd = String(process.env.PILOT_ALLOW_NONPROD_EMAILS || '').toLowerCase() === 'true';
+  const emailDeliveryEnabled = notificationsConfigured && (!context || context === 'production' || allowNonProd);
   add(
     'Emails transactionnels',
-    Boolean(process.env.RESEND_API_KEY && process.env.PILOT_EMAIL_FROM),
-    process.env.RESEND_API_KEY && process.env.PILOT_EMAIL_FROM ? 'Configurés' : 'Optionnels · non configurés'
+    emailDeliveryEnabled,
+    emailDeliveryEnabled
+      ? 'Actifs'
+      : notificationsConfigured
+      ? 'Configurés mais désactivés dans cet environnement'
+      : 'Optionnels · non configurés'
   );
   add('Notification opérateur', Boolean(process.env.PILOT_NOTIFY_TO), process.env.PILOT_NOTIFY_TO ? 'Configurée' : 'Optionnelle · non configurée');
   add('URL publique', Boolean(process.env.PILOT_PUBLIC_URL), process.env.PILOT_PUBLIC_URL ? 'Configurée' : 'À configurer pour les liens email');
