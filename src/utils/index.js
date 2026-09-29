@@ -1,6 +1,7 @@
 import Papa from 'papaparse'
 import * as XLSX from 'xlsx'
 import { DEMO } from '../data/demo'
+import { parseKnownPdfInventory } from './pdfInventory'
 
 // ── FORMATTERS ───────────────────────────────────────────────────
 export const eur = (n) => {
@@ -194,6 +195,9 @@ async function parsePdfFile(file) {
       "PDF reçu, mais aucun texte exploitable n'a été détecté. Il s'agit peut-être d'un scan : utilisez l'export Excel/CSV ou un PDF texte."
     )
   }
+
+  const knownInventory = parseKnownPdfInventory(matrix)
+  if (knownInventory.length) return knownInventory
 
   const rows = matrixToObjects(matrix)
   const width = rows[0] ? Object.keys(rows[0]).length : 0
