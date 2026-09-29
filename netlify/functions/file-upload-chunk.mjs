@@ -52,6 +52,22 @@ export default async (req) => {
     return json({ error: 'Chunk vide ou trop volumineux.' }, 413);
   }
 
+  if (chunkIndex === 0) {
+    const bytes = new Uint8Array(data.slice(0, Math.min(data.byteLength, 512)));
+    const ext = ALLOWED_EXTENSIONS.find((item) => lowerName.endsWith(item));
+    const starts = (...values) => values.every((value, index) => bytes[index] === value);
+    const isPdf = bytes.length >= 5 &&
+      bytes[0] === 0x25 && bytes[1] === 0x50 && bytes[2] === 0x44 && bytes[3] === 0x46 && bytes[4] === 0x2D;
+    const isZip = starts(0x50, 0x4B, 0x03, 0x04);
+    const isXls = starts(0xD0, 0xCF, 0x11, 0xE0, 0xA1, 0xB1, 0x1A, 0xE1);
+    const hasNull = bytes.some((value) => value === 0x00);
+
+    if (ext === '.pdf' && !isPdf) return json({ error: 'Le fichier ne correspond pas à un PDF valide.' }, 415);
+    if (ext === '.xlsx' && !isZip) return json({ error: 'Le fichier ne correspond pas à un XLSX valide.' }, 415);
+    if (ext === '.xls' && !isXls) return json({ error: 'Le fichier ne correspond pas à un XLS valide.' }, 415);
+    if (ext === '.csv' && hasNull) return json({ error: 'Le CSV semble contenir des données binaires et a été refusé.' }, 415);
+  }
+
   await STORE.files(req).set(fileChunkKey(dossierId, uploadId, chunkIndex), data, {
     metadata: {
       dossierId,
@@ -74,6 +90,19 @@ export default async (req) => {
     const uploaded = await STORE.files(req).list({ prefix });
     if ((uploaded.blobs || []).length !== chunkCount) {
       return json({ error: 'Upload incomplet : un ou plusieurs morceaux du fichier sont manquants.' }, 409);
+    }
+
+    let actualSize = 0;
+    for (let i = 0; i < chunkCount; i += 1) {
+      const stored = await STORE.files(req).get(fileChunkKey(dossierId, uploadId, i), {
+        type: 'arrayBuffer',
+        consistency: 'strong',
+      });
+      if (!stored) return json({ error: `Upload incomplet : morceau ${i + 1}/${chunkCount} manquant.` }, 409);
+      actualSize += stored.byteLength;
+    }
+    if (actualSize !== fileSize) {
+      return json({ error: 'La taille reçue ne correspond pas au fichier annoncé.' }, 409);
     }
 
     dossier.files = dossier.files || {};
