@@ -300,11 +300,24 @@ export function publicDossier(dossier) {
       }
     : null;
 
+  const files = Object.fromEntries(
+    Object.entries(dossier.files || {}).map(([slot, file]) => [
+      slot,
+      {
+        fileName: file?.fileName || '',
+        contentType: file?.contentType || '',
+        fileSize: Number.isFinite(file?.fileSize) ? file.fileSize : null,
+        uploadedAt: file?.uploadedAt || null,
+        complete: Boolean(file?.complete),
+      },
+    ])
+  );
+
   return {
     id: dossier.id,
     status: dossier.status,
     profile: dossier.profile,
-    files: dossier.files || {},
+    files,
     analysis: dossier.analysis || null,
     review,
     createdAt: dossier.createdAt,
