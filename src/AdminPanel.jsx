@@ -123,7 +123,7 @@ function PrintableReport({ dossier }) {
         <div><span>CA</span><b>{eur(analysis.ca)}</b><small>{Number.isFinite(analysis.ca_ttc) ? 'TTC' : 'base importée'}</small></div>
         <div><span>Marge</span><b>{Number.isFinite(analysis.marge_pct) ? `${analysis.marge_pct}%` : 'N/D'}</b><small>{eur(analysis.marge_eur)}</small></div>
         <div><span>Stock</span><b>{eur(analysis.stock_eur)}</b><small>valorisation importée</small></div>
-        <div><span>Sans vente</span><b>{num(analysis.dormants)}</b><small>si rapprochement disponible</small></div>
+        <div><span>Stock sans vente</span><b>{Number.isFinite(analysis.dormant_stock_eur) ? eur(analysis.dormant_stock_eur) : num(analysis.dormants)}</b><small>{Number.isFinite(analysis.dormant_stock_pct) ? `${analysis.dormant_stock_pct}% du stock` : 'si rapprochement disponible'}</small></div>
       </section>
 
       <section className="pr-section">
@@ -416,7 +416,7 @@ export default function AdminPanel() {
                 <div><span>CA</span><b>{eur(selected.analysis?.ca)}</b><small>{selected.analysis?.periode || 'N/D'}</small></div>
                 <div><span>Marge</span><b>{Number.isFinite(selected.analysis?.marge_pct) ? `${selected.analysis.marge_pct}%` : 'N/D'}</b><small>{eur(selected.analysis?.marge_eur)}</small></div>
                 <div><span>Stock</span><b>{eur(selected.analysis?.stock_eur)}</b><small>valorisé</small></div>
-                <div><span>Sans vente</span><b>{num(selected.analysis?.dormants)}</b><small>si disponible</small></div>
+                <div><span>Stock sans vente</span><b>{Number.isFinite(selected.analysis?.dormant_stock_eur) ? eur(selected.analysis.dormant_stock_eur) : num(selected.analysis?.dormants)}</b><small>{Number.isFinite(selected.analysis?.dormant_stock_pct) ? `${selected.analysis.dormant_stock_pct}% du stock` : 'si disponible'}</small></div>
               </div>
 
               <div className="adm-two">
