@@ -160,4 +160,7 @@ export default async (req) => {
   return json({ ok: true, chunkIndex, chunkCount, complete });
 };
 
-export const config = { path: '/api/file/upload-chunk' };
+export const config = {
+  path: '/api/file/upload-chunk',
+  rateLimit: { windowLimit: 120, windowSize: 60, aggregateBy: ['ip', 'domain'] },
+};
