@@ -11,6 +11,12 @@ export async function sendPilotEmail({ to, subject, html }) {
   const from = process.env.PILOT_EMAIL_FROM;
   if (!apiKey || !from || !to) return { sent: false, reason: 'not_configured' };
 
+  const context = String(process.env.CONTEXT || '').toLowerCase();
+  const allowNonProd = String(process.env.PILOT_ALLOW_NONPROD_EMAILS || '').toLowerCase() === 'true';
+  if (context && context !== 'production' && !allowNonProd) {
+    return { sent: false, reason: 'nonprod_disabled' };
+  }
+
   try {
     const response = await fetch('https://api.resend.com/emails', {
       method: 'POST',
