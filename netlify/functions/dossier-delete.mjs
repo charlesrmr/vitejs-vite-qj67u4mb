@@ -26,6 +26,9 @@ export default async (req) => {
     }
   }
 
+  if (dossier.report?.key) {
+    await STORE.files(req).delete(dossier.report.key);
+  }
   await STORE.dossiers(req).delete(dossierKey(dossier.id));
   return json({ ok: true });
 };
