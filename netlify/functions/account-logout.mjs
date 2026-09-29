@@ -5,7 +5,7 @@ export default async (req) => {
   const auth = await requireUser(req);
   if (auth.error) return auth.error;
 
-  await STORE.sessions().delete(`session/${sha256(auth.token)}`);
+  await STORE.sessions(req).delete(`session/${sha256(auth.token)}`);
   return json({ ok: true });
 };
 
