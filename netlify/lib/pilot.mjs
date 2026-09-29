@@ -217,6 +217,19 @@ export function cleanAnalysis(input = {}) {
     marge_eur: finite(input.marge_eur),
     stock_eur: finite(input.stock_eur),
     dormants: finite(input.dormants),
+    activity: {
+      days: finite(input.activity?.days),
+      dailyCaAvg: finite(input.activity?.dailyCaAvg),
+      latestVsPreviousPct: finite(input.activity?.latestVsPreviousPct),
+      monthly: Array.isArray(input.activity?.monthly)
+        ? input.activity.monthly.slice(0, 24).map((item) => ({
+            key: txt(item?.key, 20),
+            ca: finite(item?.ca),
+            days: finite(item?.days),
+            dailyCaAvg: finite(item?.dailyCaAvg),
+          }))
+        : [],
+    },
     synthesis: txt(input.synthesis, 8000),
     qualityWarnings: Array.isArray(input.qualityWarnings)
       ? input.qualityWarnings.slice(0, 30).map((item) => txt(item, 1200))
