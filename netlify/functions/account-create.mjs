@@ -32,7 +32,10 @@ export default async (req) => {
     createdAt: nowIso(),
     updatedAt: nowIso(),
   };
-  await store.setJSON(accountKey, account, { onlyIfNew: true });
+  const write = await store.setJSON(accountKey, account, { onlyIfNew: true });
+  if (write?.modified === false) {
+    return json({ error: 'Un compte existe déjà avec cet email.' }, 409);
+  }
 
   const session = await createSession(account, req);
   return json({
