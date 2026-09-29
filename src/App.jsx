@@ -937,6 +937,12 @@ export default function App() {
           if (f) parsed[k] = await parseFile(f);
         }
 
+        if (parsed.ventes?.__pilotMeta?.reportType === 'top-products') {
+          throw new Error(
+            'Ce fichier est un Hit Parade / TOP 50 produits. Déposez-le dans « Top produits » et utilisez un export global pour « Activité / ventes ».'
+          );
+        }
+
         setLs(1);
         const detected = {};
         Object.entries(parsed).forEach(([key, rows]) => {
