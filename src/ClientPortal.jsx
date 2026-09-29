@@ -211,7 +211,7 @@ export function AccountSettings({
   );
 }
 
-export function ClientReport({ dossier, onBack }) {
+export function ClientReport({ dossier, onBack, onDownload, downloading, downloadError }) {
   const r = dossier?.review || {};
   const a = dossier?.analysis || {};
   const p = dossier?.profile || {};
@@ -221,13 +221,19 @@ export function ClientReport({ dossier, onBack }) {
       <div className="cr-shell">
         <div className="cr-toolbar">
           <button onClick={onBack}>← Mes dossiers</button>
-          <button className="primary" onClick={() => window.print()}>Télécharger / imprimer en PDF</button>
+          <div className="cr-toolbar-actions">
+            <button onClick={() => window.print()}>Imprimer cette vue</button>
+            <button className="primary" onClick={onDownload} disabled={downloading || !dossier?.report?.available}>
+              {downloading ? 'Téléchargement...' : dossier?.report?.available ? 'Télécharger le PDF final' : 'PDF en préparation'}
+            </button>
+          </div>
         </div>
+        {downloadError && <div className="cp-error">{downloadError}</div>}
 
         <header className="cr-head">
           <span>DIAGNOSTIC RELU · PILOT'OFFICINE</span>
           <h1>{p.pharmacyName}</h1>
-          <p>{p.city} · {a.periode || 'Période analysée'} · {p.lgo || a.lgo || ''}</p>
+          <p>{p.city} · {a.periode || 'Période analysée'} · {p.lgo || a.lgo || ''}{dossier?.report?.generatedAt ? ` · PDF généré le ${new Date(dossier.report.generatedAt).toLocaleDateString('fr-FR')}` : ''}</p>
         </header>
 
         <div className="cr-kpis">
