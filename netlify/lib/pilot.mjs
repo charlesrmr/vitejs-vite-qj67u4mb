@@ -27,6 +27,7 @@ const stores = {
   sessions: (req) => getStore({ name: storeName('pilot-sessions', req), region: REGION, consistency: 'strong' }),
   dossiers: (req) => getStore({ name: storeName('pilot-dossiers', req), region: REGION, consistency: 'strong' }),
   files: (req) => getStore({ name: storeName('pilot-files', req), region: REGION, consistency: 'strong' }),
+  resets: (req) => getStore({ name: storeName('pilot-resets', req), region: REGION, consistency: 'strong' }),
 };
 
 export const STORE = stores;
