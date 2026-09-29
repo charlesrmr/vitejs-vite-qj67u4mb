@@ -405,6 +405,29 @@ function ResetPasswordStep({ token, onSubmit, saving, error }) {
   );
 }
 
+function VerifyEmailStep({ token, onVerify, saving, error, success, onHome }) {
+  useEffect(() => {
+    if (token && !success && !saving && !error) onVerify();
+  }, [token, success, saving, error, onVerify]);
+
+  return (
+    <div className="account-page">
+      <div className="login-shell">
+        <div className="account-kicker">Vérification email</div>
+        <h1>Confirmer votre<br /><em>adresse email.</em></h1>
+        <p>Cette étape confirme que l'adresse associée au compte vous appartient.</p>
+        <div className="account-card login-card">
+          {saving && <div className="settings-inline-info">Vérification en cours...</div>}
+          {error && <div className="account-error">{error}</div>}
+          {success && <div className="settings-success">Adresse email vérifiée. Votre compte est maintenant confirmé.</div>}
+          {!saving && !success && !error && !token && <div className="account-error">Lien de vérification invalide.</div>}
+          {success && <button className="account-submit" type="button" onClick={onHome}>Ouvrir mon espace →</button>}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function PB({ pct, color }) {
   return (
     <div className="pb">
