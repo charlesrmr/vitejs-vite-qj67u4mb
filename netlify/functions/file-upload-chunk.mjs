@@ -59,12 +59,24 @@ export default async (req) => {
     const isPdf = bytes.length >= 5 &&
       bytes[0] === 0x25 && bytes[1] === 0x50 && bytes[2] === 0x44 && bytes[3] === 0x46 && bytes[4] === 0x2D;
     const isZip = starts(0x50, 0x4B, 0x03, 0x04);
-    const isXls = starts(0xD0, 0xCF, 0x11, 0xE0, 0xA1, 0xB1, 0x1A, 0xE1);
+    const isOleXls = starts(0xD0, 0xCF, 0x11, 0xE0, 0xA1, 0xB1, 0x1A, 0xE1);
+    const headerText = new TextDecoder('utf-8', { fatal: false })
+      .decode(bytes)
+      .replace(/^\uFEFF/, '')
+      .trimStart()
+      .toLowerCase();
+    const isXmlXls =
+      headerText.startsWith('<?xml') &&
+      (headerText.includes('spreadsheet') || headerText.includes('workbook'));
+    const isHtmlXls =
+      (headerText.startsWith('<html') || headerText.startsWith('<!doctype html')) &&
+      (headerText.includes('<table') || headerText.includes('mso-'));
+    const isXls = isOleXls || isXmlXls || isHtmlXls;
     const hasNull = bytes.some((value) => value === 0x00);
 
     if (ext === '.pdf' && !isPdf) return json({ error: 'Le fichier ne correspond pas à un PDF valide.' }, 415);
     if (ext === '.xlsx' && !isZip) return json({ error: 'Le fichier ne correspond pas à un XLSX valide.' }, 415);
-    if (ext === '.xls' && !isXls) return json({ error: 'Le fichier ne correspond pas à un XLS valide.' }, 415);
+    if (ext === '.xls' && !isXls) return json({ error: 'Le fichier ne correspond pas à un format XLS reconnu.' }, 415);
     if (ext === '.csv' && hasNull) return json({ error: 'Le CSV semble contenir des données binaires et a été refusé.' }, 415);
   }
 
