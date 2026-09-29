@@ -149,7 +149,7 @@ Ne pas ouvrir le pilote tant que les points suivants n'ont pas été testés au 
 
 - compte / connexion
 - upload multi-fichiers
-- PDF réel Bernardy
+- PDF réel anonymisé
 - CSV activité réel
 - mapping
 - soumission relecture
