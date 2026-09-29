@@ -772,6 +772,12 @@ export function buildFromFiles(filesMap, columnMappings = {}) {
     const productCols = { ...detectColumns(productReportRows), ...(columnMappings.produits || {}) }
     data.detectedColumns.produits = productCols
 
+    if (productReportRows.__pilotMeta?.reportType === 'top-products') {
+      data.qualityWarnings.push(
+        "Le fichier produits est un Hit Parade / TOP 50 : il décrit uniquement les références classées dans ce rapport et ne représente pas l’ensemble des ventes."
+      )
+    }
+
     if (productCols.produit && productCols.quantite) {
       productReportRows.forEach((row) => {
         const quantity = parseFrenchNumber(row[productCols.quantite])
