@@ -14,6 +14,9 @@ export default async (req) => {
     type: 'json', consistency: 'strong',
   });
   if (!dossier) return json({ error: 'Dossier introuvable.' }, 404);
+  if (dossier.status === 'draft') {
+    return json({ error: 'Le titulaire n’a pas encore envoyé ce dossier pour relecture.' }, 409);
+  }
 
   const status = ['submitted', 'in_review', 'reviewed'].includes(body?.status)
     ? body.status
