@@ -16,6 +16,7 @@ export function ClientPortal({
   onRefresh,
   onNew,
   onOpen,
+  onDelete,
   onLogout,
 }) {
   return (
@@ -73,7 +74,10 @@ export function ClientPortal({
               </div>
 
               <div className="cp-card-foot">
-                <small>Réf. {d.id.slice(-10)}</small>
+                <div className="cp-card-ref">
+                  <small>Réf. {d.id.slice(-10)}</small>
+                  <button className="danger-link" onClick={() => onDelete(d.id, d.profile?.pharmacyName)}>Supprimer</button>
+                </div>
                 {d.status === 'reviewed' ? (
                   <button className="primary" onClick={() => onOpen(d.id)}>Voir mon diagnostic →</button>
                 ) : d.status === 'submitted' || d.status === 'in_review' ? (
