@@ -11,7 +11,7 @@
 .adm-header-actions{display:flex;gap:7px}.adm-header-actions button{border:1px solid #294158;background:#102337;color:#b8c7d6;border-radius:8px;padding:7px 10px;font:inherit;font-size:9px;cursor:pointer}
 .adm-layout{display:grid;grid-template-columns:300px minmax(0,1fr);min-height:calc(100vh - 62px)}
 .adm-sidebar{background:#fff;border-right:1px solid #dfe5eb;position:sticky;top:62px;height:calc(100vh - 62px);overflow:auto}
-.adm-side-head{padding:15px;border-bottom:1px solid #e8edf1;display:flex;align-items:center;justify-content:space-between}.adm-side-head>div{display:flex;gap:7px;align-items:center}.adm-side-head span{font-size:8px;font-weight:800;color:#8a96a5;letter-spacing:1px}.adm-side-head b{font-size:11px;color:#7c3aed}
+.adm-side-head{padding:15px;border-bottom:1px solid #e8edf1;display:flex;align-items:center;justify-content:space-between}.adm-side-head>div{display:flex;gap:7px;align-items:center;flex-wrap:wrap}.adm-side-head span{font-size:8px;font-weight:800;color:#8a96a5;letter-spacing:1px}.adm-side-head b{font-size:11px;color:#7c3aed}.adm-side-head small{flex-basis:100%;width:max-content;color:#6f7b89;background:#f5f7fa;border:1px solid #e4e9ee;border-radius:999px;padding:3px 6px;font-size:7.5px;font-weight:700;line-height:1}
 .adm-side-head select{border:1px solid #dfe5eb;border-radius:7px;background:#fafbfc;color:#596575;padding:6px 8px;font-size:9px}
 .adm-empty{padding:28px 16px;color:#919caa;font-size:10px;text-align:center}.adm-list{padding:7px}
 .adm-list-item{width:100%;border:1px solid transparent;background:transparent;border-radius:11px;padding:11px;text-align:left;cursor:pointer;display:grid;grid-template-columns:1fr auto;gap:3px 8px;margin-bottom:3px}
