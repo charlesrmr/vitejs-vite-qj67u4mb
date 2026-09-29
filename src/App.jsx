@@ -24,6 +24,7 @@ import {
   getSessionToken,
   listMyDossiers,
   loginAccount,
+  logoutAccount,
   saveSessionToken,
   submitDossier,
   uploadAllFiles,
@@ -949,7 +950,8 @@ export default function App() {
     }
   };
 
-  const logoutClient = () => {
+  const logoutClient = async () => {
+    const token = sessionToken;
     clearSession();
     setSessionToken('');
     setAccount(null);
@@ -957,6 +959,9 @@ export default function App() {
     setClientDossiers([]);
     setSelectedClientDossier(null);
     setStep('landing');
+    if (token) {
+      try { await logoutAccount(token); } catch {}
+    }
   };
   const updateProfile = (key, value) => {
     setProfile((prev) => ({ ...prev, [key]: value }));
