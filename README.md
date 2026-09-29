@@ -27,6 +27,7 @@ Pilot'Officine transforme des exports LGO en pré-analyse, puis organise une rel
 - Sessions : token opaque aléatoire, empreinte stockée côté serveur, durée 30 jours
 - Fichiers : upload chunké de 3 Mo ; limite serveur 25 Mo / fichier
 - Isolation : les Deploy Previews utilisent des stores Blob séparés des données de production
+- Règle d'exploitation : les Deploy Previews servent uniquement aux tests. Ne pas y onboarder les pharmacies pilotes définitives ; leurs comptes et dossiers ne sont pas automatiquement transférés vers la production.
 - PDF : parseur PDF.js empaqueté avec l'application, sans chargement de code parser depuis un CDN
 - Excel : SheetJS CE 0.20.3 depuis la source officielle SheetJS, en remplacement de l'ancien paquet npm 0.18.5 vulnérable
 - Back-office : protégé par `PILOT_ADMIN_TOKEN`
