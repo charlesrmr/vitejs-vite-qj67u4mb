@@ -1,3 +1,4 @@
+import { buildReviewedPdf } from '../lib/report.mjs';
 import { clientReadyEmail, sendPilotEmail } from '../lib/notify.mjs';
 import {
   STORE, json, nowIso, requireAdmin, sanitizeReview, saveDossier,
@@ -47,6 +48,35 @@ export default async (req) => {
   dossier.review = review;
   dossier.status = status;
   dossier.reviewedAt = status === 'reviewed' ? nowIso() : null;
+
+  if (status === 'reviewed') {
+    try {
+      const pdfBytes = await buildReviewedPdf(dossier);
+      const reportKey = `dossier/${dossier.id}/report/reviewed.pdf`;
+      const arrayBuffer = pdfBytes.buffer.slice(
+        pdfBytes.byteOffset,
+        pdfBytes.byteOffset + pdfBytes.byteLength
+      );
+      await STORE.files(req).set(reportKey, arrayBuffer, {
+        metadata: {
+          dossierId: dossier.id,
+          accountId: dossier.accountId,
+          contentType: 'application/pdf',
+          generatedAt: nowIso(),
+        },
+      });
+      dossier.report = {
+        key: reportKey,
+        fileName: `diagnostic-pilot-officine-${dossier.id.slice(-8)}.pdf`,
+        contentType: 'application/pdf',
+        fileSize: pdfBytes.byteLength,
+        generatedAt: nowIso(),
+      };
+    } catch {
+      return json({ error: 'La relecture est complète, mais le PDF final n’a pas pu être généré. Le dossier n’a pas été validé.' }, 500);
+    }
+  }
+
   await saveDossier(dossier, req);
 
   if (status === 'reviewed' && !wasReviewed) {
