@@ -21,6 +21,7 @@ import {
   createDossier,
   deleteAccount,
   deleteDossier,
+  downloadReviewedReport,
   getDossier,
   getMe,
   getSessionToken,
@@ -799,6 +800,8 @@ export default function App() {
   const [settingsError, setSettingsError] = useState('');
   const [settingsSuccess, setSettingsSuccess] = useState('');
   const [selectedClientDossier, setSelectedClientDossier] = useState(null);
+  const [reportDownloading, setReportDownloading] = useState(false);
+  const [reportDownloadError, setReportDownloadError] = useState('');
   const [files, setFiles] = useState({ ventes: null, produits: null, stock: null });
   const [parsedFiles, setParsedFiles] = useState({});
   const [mappings, setMappings] = useState({});
@@ -1024,6 +1027,25 @@ export default function App() {
       setPortalError(err?.message || 'Impossible d’ouvrir ce diagnostic.');
     } finally {
       setPortalLoading(false);
+    }
+  };
+
+  const downloadClientReport = async () => {
+    if (!sessionToken || !selectedClientDossier?.id) return;
+    setReportDownloading(true);
+    setReportDownloadError('');
+    try {
+      const result = await downloadReviewedReport(sessionToken, selectedClientDossier.id);
+      const url = URL.createObjectURL(result.blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = result.fileName;
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    } catch (err) {
+      setReportDownloadError(err?.message || 'Téléchargement du PDF impossible.');
+    } finally {
+      setReportDownloading(false);
     }
   };
 
@@ -1385,9 +1407,13 @@ export default function App() {
         <ClientReport
           dossier={selectedClientDossier}
           onBack={async () => {
+            setReportDownloadError('');
             await refreshPortal(sessionToken);
             setStep('portal');
           }}
+          onDownload={downloadClientReport}
+          downloading={reportDownloading}
+          downloadError={reportDownloadError}
         />
       )}
 
