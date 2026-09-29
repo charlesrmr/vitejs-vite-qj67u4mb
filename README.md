@@ -25,6 +25,9 @@ Pilot'Officine transforme des exports LGO en pré-analyse, puis organise une rel
 - Mot de passe : dérivation `scrypt` avec sel individuel, jamais stocké en clair
 - Sessions : token opaque aléatoire, empreinte stockée côté serveur, durée 30 jours
 - Fichiers : upload chunké de 3 Mo ; limite serveur 25 Mo / fichier
+- Isolation : les Deploy Previews utilisent des stores Blob séparés des données de production
+- PDF : parseur PDF.js empaqueté avec l'application, sans chargement de code parser depuis un CDN
+- Excel : SheetJS CE 0.20.3 depuis la source officielle SheetJS, en remplacement de l'ancien paquet npm 0.18.5 vulnérable
 - Back-office : protégé par `PILOT_ADMIN_TOKEN`
 - Restitution : rapport relu, rendu print A4 / PDF
 
@@ -67,6 +70,8 @@ Le token est demandé à l'ouverture et conservé uniquement dans `sessionStorag
 - Vérifier PDF / CSV / XLSX
 - Vérifier le mapping
 - Lancer la pré-analyse
+- Vérifier le CA moyen/jour, le stock, le nombre de références et la valeur éventuelle du stock sans vente
+- Confirmer explicitement l'absence de données nominatives patient
 - Ouvrir l'étape relecture
 - Envoyer le dossier
 - Se déconnecter puis se reconnecter
@@ -126,7 +131,17 @@ Les PDF sont reconnus progressivement par format LGO. Les fichiers non structur�
 - Le PDF utilise pour l'instant l'impression navigateur A4
 - Le moteur automatique reste une pré-analyse ; la restitution finale est relue
 - Aucun traitement de donnée patient / donnée nominative de santé ne doit être introduit sans revue juridique et d'hébergement dédiée
-- Le `package-lock.json` historique doit être régénéré proprement avant industrialisation
+- Le lockfile historique a été retiré car il ne correspondait plus aux dépendances du MVP ; les dépendances directes sont épinglées. Régénérer et committer un lockfile propre avant industrialisation
+
+## Vérification technique rapide
+
+Le backend expose un health check non sensible :
+
+```
+/api/health
+```
+
+Il permet de vérifier que les Functions et le stockage Blob répondent, ainsi que de savoir si le secret admin est configuré, sans exposer sa valeur.
 
 ## Critères de lancement des 10 pharmacies fondatrices
 
