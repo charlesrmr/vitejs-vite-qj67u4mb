@@ -436,6 +436,7 @@ const MAPPING_CONFIG = {
       ['cip', 'CIP / EAN'],
       ['stockValeur', 'Valeur stock'],
       ['stockQte', 'Quantité stock'],
+      ['stockRefs', 'Nombre de références'],
       ['famille', 'Famille / rayon'],
     ],
   },
