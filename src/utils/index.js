@@ -535,6 +535,12 @@ function emptyRealData() {
       tx_assoc: null,
       clients: null,
     },
+    activity: {
+      days: null,
+      dailyCaAvg: null,
+      monthly: [],
+      latestVsPreviousPct: null,
+    },
     top10: [],
     flop: [],
     familles: [],
@@ -571,6 +577,7 @@ export function buildFromFiles(filesMap, columnMappings = {}) {
   const data = emptyRealData()
   data.detectedColumns.ventes = salesCols
   data.periode = inferPeriod(ventes, salesCols.date)
+  data.activity = buildActivity(ventes, salesCols.date, caDisplayCol)
 
   let ca = 0
   let caHt = 0
@@ -661,7 +668,7 @@ export function buildFromFiles(filesMap, columnMappings = {}) {
     marginMode = 'eur'
   } else if (weightedBase > 0) {
     margePct = weightedMargin / weightedBase
-    margeEur = ca * margePct / 100
+    margeEur = weightedBase * margePct / 100
     marginMode = 'pct'
   }
 
@@ -693,7 +700,16 @@ export function buildFromFiles(filesMap, columnMappings = {}) {
   }
 
   data.familles = caDisplayCol
-    ? buildFamilies(ventes, { ...salesCols, ca: caDisplayCol }, ca, marginMode)
+    ? buildFamilies(
+        ventes,
+        {
+          ...salesCols,
+          caDisplay: caDisplayCol,
+          caMargin: caMarginBaseCol,
+        },
+        ca,
+        marginMode
+      )
     : []
   data.chart = data.familles.slice(0, 8).map((f) => ({
     name: f.nom,
