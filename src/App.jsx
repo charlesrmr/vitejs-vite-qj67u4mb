@@ -735,6 +735,18 @@ export default function App() {
   const [accountError, setAccountError] = useState('');
 
   const sf = (k) => (f) => {
+    if (!f) return;
+    const lower = f.name.toLowerCase();
+    const allowed = ['.pdf', '.csv', '.xlsx', '.xls'].some((ext) => lower.endsWith(ext));
+    if (!allowed) {
+      setError('Format refusé. Utilisez un fichier PDF, CSV, XLS ou XLSX.');
+      return;
+    }
+    if (f.size > 25 * 1024 * 1024) {
+      setError('Fichier trop volumineux. Limite pilote : 25 Mo par fichier.');
+      return;
+    }
+    setError('');
     setFiles((p) => ({ ...p, [k]: f }));
     setFilesPersisted(false);
     setUploadProgress(null);
