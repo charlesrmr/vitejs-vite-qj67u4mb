@@ -169,7 +169,7 @@ const EMPTY_PROFILE = {
   consent: false,
 };
 
-function AccountStep({ profile, onChange, onSubmit, onDemo, saving, submitError }) {
+function AccountStep({ profile, onChange, onSubmit, onDemo, saving, submitError, password, passwordConfirm, onPassword, onPasswordConfirm, onLogin }) {
   const requiredReady = Boolean(
     profile.firstName.trim() &&
     profile.lastName.trim() &&
@@ -180,7 +180,9 @@ function AccountStep({ profile, onChange, onSubmit, onDemo, saving, submitError 
     profile.postalCode.trim() &&
     profile.city.trim() &&
     profile.lgo.trim() &&
-    profile.consent
+    profile.consent &&
+    password.length >= 8 &&
+    password === passwordConfirm
   );
 
   const field = (key) => ({
@@ -264,6 +266,14 @@ function AccountStep({ profile, onChange, onSubmit, onDemo, saving, submitError 
               <span>Un contexte à connaître ? <small>optionnel</small></span>
               <textarea {...field('context')} rows="3" placeholder="Transfert récent, recrutement, tension de trésorerie, objectif particulier..." />
             </label>
+            <label>
+              <span>Mot de passe *</span>
+              <input type="password" value={password} onChange={(e) => onPassword(e.target.value)} autoComplete="new-password" placeholder="8 caractères minimum" />
+            </label>
+            <label>
+              <span>Confirmer le mot de passe *</span>
+              <input type="password" value={passwordConfirm} onChange={(e) => onPasswordConfirm(e.target.value)} autoComplete="new-password" placeholder="Retapez le mot de passe" />
+            </label>
           </div>
 
           <label className="account-consent">
@@ -279,11 +289,33 @@ function AccountStep({ profile, onChange, onSubmit, onDemo, saving, submitError 
           <button className="account-submit" type="submit" disabled={!requiredReady || saving}>
             {saving ? 'Création du dossier...' : 'Continuer vers mes exports →'}
           </button>
+          <button className="account-demo" type="button" onClick={onLogin}>J'ai déjà un compte</button>
           <button className="account-demo" type="button" onClick={onDemo}>Voir la démonstration sans créer de compte</button>
 
           <div className="account-foot">
-            Aucune donnée patient n'est demandée. En phase pilote, ce formulaire prépare votre dossier avant l'activation du stockage sécurisé côté serveur.
+            Aucune donnée patient n'est demandée. Le compte et les dossiers sont stockés côté serveur ; les mots de passe ne sont jamais enregistrés en clair.
           </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+function LoginStep({ email, password, onEmail, onPassword, onSubmit, saving, error, onCreate }) {
+  return (
+    <div className="account-page">
+      <div className="login-shell">
+        <div className="account-kicker">Connexion</div>
+        <h1>Retrouvez votre compte<br /><em>Pilot'Officine.</em></h1>
+        <p>Connectez-vous pour créer un nouveau dossier ou poursuivre votre parcours.</p>
+        <form className="account-card login-card" onSubmit={(e) => { e.preventDefault(); onSubmit(); }}>
+          <div className="account-grid">
+            <label className="full"><span>Email</span><input type="email" value={email} onChange={(e) => onEmail(e.target.value)} autoComplete="email" /></label>
+            <label className="full"><span>Mot de passe</span><input type="password" value={password} onChange={(e) => onPassword(e.target.value)} autoComplete="current-password" /></label>
+          </div>
+          {error && <div className="account-error">{error}</div>}
+          <button className="account-submit" type="submit" disabled={saving || !email || !password}>{saving ? 'Connexion...' : 'Se connecter →'}</button>
+          <button className="account-demo" type="button" onClick={onCreate}>Créer un compte</button>
         </form>
       </div>
     </div>
