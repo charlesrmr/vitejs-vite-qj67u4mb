@@ -253,12 +253,12 @@ function Landing({ onStart, onDemo }) {
                 <div className="lp-preview-label">Aperçu diagnostic</div>
                 <div className="lp-preview-title">Pilot'Officine</div>
               </div>
-              <span className="lp-live">démo</span>
+              <span className="lp-live">exemple fictif</span>
             </div>
             <div className="lp-kpi-grid">
-              <div className="lp-kpi"><span>CA</span><b>1,22 M€</b><small>12 mois</small></div>
-              <div className="lp-kpi"><span>Marge</span><b>27,6 %</b><small>à surveiller</small></div>
-              <div className="lp-kpi"><span>Stock</span><b>119 k€</b><small>valorisé HT</small></div>
+              <div className="lp-kpi"><span>CA</span><b>1,25 M€</b><small>12 mois</small></div>
+              <div className="lp-kpi"><span>Marge</span><b>29,1 %</b><small>à surveiller</small></div>
+              <div className="lp-kpi"><span>Stock</span><b>115 k€</b><small>valorisé HT</small></div>
               <div className="lp-kpi"><span>Priorités</span><b>5</b><small>actions maximum</small></div>
             </div>
             <div className="lp-mini-chart">
