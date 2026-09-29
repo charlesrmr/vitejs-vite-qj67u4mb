@@ -126,6 +126,14 @@ function PrintableReport({ dossier }) {
         <div><span>Stock sans vente</span><b>{Number.isFinite(analysis.dormant_stock_eur) ? eur(analysis.dormant_stock_eur) : num(analysis.dormants)}</b><small>{Number.isFinite(analysis.dormant_stock_pct) ? `${analysis.dormant_stock_pct}% du stock` : 'si rapprochement disponible'}</small></div>
       </section>
 
+      {!!analysis.qualityWarnings?.length && (
+        <section className="pr-section pr-missing">
+          <span className="pr-eyebrow">PÉRIMÈTRE DE LECTURE</span>
+          <h2>Points de vigilance sur les données</h2>
+          <ul>{analysis.qualityWarnings.map((warning, i) => <li key={i}>{warning}</li>)}</ul>
+        </section>
+      )}
+
       <section className="pr-section">
         <span className="pr-eyebrow">SYNTHÈSE</span>
         <h2>Ce qu'il faut retenir</h2>
