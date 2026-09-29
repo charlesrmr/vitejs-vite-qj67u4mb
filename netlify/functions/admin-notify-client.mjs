@@ -42,6 +42,5 @@ export default async (req) => {
 
 export const config = {
   path: '/api/admin/notify-client',
-  region: 'fra',
   rateLimit: { windowLimit: 10, windowSize: 60, aggregateBy: ['ip', 'domain'] },
 };
