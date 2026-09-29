@@ -222,3 +222,19 @@ export async function downloadReviewedReport(token, dossierId) {
     fileName: match?.[1] || 'diagnostic-pilot-officine.pdf',
   };
 }
+
+
+export async function requestEmailVerification(token) {
+  return apiRequest('/api/account/verify-request', {
+    method: 'POST',
+    token,
+    body: {},
+  });
+}
+
+export async function verifyEmail(token) {
+  return apiRequest('/api/account/verify', {
+    method: 'POST',
+    body: { token },
+  });
+}
