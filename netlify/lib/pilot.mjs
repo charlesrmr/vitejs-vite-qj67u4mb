@@ -126,6 +126,9 @@ export async function requireUser(req) {
     consistency: 'strong',
   });
   if (!session || !session.expiresAt || new Date(session.expiresAt).getTime() < Date.now()) {
+    if (token) {
+      try { await stores.sessions(req).delete(`session/${sha256(token)}`); } catch {}
+    }
     return { error: json({ error: 'Session expirée ou invalide.' }, 401) };
   }
   const account = await stores.accounts(req).get(session.accountKey, {
