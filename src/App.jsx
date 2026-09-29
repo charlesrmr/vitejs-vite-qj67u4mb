@@ -566,7 +566,7 @@ function Landing({ onStart, onDemo }) {
           <div className="lp-trust-mark">CR</div>
           <div className="lp-trust-copy">
             <strong>Conçu par un pharmacien. Nourri par le terrain.</strong>
-            <span>Charles Romier · CRC Pharma · ancien cofondateur du Comptoir des Pharmacies</span>
+            <span>Charles Romier · CRC Pharma · Le Comptoir des Pharmacies</span>
           </div>
         </div>
       </section>
