@@ -1,6 +1,6 @@
 import {
   STORE, fileChunkKey, getOwnedDossier, json, requireAdmin, requireUser,
-} from './_pilot.mjs';
+} from '../lib/pilot.mjs';
 
 function disposition(name) {
   const ascii = String(name || 'fichier').replace(/[^a-zA-Z0-9._-]+/g, '_');
