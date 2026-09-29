@@ -233,14 +233,14 @@ function AccountStep({ profile, onChange, onSubmit, onDemo, saving, submitError,
           </div>
 
           <div className="account-grid">
-            <label><span>Prénom *</span><input {...field('firstName')} autoComplete="given-name" placeholder="Claire" /></label>
-            <label><span>Nom *</span><input {...field('lastName')} autoComplete="family-name" placeholder="Bernardy" /></label>
+            <label><span>Prénom *</span><input {...field('firstName')} autoComplete="given-name" placeholder="Votre prénom" /></label>
+            <label><span>Nom *</span><input {...field('lastName')} autoComplete="family-name" placeholder="Votre nom" /></label>
             <label><span>Email *</span><input {...field('email')} type="email" autoComplete="email" placeholder="vous@pharmacie.fr" /></label>
             <label><span>Téléphone *</span><input {...field('phone')} type="tel" autoComplete="tel" placeholder="06 00 00 00 00" /></label>
-            <label className="full"><span>Nom de la pharmacie *</span><input {...field('pharmacyName')} placeholder="Pharmacie des Jardins" /></label>
-            <label className="full"><span>Adresse de l'officine *</span><input {...field('address')} autoComplete="street-address" placeholder="2 rue des Jardins" /></label>
-            <label><span>Code postal *</span><input {...field('postalCode')} autoComplete="postal-code" placeholder="57000" /></label>
-            <label><span>Ville *</span><input {...field('city')} autoComplete="address-level2" placeholder="Metz" /></label>
+            <label className="full"><span>Nom de la pharmacie *</span><input {...field('pharmacyName')} placeholder="Nom de votre pharmacie" /></label>
+            <label className="full"><span>Adresse de l'officine *</span><input {...field('address')} autoComplete="street-address" placeholder="Adresse de l'officine" /></label>
+            <label><span>Code postal *</span><input {...field('postalCode')} autoComplete="postal-code" placeholder="Code postal" /></label>
+            <label><span>Ville *</span><input {...field('city')} autoComplete="address-level2" placeholder="Ville" /></label>
 
             <label>
               <span>LGO *</span>
