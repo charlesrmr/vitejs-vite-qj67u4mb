@@ -1018,84 +1018,15 @@ export default function App() {
           <div className="hd-nm">Pilot'Officine</div>
         </button>
         <div className="hd-r">
-          {step === 'review' && data && (
-        <div className="review-page">
-          <div className="review-shell">
-            <div className="review-head">
-              <div className="review-kicker">Étape 4 · Relecture</div>
-              <h1>Votre dossier est prêt<br /><em>pour la validation.</em></h1>
-              <p>
-                La pré-analyse est terminée. Le MVP Pilot'Officine prévoit maintenant une relecture
-                avant de produire le diagnostic PDF final.
-              </p>
-            </div>
-
-            <div className="review-grid">
-              <section className="review-card">
-                <span>CONTACT</span>
-                <h3>{profile.firstName} {profile.lastName}</h3>
-                <p>{profile.email}<br />{profile.phone}</p>
-              </section>
-              <section className="review-card">
-                <span>OFFICINE</span>
-                <h3>{profile.pharmacyName}</h3>
-                <p>{profile.address}<br />{profile.postalCode} {profile.city}</p>
-              </section>
-              <section className="review-card">
-                <span>CONTEXTE</span>
-                <h3>{profile.lgo || 'LGO non renseigné'}</h3>
-                <p>
-                  {profile.role}
-                  {profile.teamSize ? ' · ' + profile.teamSize : ''}
-                  {profile.network ? ' · ' + profile.network : ''}
-                </p>
-              </section>
-            </div>
-
-            <div className="review-package">
-              <div>
-                <span>DOSSIER À RELIRE</span>
-                <h2>Pré-analyse + exports + contexte officine</h2>
-                <p>
-                  {Object.values(files).filter(Boolean).length} fichier(s) associé(s) au dossier.
-                  Le PDF final devra reprendre uniquement les constats validés après contrôle.
-                </p>
-              </div>
-              <div className="review-file-list">
-                {Object.entries(files).filter(([, file]) => file).map(([type, file]) => (
-                  <div key={type}><b>{type}</b><span>{file.name}</span></div>
-                ))}
-              </div>
-            </div>
-
-            <div className="review-output">
-              <div className="review-output-number">PDF</div>
-              <div>
-                <span>RESTITUTION PRÉVUE</span>
-                <h3>Un diagnostic court, relu, directement exploitable.</h3>
-                <p>Constats clés · points de vigilance · 3 priorités · plan d'action 30 jours · données manquantes à compléter.</p>
-              </div>
-            </div>
-
-            <div className="review-notice">
-              <b>Phase pilote :</b> le stockage serveur et l'envoi sécurisé du dossier ne sont pas encore connectés.
-              L'écran prépare le workflow final sans prétendre que les fichiers ont déjà été transmis.
-            </div>
-
-            <div className="review-actions">
-              <button className="map-back" onClick={() => setStep('dashboard')}>← Retour à la pré-analyse</button>
-              <button className="review-disabled" disabled>Envoi sécurisé · prochaine brique</button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {step === 'dashboard' && data && (
+          {step === 'dashboard' && data && (
             <div className="hd-meta">
               {data.officine} - {data.periode}
             </div>
           )}
-          <div className="hd-badge">beta</div>
+          {account?.profile?.firstName && step !== 'landing' && (
+            <div className="hd-meta">{account.profile.firstName}</div>
+          )}
+          <div className="hd-badge">pilote</div>
           {step === 'landing' && (
             <button className="hd-cta" onClick={startAccount}>Préparer mon diagnostic</button>
           )}
@@ -1114,6 +1045,24 @@ export default function App() {
           onDemo={() => run(true)}
           saving={accountSaving}
           submitError={accountError}
+          password={password}
+          passwordConfirm={passwordConfirm}
+          onPassword={setPassword}
+          onPasswordConfirm={setPasswordConfirm}
+          onLogin={() => setStep('login')}
+        />
+      )}
+
+      {step === 'login' && (
+        <LoginStep
+          email={loginEmail}
+          password={loginPassword}
+          onEmail={setLoginEmail}
+          onPassword={setLoginPassword}
+          onSubmit={completeLogin}
+          saving={loginSaving}
+          error={loginError}
+          onCreate={() => setStep('account')}
         />
       )}
 
@@ -1158,6 +1107,13 @@ export default function App() {
               Le fichier activité suffit pour démarrer —{' '}
               <b>produits et stock enrichissent le diagnostic</b>
             </p>
+            {uploadProgress && (
+              <div className="upload-progress">
+                <div><span>Envoi sécurisé</span><b>{uploadProgress.fileName}</b></div>
+                <div className="upload-progress-track"><i style={{ width: `${uploadProgress.pct}%` }} /></div>
+                <small>{uploadProgress.pct}% · fichier {uploadProgress.fileIndex}/{uploadProgress.fileCount}</small>
+              </div>
+            )}
             {error && <div className="up-error">{error}</div>}
             <button className="btn-go" onClick={() => run(false)} disabled={!files.ventes}>
               Préparer ma pré-analyse
