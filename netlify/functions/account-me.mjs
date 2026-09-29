@@ -7,4 +7,4 @@ export default async (req) => {
   return json({ account: publicAccount(auth.account) });
 };
 
-export const config = { path: '/api/account/me', region: 'fra' };
+export const config = { path: '/api/account/me' };
