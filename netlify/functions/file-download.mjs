@@ -18,13 +18,13 @@ export default async (req) => {
   if (adminMode) {
     const admin = requireAdmin(req);
     if (admin.error) return admin.error;
-    dossier = await STORE.dossiers().get(`dossier/${dossierId}.json`, {
+    dossier = await STORE.dossiers(req).get(`dossier/${dossierId}.json`, {
       type: 'json', consistency: 'strong',
     });
   } else {
     const auth = await requireUser(req);
     if (auth.error) return auth.error;
-    dossier = await getOwnedDossier(dossierId, auth.account.id);
+    dossier = await getOwnedDossier(dossierId, auth.account.id, req);
   }
 
   if (!dossier) return json({ error: 'Dossier introuvable.' }, 404);
@@ -35,7 +35,7 @@ export default async (req) => {
     async start(controller) {
       try {
         for (let i = 0; i < meta.chunkCount; i += 1) {
-          const chunk = await STORE.files().get(fileChunkKey(dossierId, meta.uploadId, i), {
+          const chunk = await STORE.files(req).get(fileChunkKey(dossierId, meta.uploadId, i), {
             type: 'arrayBuffer',
             consistency: 'strong',
           });
