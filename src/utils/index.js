@@ -487,6 +487,10 @@ function buildLocalSynthesis(data) {
   if (Number.isFinite(data.activity?.dailyCaAvg) && Number.isFinite(data.activity?.days)) {
     parts.push(`Le CA moyen est de ${eur(data.activity.dailyCaAvg)} par jour présent dans l'export, sur ${data.activity.days} jour(s) exploitable(s).`)
   }
+  if (Number.isFinite(data.activity?.latestVsPreviousPct)) {
+    const sign = data.activity.latestVsPreviousPct >= 0 ? '+' : ''
+    parts.push(`Entre les deux derniers mois suffisamment renseignés, le CA moyen par jour actif évolue de ${sign}${data.activity.latestVsPreviousPct}%.`)
+  }
   if (Number.isFinite(data.marge_pct)) {
     parts.push(`La marge brute calculée sur l'ensemble des lignes exploitables est de ${data.marge_pct}% (${eur(data.marge_eur)}).`)
   } else {
