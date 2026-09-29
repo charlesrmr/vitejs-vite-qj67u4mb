@@ -11,9 +11,11 @@ const REGION = 'eu-central-1';
 
 function requestStoreSuffix(req) {
   try {
-    const requestHost = new URL(req.url).hostname;
-    const primaryHost = process.env.URL ? new URL(process.env.URL).hostname : '';
-    return primaryHost && requestHost === primaryHost ? '' : '-preview';
+    const host = new URL(req.url).hostname.toLowerCase();
+    const isDeployPreview =
+      host.startsWith('deploy-preview-') ||
+      host.includes('--pilotofficine.netlify.app');
+    return isDeployPreview ? '-preview' : '';
   } catch {
     return '-preview';
   }
