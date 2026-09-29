@@ -14,4 +14,7 @@ export default async (req) => {
   return json({ dossier });
 };
 
-export const config = { path: '/api/admin/dossier' };
+export const config = {
+  path: '/api/admin/dossier',
+  rateLimit: { windowLimit: 60, windowSize: 60, aggregateBy: ['ip', 'domain'] },
+};
