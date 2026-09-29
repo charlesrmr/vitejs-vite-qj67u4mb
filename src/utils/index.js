@@ -599,7 +599,8 @@ export function buildFromFiles(filesMap, columnMappings = {}) {
   let hasMarginEur = false
   let weightedMargin = 0
   let weightedBase = 0
-  const products = []
+  const salesProducts = []
+  let productReportProducts = []
 
   ventes.forEach((row) => {
     const rowCa = caDisplayCol ? parseFrenchNumber(row[caDisplayCol]) : null
@@ -625,7 +626,7 @@ export function buildFromFiles(filesMap, columnMappings = {}) {
     if (salesCols.produit) {
       const quantity = salesCols.quantite ? parseFrenchNumber(row[salesCols.quantite]) : null
       const publicPrice = salesCols.prixPublic ? parseFrenchNumber(row[salesCols.prixPublic]) : null
-      products.push({
+      salesProducts.push({
         nom: String(row[salesCols.produit] || '?'),
         ca: rowCa,
         quantite: quantity,
@@ -648,7 +649,7 @@ export function buildFromFiles(filesMap, columnMappings = {}) {
       productReportRows.forEach((row) => {
         const quantity = parseFrenchNumber(row[productCols.quantite])
         const publicPrice = productCols.prixPublic ? parseFrenchNumber(row[productCols.prixPublic]) : null
-        products.push({
+        productReportProducts.push({
           nom: String(row[productCols.produit] || '?'),
           ca: null,
           quantite: quantity,
@@ -667,6 +668,11 @@ export function buildFromFiles(filesMap, columnMappings = {}) {
       )
     }
   }
+
+  // A dedicated product export takes precedence for the product ranking.
+  // Never merge it with product rows already present in the activity export:
+  // CA and quantities are not comparable ranking units and mixing both duplicates references.
+  const products = productReportProducts.length ? productReportProducts : salesProducts
 
   if (ca <= 0 && !products.length) throw new Error("Aucune donnée exploitable n'a été trouvée.")
 
@@ -767,12 +773,17 @@ export function buildFromFiles(filesMap, columnMappings = {}) {
 
     // No-sale stock signal: positive current stock with no matching sale in the imported period.
     const salesKeys = new Set(
-      products
+      salesProducts
         .map((p) => p.key)
         .filter(Boolean)
     )
 
     const stockKeyColumn = stockCols.cip || stockCols.produit
+    if (stockKeyColumn && !salesKeys.size) {
+      data.qualityWarnings.push(
+        "Dormance non calculée : l'export d'activité ne contient pas de références produit exploitables. Un Top produits, même fourni, n'est pas considéré comme un historique exhaustif des ventes."
+      )
+    }
     if (stockKeyColumn && salesKeys.size) {
       const dormantRows = []
       let noSaleStockValue = 0
