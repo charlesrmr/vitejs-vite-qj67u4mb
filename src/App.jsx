@@ -647,6 +647,7 @@ function Landing({ onStart, onDemo }) {
 }
 
 export default function App() {
+  const [profile, setProfile] = useState(EMPTY_PROFILE);
   const [files, setFiles] = useState({ ventes: null, produits: null, stock: null });
   const [parsedFiles, setParsedFiles] = useState({});
   const [mappings, setMappings] = useState({});
@@ -749,7 +750,14 @@ export default function App() {
     setFiles({ ventes: null, produits: null, stock: null });
     setError('');
   };
-  const startUpload = () => {
+  const startAccount = () => {
+    setError('');
+    setStep('account');
+  };
+  const updateProfile = (key, value) => {
+    setProfile((prev) => ({ ...prev, [key]: value }));
+  };
+  const completeAccount = () => {
     setError('');
     setStep('upload');
   };
@@ -828,13 +836,22 @@ export default function App() {
           )}
           <div className="hd-badge">beta</div>
           {step === 'landing' && (
-            <button className="hd-cta" onClick={startUpload}>Tester mes exports</button>
+            <button className="hd-cta" onClick={startAccount}>Préparer mon diagnostic</button>
           )}
         </div>
       </header>
 
       {step === 'landing' && (
-        <Landing onStart={startUpload} onDemo={() => run(true)} />
+        <Landing onStart={startAccount} onDemo={() => run(true)} />
+      )}
+
+      {step === 'account' && (
+        <AccountStep
+          profile={profile}
+          onChange={updateProfile}
+          onSubmit={completeAccount}
+          onDemo={() => run(true)}
+        />
       )}
 
       {step === 'upload' && (
@@ -849,8 +866,8 @@ export default function App() {
               plus qu un tableau Excel.
             </h1>
             <p className="up-s">
-              Importez vos fichiers et obtenez une première lecture fiable de
-              vos indicateurs de gestion.
+              Déposez vos exports pour préparer la pré-analyse qui servira de base
+              à votre diagnostic relu avant restitution.
             </p>
             <div className="slots">
               <Slot
@@ -880,7 +897,7 @@ export default function App() {
             </p>
             {error && <div className="up-error">{error}</div>}
             <button className="btn-go" onClick={() => run(false)} disabled={!files.ventes}>
-              Analyser mon officine
+              Préparer ma pré-analyse
             </button>
             <button className="btn-demo" onClick={() => run(true)}>
               Tester avec les donnees de demonstration
