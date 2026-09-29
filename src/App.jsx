@@ -1227,6 +1227,7 @@ export default function App() {
       setSessionToken(result.sessionToken);
       setAccount(result.account);
       setProfile((prev) => ({ ...prev, ...(result.account?.profile || {}) }));
+      requestEmailVerification(result.sessionToken).catch(() => {});
       setPassword('');
       setPasswordConfirm('');
 
