@@ -1,6 +1,7 @@
 import { buildReviewedPdf } from '../lib/report.mjs';
 import {
   STORE,
+  cleanAnalysis,
   json,
   newId,
   nowIso,
@@ -62,6 +63,29 @@ export default async (req) => {
     add('Génération PDF', false, error?.message || 'Échec PDF');
   }
 
+  try {
+    const cleaned = cleanAnalysis({
+      product_ranking_mode: 'margin',
+      top10: [{
+        nom: 'Produit test',
+        ca: 100,
+        quantite: 2,
+        marge: 25,
+        marge_eur: 25,
+      }],
+    });
+    const product = cleaned.top10?.[0];
+    add(
+      'Persistance classement produits',
+      cleaned.product_ranking_mode === 'margin' && product?.marge_eur === 25,
+      cleaned.product_ranking_mode === 'margin' && product?.marge_eur === 25
+        ? 'Mode de classement et marge € conservés'
+        : 'Données produit perdues au nettoyage serveur'
+    );
+  } catch (error) {
+    add('Persistance classement produits', false, error?.message || 'Échec du contrôle');
+  }
+
   add('Secret administrateur', Boolean(process.env.PILOT_ADMIN_TOKEN), process.env.PILOT_ADMIN_TOKEN ? 'Configuré' : 'Absent');
   const notificationsConfigured = Boolean(process.env.RESEND_API_KEY && process.env.PILOT_EMAIL_FROM);
   const context = String(process.env.CONTEXT || '').toLowerCase();
@@ -79,7 +103,9 @@ export default async (req) => {
   add('Notification opérateur', Boolean(process.env.PILOT_NOTIFY_TO), process.env.PILOT_NOTIFY_TO ? 'Configurée' : 'Optionnelle · non configurée');
   add('URL publique', Boolean(process.env.PILOT_PUBLIC_URL), process.env.PILOT_PUBLIC_URL ? 'Configurée' : 'À configurer pour les liens email');
 
-  const critical = checks.filter((c) => ['Stockage privé', 'Génération PDF', 'Secret administrateur'].includes(c.name));
+  const critical = checks.filter((c) =>
+    ['Stockage privé', 'Génération PDF', 'Persistance classement produits', 'Secret administrateur'].includes(c.name)
+  );
   const ok = critical.every((c) => c.ok);
 
   return json({
