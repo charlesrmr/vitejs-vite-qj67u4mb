@@ -512,6 +512,10 @@ const MAPPING_CONFIG = {
     fields: [
       ['produit', 'Produit'],
       ['cip', 'CIP / EAN'],
+      ['caHt', 'CA HT produit'],
+      ['caTtc', 'CA TTC produit'],
+      ['margeEur', 'Marge € produit'],
+      ['margePct', 'Taux de marge produit'],
       ['quantite', 'Quantité'],
       ['prixPublic', 'Prix public'],
       ['famille', 'Famille / rayon'],
@@ -1590,13 +1594,13 @@ export default function App() {
             <div className="slots">
               <Slot
                 label="Activité / ventes"
-                hint="CA, marge, période · PDF accepté"
+                hint="Export global CA / marge / période · pas un TOP 50"
                 file={files.ventes}
                 onFile={sf('ventes')}
               />
               <Slot
                 label="Top produits"
-                hint="Produits, codes, quantités · PDF accepté"
+                hint="TOP CAHT, TOP marge ou quantités · PDF accepté"
                 optional
                 file={files.produits}
                 onFile={sf('produits')}
