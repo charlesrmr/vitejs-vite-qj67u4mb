@@ -337,16 +337,16 @@ export const parseCSV = parseFile
 
 // ── COLUMN DETECTION ─────────────────────────────────────────────
 const COLUMN_ALIASES = {
-  caTtc: ['total ttc', 'ca ttc', 'chiffre affaires ttc', "chiffre d'affaires ttc", 'montant ttc'],
-  caHt: ['total ht', 'ca ht', 'chiffre affaires ht', "chiffre d'affaires ht", 'montant ht'],
+  caTtc: ['total ttc', 'ca ttc', 'cattc', 'chiffre affaires ttc', "chiffre d'affaires ttc", 'montant ttc'],
+  caHt: ['total ht', 'ca ht', 'caht', 'chiffre affaires ht', "chiffre d'affaires ht", 'montant ht'],
   ca: ['chiffre affaires', "chiffre d'affaires", 'montant ventes', 'total vente', 'total ventes', 'ca', 'ventes'],
   date: ['date vente', 'date', 'periode', 'période'],
   produit: ['nom forme produit', 'designation', 'désignation', 'libelle', 'libellé', 'produit', 'article', 'nom produit'],
   margeEur: ['margevaleur', 'marge valeur', 'marge eur', 'marge €', 'marge euros', 'marge brute eur', 'marge brute €', 'montant marge'],
   margePct: ['marge', 'taux marge', 'taux de marge', 'marge %', 'marge pct', 'pourcentage marge'],
   famille: ['famille', 'rayon', 'categorie', 'catégorie', 'univers'],
-  cip: ['code prix public', 'code / prix public', 'cip13', 'cip 13', 'cip7', 'cip', 'ean13', 'ean', 'gtin', 'code produit'],
-  quantite: ['quantite', 'quantité', 'qte', 'qté', 'volume vendu', 'unités vendues'],
+  cip: ['code prix public', 'code / prix public', 'code cip', 'cip13', 'cip 13', 'cip7', 'cip', 'ean13', 'ean', 'gtin', 'code produit'],
+  quantite: ['quantite', 'quantité', 'qte fact', 'qté fact', 'qte facturee', 'qté facturée', 'qte', 'qté', 'volume vendu', 'unités vendues'],
   prixPublic: ['prix public', 'prix ttc', 'pvp'],
   stockValeur: ['valeur stock', 'stock valorise', 'stock valorisé', 'valorisation stock', 'stock pmp', 'montant stock', 'montant net ht', 'valeur pamp', 'pamp net'],
   stockQte: ['quantite stock', 'quantité stock', 'qte stock', 'qté stock', 'stock physique', 'stock'],
@@ -390,14 +390,29 @@ export function detectColumn(rows, type) {
 }
 
 export function detectColumns(rows) {
+  let margeEur = detectColumn(rows, 'margeEur')
+  let margePct = detectColumn(rows, 'margePct')
+
+  // Some LGO exports label an amount column simply "Marge".
+  // When sampled values explicitly contain a euro sign, treat it as an amount.
+  if (!margeEur && margePct && normalizeHeader(margePct) === 'marge') {
+    const hasEuroValues = rows
+      .slice(0, 20)
+      .some((row) => String(row?.[margePct] ?? '').includes('€'))
+    if (hasEuroValues) {
+      margeEur = margePct
+      margePct = null
+    }
+  }
+
   return {
     caTtc: detectColumn(rows, 'caTtc'),
     caHt: detectColumn(rows, 'caHt'),
     ca: detectColumn(rows, 'ca'),
     date: detectColumn(rows, 'date'),
     produit: detectColumn(rows, 'produit'),
-    margeEur: detectColumn(rows, 'margeEur'),
-    margePct: detectColumn(rows, 'margePct'),
+    margeEur,
+    margePct,
     famille: detectColumn(rows, 'famille'),
     cip: detectColumn(rows, 'cip'),
     quantite: detectColumn(rows, 'quantite'),
