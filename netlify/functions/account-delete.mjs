@@ -57,6 +57,5 @@ export default async (req) => {
 
 export const config = {
   path: '/api/account/delete',
-  region: 'fra',
   rateLimit: { windowLimit: 3, windowSize: 60, aggregateBy: ['ip', 'domain'] },
 };
