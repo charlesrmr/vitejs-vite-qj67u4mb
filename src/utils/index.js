@@ -163,24 +163,26 @@ function extractMhtmlSpreadsheetHtml(buffer) {
     throw new Error('Export XLS MHTML détecté, mais aucun tableau HTML exploitable n’a été trouvé.')
   }
 
-  const scored = tables.map((table) => {
-    const rows = Array.from(table.rows || [])
-    const widths = rows.map((row) => row.cells?.length || 0)
-    const maxWidth = widths.length ? Math.max(...widths) : 0
-    const sample = rows
-      .slice(0, 5)
-      .flatMap((row) => Array.from(row.cells || []).map((cell) => normalizeLoose(cell.textContent)))
-      .filter(Boolean)
-    const hints = sample.reduce(
-      (score, cell) =>
-        score + (HEADER_HINTS.some((hint) => {
-          const normalizedHint = normalizeLoose(hint)
-          return cell === normalizedHint || cell.includes(normalizedHint)
-        }) ? 5 : 0),
-      0
-    )
-    return { table, score: hints + maxWidth * 3 + Math.min(rows.length, 100) }
-  })
+  const scored = tables
+    .filter((table) => !table.querySelector('table'))
+    .map((table) => {
+      const rows = Array.from(table.rows || [])
+      const widths = rows.map((row) => row.cells?.length || 0)
+      const maxWidth = widths.length ? Math.max(...widths) : 0
+      const sample = rows
+        .slice(0, 5)
+        .flatMap((row) => Array.from(row.cells || []).map((cell) => normalizeLoose(cell.textContent)))
+        .filter(Boolean)
+      const hints = sample.reduce(
+        (score, cell) =>
+          score + (HEADER_HINTS.some((hint) => {
+            const normalizedHint = normalizeLoose(hint)
+            return cell === normalizedHint || cell.includes(normalizedHint)
+          }) ? 5 : 0),
+        0
+      )
+      return { table, score: hints + maxWidth * 3 + Math.min(rows.length, 100) }
+    })
 
   const best = scored
     .filter((item) => (item.table.rows?.length || 0) >= 2)
