@@ -181,7 +181,7 @@ const COLUMN_ALIASES = {
   cip: ['code prix public', 'code / prix public', 'cip13', 'cip 13', 'cip7', 'cip', 'ean13', 'ean', 'gtin', 'code produit'],
   quantite: ['quantite', 'quantité', 'qte', 'qté', 'volume vendu', 'unités vendues'],
   prixPublic: ['prix public', 'prix ttc', 'pvp'],
-  stockValeur: ['valeur stock', 'stock valorise', 'stock valorisé', 'valorisation stock', 'stock pmp', 'montant stock'],
+  stockValeur: ['valeur stock', 'stock valorise', 'stock valorisé', 'valorisation stock', 'stock pmp', 'montant stock', 'montant net ht', 'valeur pamp', 'pamp net'],
   stockQte: ['quantite stock', 'quantité stock', 'qte stock', 'qté stock', 'stock physique', 'stock'],
 }
 
@@ -560,9 +560,10 @@ export function buildFromFiles(filesMap) {
     }
   }
 
-  if (Number.isFinite(data.ca) && Number.isFinite(data.stock_eur) && data.stock_eur > 0) {
-    data.extra.rotation = Math.round((data.ca / data.stock_eur) * 10) / 10
-  }
+  // Do not infer stock rotation from sales revenue / stock purchase value.
+  // Stock is typically valued at PAMP/Purchase HT while revenue is sales HT/TTC;
+  // mixing these bases would produce a misleading rotation ratio.
+  data.extra.rotation = null
 
   data.alerts = []
   data.qualityWarnings.forEach((warning) => {
@@ -583,7 +584,7 @@ export function buildFromFiles(filesMap) {
     data.alerts.push({
       type: 'b',
       title: `Stock valorisé : ${eur(data.stock_eur)}`,
-      body: 'Valeur calculée uniquement à partir de l’export stock fourni.',
+      body: "Valeur calculée uniquement à partir de l'export stock fourni. La rotation n'est pas calculée sans base d'achats/COGS compatible.",
     })
   }
   if (data.dormants !== null) {
