@@ -311,6 +311,32 @@ export default function AdminPanel() {
     }
   };
 
+  const downloadFinalReport = async () => {
+    if (!selected) return;
+    setError('');
+    try {
+      const response = await fetch(
+        `/api/report/download?admin=1&id=${encodeURIComponent(selected.id)}`,
+        { headers: { authorization: `Bearer ${token}` } }
+      );
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data?.error || 'Téléchargement du PDF impossible.');
+      }
+      const blob = await response.blob();
+      const disposition = response.headers.get('content-disposition') || '';
+      const match = disposition.match(/filename="([^"]+)"/i);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = match?.[1] || 'diagnostic-pilot-officine.pdf';
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
   const downloadFile = async (slot) => {
     if (!selected) return;
     setError('');
@@ -587,7 +613,12 @@ export default function AdminPanel() {
                 <div className="adm-review-actions">
                   <button onClick={() => save('in_review')} disabled={saving || !canReview}>{saving ? 'Enregistrement...' : 'Enregistrer le brouillon'}</button>
                   <button className="primary" onClick={() => save('reviewed')} disabled={saving || !reviewReady}>Valider le diagnostic</button>
-                  {selected.status === 'reviewed' && <button className="print" onClick={() => window.print()}>Imprimer / enregistrer le PDF</button>}
+                  {selected.status === 'reviewed' && (
+                    <>
+                      <button className="print" onClick={downloadFinalReport}>Télécharger le PDF final</button>
+                      <button onClick={() => window.print()}>Imprimer la vue</button>
+                    </>
+                  )}
                 </div>
               </section>
 
