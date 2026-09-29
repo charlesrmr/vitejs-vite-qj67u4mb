@@ -1060,14 +1060,18 @@ export default function App() {
     }
     if (Number.isFinite(data.dormants) && data.dormants > 0) {
       actions.push({
-        titre: `Revoir ${data.dormants} référence(s) sans vente sur la période`,
-        detail: 'Le rapprochement ventes / stock les signale comme sans vente sur la période importée. Vérifiez saisonnalité, lancement récent et profondeur de stock avant décision.',
+        titre: `Qualifier ${data.dormants} référence(s) en stock sans vente`,
+        detail: Number.isFinite(data.dormant_stock_eur)
+          ? `Ces références représentent ${eur(data.dormant_stock_eur)} de stock dans l'export (${Number.isFinite(data.dormant_stock_pct) ? `${data.dormant_stock_pct}% du stock valorisé` : 'part du stock non calculable'}). Vérifiez saisonnalité, lancement récent, réserve et date de dernière vente avant toute décision.`
+          : 'Le rapprochement stock / ventes les signale sans vente sur la période importée. Vérifiez saisonnalité, lancement récent, réserve et date de dernière vente avant toute décision.',
         prio: 'h',
       });
     } else if (Number.isFinite(data.stock_eur)) {
       actions.push({
-        titre: 'Qualifier le stock avant de décider',
-        detail: `Le stock valorisé importé est de ${eur(data.stock_eur)}. Un export détaillé par référence permettra d'identifier les lignes sans vente et les concentrations de valeur.`,
+        titre: 'Passer du stock global au stock par référence',
+        detail: Number.isFinite(data.stock_references)
+          ? `Le stock importé représente ${eur(data.stock_eur)} sur ${num(data.stock_references)} référence(s), mais le fichier ne permet pas encore de qualifier les lignes sans vente.`
+          : `Le stock valorisé importé est de ${eur(data.stock_eur)}. Un inventaire détaillé permettra d'identifier les références sans vente et leur valeur immobilisée.`,
         prio: 'm',
       });
     }
@@ -1078,7 +1082,14 @@ export default function App() {
         prio: 'm',
       });
     }
-    if (!data.familles?.length) {
+    if (data.familles?.length) {
+      const topFamilies = data.familles.slice(0, 3);
+      actions.push({
+        titre: 'Relire les familles qui concentrent l’activité',
+        detail: `Les 3 premières familles du fichier représentent ${Math.round(topFamilies.reduce((sum, fam) => sum + (fam.pct_ca || 0), 0) * 10) / 10}% du CA ventilé. Vérifiez si cette structure correspond bien à vos choix d'assortiment et à votre saisonnalité.`,
+        prio: 'm',
+      });
+    } else {
       actions.push({
         titre: 'Ajouter une ventilation famille / rayon',
         detail: 'Elle permettra de voir quelles familles portent le CA et la marge au lieu de rester au niveau global.',
