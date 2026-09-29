@@ -458,6 +458,53 @@ export function detectColumns(rows) {
   }
 }
 
+function inferTopProductReportMeta(rows) {
+  if (!Array.isArray(rows) || rows.length < 5 || rows.length > 200 || !rows[0]) return null
+
+  const columns = detectColumns(rows)
+  const positionColumn = Object.keys(rows[0]).find((column) =>
+    ['pos', 'position', 'rang', 'rank'].includes(normalizeHeader(column))
+  )
+  if (!positionColumn || !columns.produit || !columns.quantite) return null
+  if (!columns.caHt && !columns.caTtc && !columns.ca && !columns.margeEur) return null
+
+  const ranked = rows
+    .map((row) => ({ row, position: parseFrenchNumber(row[positionColumn]) }))
+    .filter((item) => Number.isInteger(item.position) && item.position > 0)
+    .sort((a, b) => a.position - b.position)
+
+  const requiredPositions = Math.min(10, rows.length)
+  if (ranked.length < requiredPositions || ranked[0]?.position !== 1) return null
+
+  const leading = ranked.slice(0, requiredPositions).map((item) => item.position)
+  if (!leading.every((position, index) => position === index + 1)) return null
+
+  const descendingScore = (column) => {
+    if (!column) return 0
+    const values = ranked
+      .slice(0, 50)
+      .map((item) => parseFrenchNumber(item.row[column]))
+      .filter((value) => Number.isFinite(value))
+    if (values.length < requiredPositions) return 0
+    let descending = 0
+    let pairs = 0
+    for (let index = 1; index < values.length; index += 1) {
+      pairs += 1
+      if (values[index - 1] >= values[index]) descending += 1
+    }
+    return pairs ? descending / pairs : 0
+  }
+
+  const caScore = descendingScore(columns.caHt || columns.caTtc || columns.ca)
+  const marginScore = descendingScore(columns.margeEur)
+  let reportMetric = null
+  if (marginScore >= 0.9 && marginScore > caScore + 0.15) reportMetric = 'margin'
+  else if (caScore >= 0.9 && caScore > marginScore + 0.15) reportMetric = 'ca'
+
+  if (!reportMetric) return null
+  return { reportType: 'top-products', reportMetric }
+}
+
 function pct(value, total) {
   if (!Number.isFinite(value) || !Number.isFinite(total) || total === 0) return null
   return Math.round((value / total) * 1000) / 10
@@ -716,8 +763,10 @@ function emptyRealData() {
 export function buildFromFiles(filesMap, columnMappings = {}) {
   const ventes = filesMap.ventes || []
   const productReportRows = filesMap.produits || []
+  const salesReportMeta = ventes.__pilotMeta || inferTopProductReportMeta(ventes)
+  const productReportMeta = productReportRows.__pilotMeta || inferTopProductReportMeta(productReportRows)
   if (!ventes.length) throw new Error("Le fichier d'activité / ventes est vide ou illisible.")
-  if (ventes.__pilotMeta?.reportType === 'top-products') {
+  if (salesReportMeta?.reportType === 'top-products') {
     throw new Error(
       "Ce fichier est un Hit Parade / TOP 50 produits. Déposez-le dans « Top produits ». Pour l’activité / ventes, utilisez un export couvrant l’ensemble de l’activité."
     )
@@ -799,7 +848,7 @@ export function buildFromFiles(filesMap, columnMappings = {}) {
     const productCols = { ...detectColumns(productReportRows), ...(columnMappings.produits || {}) }
     data.detectedColumns.produits = productCols
 
-    if (productReportRows.__pilotMeta?.reportType === 'top-products') {
+    if (productReportMeta?.reportType === 'top-products') {
       const { periodStart, periodEnd } = productReportRows.__pilotMeta
       const productPeriod = periodStart && periodEnd
         ? (periodStart === periodEnd ? periodStart : `${periodStart} → ${periodEnd}`)
@@ -909,7 +958,7 @@ export function buildFromFiles(filesMap, columnMappings = {}) {
     ? products
     : products.filter((product) => product.quantite !== anomalousQuantity)
 
-  const productReportMetric = productReportRows.__pilotMeta?.reportMetric || null
+  const productReportMetric = productReportMeta?.reportMetric || null
   data.product_ranking_mode = productReportProducts.length
     ? (productReportMetric === 'margin'
         ? 'margin'
