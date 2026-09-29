@@ -18,6 +18,7 @@ export function ClientPortal({
   onNew,
   onOpen,
   onDelete,
+  onSettings,
   onLogout,
 }) {
   return (
@@ -31,6 +32,7 @@ export function ClientPortal({
           </div>
           <div className="cp-head-actions">
             <button onClick={onRefresh}>Actualiser</button>
+            <button onClick={onSettings}>Mon compte</button>
             <button onClick={onLogout}>Déconnexion</button>
           </div>
         </header>
