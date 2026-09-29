@@ -879,21 +879,69 @@ export default function App() {
     return result.dossier;
   };
 
+  const refreshPortal = async (token = sessionToken) => {
+    if (!token) return;
+    setPortalLoading(true);
+    setPortalError('');
+    try {
+      const result = await listMyDossiers(token);
+      setClientDossiers(result.dossiers || []);
+    } catch (err) {
+      setPortalError(err?.message || 'Impossible de charger vos dossiers.');
+    } finally {
+      setPortalLoading(false);
+    }
+  };
+
   const startAccount = async () => {
     setError('');
     if (sessionToken && account) {
-      try {
-        await createFreshDossier(sessionToken);
-        setStep('upload');
-      } catch {
-        saveSessionToken('');
-        setSessionToken('');
-        setAccount(null);
-        setStep('login');
-      }
+      await refreshPortal(sessionToken);
+      setStep('portal');
       return;
     }
     setStep('account');
+  };
+
+  const startNewFromPortal = async () => {
+    if (!sessionToken) {
+      setStep('login');
+      return;
+    }
+    setPortalError('');
+    try {
+      await createFreshDossier(sessionToken);
+      setData(null);
+      setSyn('');
+      setStep('upload');
+    } catch (err) {
+      setPortalError(err?.message || 'Impossible de créer un nouveau dossier.');
+    }
+  };
+
+  const openClientDossier = async (id) => {
+    if (!sessionToken) return;
+    setPortalLoading(true);
+    setPortalError('');
+    try {
+      const result = await getDossier(sessionToken, id);
+      setSelectedClientDossier(result.dossier);
+      setStep('clientReport');
+    } catch (err) {
+      setPortalError(err?.message || 'Impossible d’ouvrir ce diagnostic.');
+    } finally {
+      setPortalLoading(false);
+    }
+  };
+
+  const logoutClient = () => {
+    clearSession();
+    setSessionToken('');
+    setAccount(null);
+    setProfile(EMPTY_PROFILE);
+    setClientDossiers([]);
+    setSelectedClientDossier(null);
+    setStep('landing');
   };
   const updateProfile = (key, value) => {
     setProfile((prev) => ({ ...prev, [key]: value }));
@@ -928,9 +976,10 @@ export default function App() {
       setSessionToken(result.sessionToken);
       setAccount(result.account);
       setProfile((prev) => ({ ...prev, ...(result.account?.profile || {}) }));
-      await createFreshDossier(result.sessionToken);
       setLoginPassword('');
-      setStep('upload');
+      const dossierResult = await listMyDossiers(result.sessionToken);
+      setClientDossiers(dossierResult.dossiers || []);
+      setStep('portal');
     } catch (err) {
       setLoginError(err?.message || 'Connexion impossible.');
     } finally {
@@ -953,6 +1002,7 @@ export default function App() {
         synthesis: syn || data.synthesis,
       });
       setReviewSent(true);
+      await refreshPortal(sessionToken);
     } catch (err) {
       setReviewError(err?.message || 'Impossible d’envoyer le dossier pour relecture.');
     } finally {
