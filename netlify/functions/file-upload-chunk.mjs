@@ -34,7 +34,7 @@ export default async (req) => {
     return json({ error: 'Format refusé. Utilisez PDF, CSV, XLS ou XLSX.' }, 415);
   }
 
-  const dossier = await getOwnedDossier(dossierId, auth.account.id);
+  const dossier = await getOwnedDossier(dossierId, auth.account.id, req);
   if (!dossier) return json({ error: 'Dossier introuvable.' }, 404);
 
   const data = await req.arrayBuffer();
@@ -42,7 +42,7 @@ export default async (req) => {
     return json({ error: 'Chunk vide ou trop volumineux.' }, 413);
   }
 
-  await STORE.files().set(fileChunkKey(dossierId, uploadId, chunkIndex), data, {
+  await STORE.files(req).set(fileChunkKey(dossierId, uploadId, chunkIndex), data, {
     metadata: {
       dossierId,
       accountId: auth.account.id,
@@ -65,7 +65,7 @@ export default async (req) => {
 
     if (previous?.uploadId && previous.uploadId !== uploadId && Number.isInteger(previous.chunkCount)) {
       for (let i = 0; i < previous.chunkCount; i += 1) {
-        await STORE.files().delete(fileChunkKey(dossierId, previous.uploadId, i));
+        await STORE.files(req).delete(fileChunkKey(dossierId, previous.uploadId, i));
       }
     }
 
@@ -79,7 +79,7 @@ export default async (req) => {
       uploadedAt: nowIso(),
       complete: true,
     };
-    await saveDossier(dossier);
+    await saveDossier(dossier, req);
   }
 
   return json({ ok: true, chunkIndex, chunkCount, complete });
