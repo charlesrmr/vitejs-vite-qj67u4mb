@@ -229,48 +229,64 @@ function Landing({ onStart, onDemo }) {
         <div className="lp-orb lp-orb-b" />
         <div className="lp-shell lp-hero-grid">
           <div className="lp-hero-copy">
-            <div className="lp-kicker">Pilot'Officine · CRC Pharma</div>
-            <h1>Vos données LGO.<br /><em>Enfin transformées en décisions.</em></h1>
+            <div className="lp-kicker">Pilot'Officine · le pilotage utile, enfin.</div>
+            <h1>Votre LGO vous donne des chiffres.<br /><em>Pilot'Officine vous dit où regarder.</em></h1>
             <p>
-              Importez vos données de gestion et obtenez une lecture claire de votre
-              activité, votre marge, vos produits et votre stock — sans passer votre
-              soirée dans Excel.
+              Marge qui se tasse. Stock qui gonfle. Produits qui dorment.
+              Pilot'Officine transforme vos exports en un diagnostic clair,
+              hiérarchisé et directement exploitable.
             </p>
             <div className="lp-actions">
-              <button className="lp-btn primary" onClick={onStart}>Analyser mon officine</button>
-              <button className="lp-btn secondary" onClick={onDemo}>Voir la démonstration</button>
+              <button className="lp-btn primary" onClick={onStart}>Voir ce que mes données révèlent</button>
+              <button className="lp-btn secondary" onClick={onDemo}>Explorer un diagnostic</button>
             </div>
             <div className="lp-proof">
-              <span>CSV + Excel</span>
-              <span>Données de gestion uniquement</span>
-              <span>Diagnostic orienté action</span>
+              <span>Pas de tableau de bord de plus</span>
+              <span>Pas de chiffre inventé</span>
+              <span>Des priorités concrètes</span>
             </div>
           </div>
 
-          <div className="lp-preview">
-            <div className="lp-preview-top">
-              <div>
-                <div className="lp-preview-label">Aperçu diagnostic</div>
-                <div className="lp-preview-title">Pilot'Officine</div>
+          <div className="lp-preview-wrap">
+            <div className="lp-preview-glow" />
+            <div className="lp-preview">
+              <div className="lp-preview-window">
+                <span /><span /><span />
+                <div>pilot'officine · diagnostic dirigeant</div>
               </div>
-              <span className="lp-live">exemple fictif</span>
-            </div>
-            <div className="lp-kpi-grid">
-              <div className="lp-kpi"><span>CA</span><b>1,25 M€</b><small>12 mois</small></div>
-              <div className="lp-kpi"><span>Marge</span><b>29,1 %</b><small>à surveiller</small></div>
-              <div className="lp-kpi"><span>Stock</span><b>115 k€</b><small>valorisé HT</small></div>
-              <div className="lp-kpi"><span>Priorités</span><b>5</b><small>actions maximum</small></div>
-            </div>
-            <div className="lp-mini-chart">
-              {[42,55,48,68,61,76,72,88,79,94,87,98].map((h,i) => (
-                <span key={i} style={{height:`${h}%`}} />
-              ))}
-            </div>
-            <div className="lp-preview-foot">
-              <span>Synthèse dirigeant</span>
-              <span>Marge</span>
-              <span>Produits</span>
-              <span>Plan d'action</span>
+              <div className="lp-preview-top">
+                <div>
+                  <div className="lp-preview-label">Aperçu diagnostic</div>
+                  <div className="lp-preview-title">Votre officine en un coup d'œil</div>
+                </div>
+                <span className="lp-live">exemple fictif</span>
+              </div>
+              <div className="lp-kpi-grid">
+                <div className="lp-kpi focus"><span>CA</span><b>1,25 M€</b><small>12 mois analysés</small></div>
+                <div className="lp-kpi warning"><span>Marge</span><b>29,1 %</b><small>point de vigilance</small></div>
+                <div className="lp-kpi"><span>Stock</span><b>115 k€</b><small>valorisé HT</small></div>
+                <div className="lp-kpi action"><span>Priorités</span><b>5</b><small>actions à décider</small></div>
+              </div>
+              <div className="lp-insight">
+                <div className="lp-insight-dot" />
+                <div>
+                  <span>Signal à regarder</span>
+                  <strong>La marge recule alors que le stock reste élevé.</strong>
+                  <small>→ Priorité : identifier les familles qui immobilisent du cash.</small>
+                </div>
+              </div>
+              <div className="lp-mini-chart">
+                {[42,55,48,68,61,76,72,88,79,94,87,98].map((h,i) => (
+                  <span key={i} style={{height:`${h}%`}} />
+                ))}
+              </div>
+              <div className="lp-preview-foot">
+                <span>Synthèse</span>
+                <span>Marge</span>
+                <span>Produits</span>
+                <span>Stock</span>
+                <span>Plan d'action</span>
+              </div>
             </div>
           </div>
         </div>
