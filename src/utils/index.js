@@ -849,7 +849,8 @@ export function buildFromFiles(filesMap, columnMappings = {}) {
     data.detectedColumns.produits = productCols
 
     if (productReportMeta?.reportType === 'top-products') {
-      const { periodStart, periodEnd } = productReportRows.__pilotMeta
+      const periodStart = productReportMeta?.periodStart || null
+      const periodEnd = productReportMeta?.periodEnd || null
       const productPeriod = periodStart && periodEnd
         ? (periodStart === periodEnd ? periodStart : `${periodStart} → ${periodEnd}`)
         : null
