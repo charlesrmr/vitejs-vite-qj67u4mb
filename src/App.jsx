@@ -303,7 +303,6 @@ function Landing({ onStart, onDemo }) {
             <strong>Conçu par un pharmacien. Nourri par le terrain.</strong>
             <span>Charles Romier · CRC Pharma · ancien cofondateur du Comptoir des Pharmacies</span>
           </div>
-          <div className="lp-trust-pill">Testé sur des exports LGO anonymisés</div>
         </div>
       </section>
 
@@ -314,10 +313,6 @@ function Landing({ onStart, onDemo }) {
               <span>Le produit, pour de vrai</span>
               <h2>Une lecture courte.<br />Des décisions visibles.</h2>
             </div>
-            <p>
-              Ci-dessous, ce n'est pas une deuxième maquette marketing : ce sont les données
-              utilisées par la démonstration actuelle de Pilot'Officine.
-            </p>
           </div>
 
           <div className="lp-product-frame">
