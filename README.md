@@ -187,3 +187,8 @@ fix/real-data-engine
 ```
 
 La branche `main` ne doit pas être fusionnée sans validation finale du parcours.
+
+
+## Vérification de déploiement
+
+Avant toute nouvelle modification fonctionnelle, vérifier que le dernier deploy-preview Netlify est vert. Si un déploiement reste bloqué en `pending` alors que son parent direct est vert et que le commit ne touche qu'à la documentation ou au wording, déclencher un nouveau commit minimal avant de diagnostiquer le code applicatif.
