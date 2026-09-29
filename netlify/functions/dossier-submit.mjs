@@ -39,4 +39,4 @@ export default async (req) => {
   return json({ ok: true, dossier: publicDossier(dossier) });
 };
 
-export const config = { path: '/api/dossier/submit', region: 'fra' };
+export const config = { path: '/api/dossier/submit' };
