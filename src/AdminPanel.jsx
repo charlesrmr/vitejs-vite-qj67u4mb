@@ -216,6 +216,7 @@ export default function AdminPanel() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [filter, setFilter] = useState('all');
+  const [search, setSearch] = useState('');
 
   const loadList = async (activeToken = token) => {
     if (!activeToken) return;
@@ -334,10 +335,58 @@ export default function AdminPanel() {
     }
   };
 
-  const visible = useMemo(
-    () => dossiers.filter((d) => filter === 'all' || d.status === filter),
-    [dossiers, filter]
-  );
+  const visible = useMemo(() => {
+    const needle = search.trim().toLowerCase();
+    return dossiers.filter((d) => {
+      if (filter !== 'all' && d.status !== filter) return false;
+      if (!needle) return true;
+      const p = d.profile || {};
+      return [
+        p.pharmacyName,
+        p.firstName,
+        p.lastName,
+        p.email,
+        p.phone,
+        p.city,
+        p.postalCode,
+        p.lgo,
+        d.id,
+      ].some((value) => String(value || '').toLowerCase().includes(needle));
+    });
+  }, [dossiers, filter, search]);
+
+  const exportCsv = () => {
+    const escape = (value) => {
+      const raw = String(value ?? '');
+      return `"${raw.replace(/"/g, '""')}"`;
+    };
+    const headers = ['Statut','Pharmacie','Prénom','Nom','Email','Téléphone','Ville','CP','LGO','Créé','Mis à jour','Dossier'];
+    const rows = dossiers.map((d) => {
+      const p = d.profile || {};
+      return [
+        statusLabel[d.status] || d.status,
+        p.pharmacyName,
+        p.firstName,
+        p.lastName,
+        p.email,
+        p.phone,
+        p.city,
+        p.postalCode,
+        p.lgo,
+        d.createdAt,
+        d.updatedAt,
+        d.id,
+      ];
+    });
+    const csv = [headers, ...rows].map((row) => row.map(escape).join(';')).join('\n');
+    const blob = new Blob(['\uFEFF', csv], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `pilot-officine-dossiers-${new Date().toISOString().slice(0,10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
   const canReview = selected?.status && selected.status !== 'draft';
   const reviewReady = Boolean(
     canReview &&
@@ -369,6 +418,7 @@ export default function AdminPanel() {
         <div className="adm-brand"><div className="hd-mk">P</div><div><b>Pilot'Officine</b><span>Back-office · relecture</span></div></div>
         <div className="adm-header-actions">
           <button onClick={() => loadList(token)}>Actualiser</button>
+          <button onClick={exportCsv}>Exporter CSV</button>
           <button onClick={() => { sessionStorage.removeItem('pilot_admin_token'); setToken(''); setSelected(null); }}>Verrouiller</button>
         </div>
       </header>
@@ -384,6 +434,10 @@ export default function AdminPanel() {
               <option value="reviewed">Validés</option>
               <option value="draft">Brouillons</option>
             </select>
+          </div>
+          <div className="adm-search">
+            <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Pharmacie, nom, email, ville..." />
+            {search && <button onClick={() => setSearch('')}>×</button>}
           </div>
 
           {loading && !dossiers.length && <div className="adm-empty">Chargement...</div>}
