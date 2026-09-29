@@ -273,6 +273,7 @@ const COLUMN_ALIASES = {
   prixPublic: ['prix public', 'prix ttc', 'pvp'],
   stockValeur: ['valeur stock', 'stock valorise', 'stock valorisé', 'valorisation stock', 'stock pmp', 'montant stock', 'montant net ht', 'valeur pamp', 'pamp net'],
   stockQte: ['quantite stock', 'quantité stock', 'qte stock', 'qté stock', 'stock physique', 'stock'],
+  stockRefs: ['nb produits', 'nombre produits', 'nb references', 'nb références', 'nombre references', 'nombre références'],
 }
 
 function normalizeHeader(value) {
@@ -326,6 +327,7 @@ export function detectColumns(rows) {
     prixPublic: detectColumn(rows, 'prixPublic'),
     stockValeur: detectColumn(rows, 'stockValeur'),
     stockQte: detectColumn(rows, 'stockQte'),
+    stockRefs: detectColumn(rows, 'stockRefs'),
   }
 }
 
@@ -454,8 +456,16 @@ function buildActivity(rows, dateColumn, caColumn) {
   if (monthly.length >= 2) {
     const previous = monthly[monthly.length - 2]
     const latest = monthly[monthly.length - 1]
-    if (previous.ca > 0) {
-      latestVsPreviousPct = Math.round(((latest.ca - previous.ca) / previous.ca) * 1000) / 10
+    if (
+      previous.days >= 5 &&
+      latest.days >= 5 &&
+      Number.isFinite(previous.dailyCaAvg) &&
+      previous.dailyCaAvg > 0 &&
+      Number.isFinite(latest.dailyCaAvg)
+    ) {
+      latestVsPreviousPct = Math.round(
+        ((latest.dailyCaAvg - previous.dailyCaAvg) / previous.dailyCaAvg) * 1000
+      ) / 10
     }
   }
 
@@ -527,7 +537,10 @@ function emptyRealData() {
     marge_pct: null,
     marge_eur: null,
     stock_eur: null,
+    stock_references: null,
     dormants: null,
+    dormant_stock_eur: null,
+    dormant_stock_pct: null,
     score: null,
     extra: {
       rotation: null,
@@ -737,7 +750,22 @@ export function buildFromFiles(filesMap, columnMappings = {}) {
       data.stock_eur = Math.round(stockTotal)
     }
 
-    // Dormants: stock line with positive stock/value and no matching sale in the imported period.
+    if (stockCols.stockRefs && stockRows.length === 1) {
+      const reported = parseFrenchNumber(stockRows[0][stockCols.stockRefs])
+      data.stock_references = Number.isFinite(reported) ? Math.round(reported) : null
+    } else {
+      const stockKeyColumnForCount = stockCols.cip || stockCols.produit
+      if (stockKeyColumnForCount) {
+        const refs = new Set(
+          stockRows
+            .map((row) => String(row[stockKeyColumnForCount] || '').trim())
+            .filter(Boolean)
+        )
+        data.stock_references = refs.size || null
+      }
+    }
+
+    // No-sale stock signal: positive current stock with no matching sale in the imported period.
     const salesKeys = new Set(
       products
         .map((p) => p.key)
@@ -747,6 +775,8 @@ export function buildFromFiles(filesMap, columnMappings = {}) {
     const stockKeyColumn = stockCols.cip || stockCols.produit
     if (stockKeyColumn && salesKeys.size) {
       const dormantRows = []
+      let noSaleStockValue = 0
+      let hasNoSaleStockValue = false
       stockRows.forEach((row) => {
         const key = stockCols.cip
           ? String(row[stockCols.cip] || '').trim()
@@ -756,16 +786,28 @@ export function buildFromFiles(filesMap, columnMappings = {}) {
         const hasStock = (stockValue !== null && stockValue > 0) || (stockQty !== null && stockQty > 0)
 
         if (key && hasStock && !salesKeys.has(key)) {
+          if (Number.isFinite(stockValue) && stockValue > 0) {
+            noSaleStockValue += stockValue
+            hasNoSaleStockValue = true
+          }
           dormantRows.push({
             nom: stockCols.produit ? String(row[stockCols.produit] || '?') : key,
             fam: stockCols.famille ? String(row[stockCols.famille] || '—') : '—',
             ca: 0,
             stock: stockQty ?? stockValue ?? 0,
+            valeur_stock: stockValue,
           })
         }
       })
       data.dormants = dormantRows.length
-      data.flop = dormantRows.slice(0, 10)
+      data.dormant_stock_eur = hasNoSaleStockValue ? Math.round(noSaleStockValue) : null
+      data.dormant_stock_pct =
+        Number.isFinite(data.dormant_stock_eur) && Number.isFinite(data.stock_eur) && data.stock_eur > 0
+          ? pct(data.dormant_stock_eur, data.stock_eur)
+          : null
+      data.flop = dormantRows
+        .sort((a, b) => (b.valeur_stock || b.stock || 0) - (a.valeur_stock || a.stock || 0))
+        .slice(0, 10)
     }
   }
 
@@ -789,6 +831,23 @@ export function buildFromFiles(filesMap, columnMappings = {}) {
       body: `Calcul descriptif sur ${data.activity.days} jour(s) contenus dans l'export ; ce n'est pas un benchmark de performance.`,
     })
   }
+  if (Number.isFinite(data.activity?.latestVsPreviousPct)) {
+    const direction = data.activity.latestVsPreviousPct >= 0 ? '+' : ''
+    data.alerts.push({
+      type: 'b',
+      title: `Évolution du CA moyen/jour : ${direction}${data.activity.latestVsPreviousPct}%`,
+      body: "Comparaison descriptive entre les deux derniers mois présents dans l'export, sur le CA moyen par jour actif plutôt que sur les totaux mensuels.",
+    })
+  }
+  if (data.familles.length) {
+    const first = data.familles[0]
+    const top3 = data.familles.slice(0, 3).reduce((sum, item) => sum + (item.pct_ca || 0), 0)
+    data.alerts.push({
+      type: 'b',
+      title: `1re famille : ${first.nom} · ${first.pct_ca ?? 'N/D'}% du CA`,
+      body: `Les 3 premières familles représentent ${Math.round(top3 * 10) / 10}% du CA ventilé dans le fichier.`,
+    })
+  }
   if (data.marge_pct !== null) {
     data.alerts.push({
       type: 'b',
@@ -804,9 +863,12 @@ export function buildFromFiles(filesMap, columnMappings = {}) {
     })
   }
   if (data.dormants !== null) {
+    const valueText = Number.isFinite(data.dormant_stock_eur)
+      ? ` · ${eur(data.dormant_stock_eur)} de stock associé`
+      : ''
     data.alerts.push({
       type: 'b',
-      title: `${data.dormants} référence(s) en stock sans vente sur la période`,
+      title: `${data.dormants} référence(s) en stock sans vente sur la période${valueText}`,
       body: "Signal de rapprochement stock/ventes. Il doit être qualifié avant d'être interprété comme dormance réelle.",
     })
   }
