@@ -737,6 +737,8 @@ export default function App() {
     setLs(2);
     try {
       const res = buildFromFiles(parsedFiles, mappings);
+      res.officine = profile.pharmacyName || res.officine;
+      res.lgo = profile.lgo || res.lgo;
       await finishAnalysis(res);
     } catch (err) {
       setData(null);
@@ -754,6 +756,7 @@ export default function App() {
     setParsedFiles({});
     setMappings({});
     setFiles({ ventes: null, produits: null, stock: null });
+    setProfile(EMPTY_PROFILE);
     setError('');
   };
   const startAccount = () => {
@@ -766,6 +769,9 @@ export default function App() {
   const completeAccount = () => {
     setError('');
     setStep('upload');
+  };
+  const prepareReview = () => {
+    setStep('review');
   };
   const tc = (t) => (t === 'up' ? C.emerald : t === 'down' ? C.rose : C.t3);
   const ti = (t) => (t === 'up' ? 'haut' : t === 'down' ? 'bas' : '-');
@@ -835,7 +841,79 @@ export default function App() {
           <div className="hd-nm">Pilot'Officine</div>
         </button>
         <div className="hd-r">
-          {step === 'dashboard' && data && (
+          {step === 'review' && data && (
+        <div className="review-page">
+          <div className="review-shell">
+            <div className="review-head">
+              <div className="review-kicker">Étape 4 · Relecture</div>
+              <h1>Votre dossier est prêt<br /><em>pour la validation.</em></h1>
+              <p>
+                La pré-analyse est terminée. Le MVP Pilot'Officine prévoit maintenant une relecture
+                avant de produire le diagnostic PDF final.
+              </p>
+            </div>
+
+            <div className="review-grid">
+              <section className="review-card">
+                <span>CONTACT</span>
+                <h3>{profile.firstName} {profile.lastName}</h3>
+                <p>{profile.email}<br />{profile.phone}</p>
+              </section>
+              <section className="review-card">
+                <span>OFFICINE</span>
+                <h3>{profile.pharmacyName}</h3>
+                <p>{profile.address}<br />{profile.postalCode} {profile.city}</p>
+              </section>
+              <section className="review-card">
+                <span>CONTEXTE</span>
+                <h3>{profile.lgo || 'LGO non renseigné'}</h3>
+                <p>
+                  {profile.role}
+                  {profile.teamSize ? ' · ' + profile.teamSize : ''}
+                  {profile.network ? ' · ' + profile.network : ''}
+                </p>
+              </section>
+            </div>
+
+            <div className="review-package">
+              <div>
+                <span>DOSSIER À RELIRE</span>
+                <h2>Pré-analyse + exports + contexte officine</h2>
+                <p>
+                  {Object.values(files).filter(Boolean).length} fichier(s) associé(s) au dossier.
+                  Le PDF final devra reprendre uniquement les constats validés après contrôle.
+                </p>
+              </div>
+              <div className="review-file-list">
+                {Object.entries(files).filter(([, file]) => file).map(([type, file]) => (
+                  <div key={type}><b>{type}</b><span>{file.name}</span></div>
+                ))}
+              </div>
+            </div>
+
+            <div className="review-output">
+              <div className="review-output-number">PDF</div>
+              <div>
+                <span>RESTITUTION PRÉVUE</span>
+                <h3>Un diagnostic court, relu, directement exploitable.</h3>
+                <p>Constats clés · points de vigilance · 3 priorités · plan d'action 30 jours · données manquantes à compléter.</p>
+              </div>
+            </div>
+
+            <div className="review-notice">
+              <b>Phase pilote :</b> le stockage serveur et l'envoi sécurisé du dossier ne sont pas encore connectés.
+              L'écran prépare le workflow final sans prétendre que les fichiers ont déjà été transmis.
+            </div>
+
+            <div className="review-actions">
+              <button className="map-back" onClick={() => setStep('dashboard')}>← Retour à la pré-analyse</button>
+              <button className="review-disabled" disabled>Envoi sécurisé · prochaine brique</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {step === 'dashboard' && data && (
             <div className="hd-meta">
               {data.officine} - {data.periode}
             </div>
@@ -1016,6 +1094,16 @@ export default function App() {
           </div>
 
           <div className="content">
+            {!data.isDemo && (
+              <div className="review-banner fu">
+                <div className="review-banner-copy">
+                  <span>PRÉ-ANALYSE TERMINÉE</span>
+                  <strong>Les chiffres sont lus. Le diagnostic final mérite une relecture.</strong>
+                  <p>Cette vue sert de base de travail. Après contrôle, Pilot'Officine pourra restituer un PDF court avec les constats, les priorités et le plan d'action.</p>
+                </div>
+                <button onClick={prepareReview}>Préparer la relecture →</button>
+              </div>
+            )}
             {tab === 'synthese' && (
               <>
                 <div className="g4">
