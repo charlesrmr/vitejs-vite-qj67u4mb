@@ -18,7 +18,10 @@ function safe(value) {
     .replace(/[–—]/g, '-')
     .replace(/[’]/g, "'")
     .replace(/…/g, '...')
-    .replace(/€/g, ' EUR');
+    .replace(/€/g, ' EUR')
+    .normalize('NFKD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^\x20-\x7E]/g, '?');
 }
 
 function money(value) {
