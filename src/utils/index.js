@@ -73,7 +73,7 @@ function normalizeLoose(value) {
 }
 
 function findHeaderIndex(matrix) {
-  const limit = Math.min(matrix.length, 12)
+  const limit = Math.min(matrix.length, 30)
   let bestIndex = 0
   let bestScore = -1
 
@@ -121,8 +121,97 @@ function matrixToObjects(matrix) {
   )
 }
 
+async function loadPdfJs() {
+  const pdfjs = await import(
+    /* @vite-ignore */
+    'https://cdn.jsdelivr.net/npm/pdfjs-dist@4.10.38/build/pdf.min.mjs'
+  )
+  pdfjs.GlobalWorkerOptions.workerSrc =
+    'https://cdn.jsdelivr.net/npm/pdfjs-dist@4.10.38/build/pdf.worker.min.mjs'
+  return pdfjs
+}
+
+function pdfItemsToMatrix(items) {
+  const positioned = (items || [])
+    .filter((item) => String(item?.str || '').trim())
+    .map((item) => ({
+      text: String(item.str).trim(),
+      x: Number(item.transform?.[4] || 0),
+      y: Number(item.transform?.[5] || 0),
+      width: Number(item.width || 0),
+    }))
+    .sort((a, b) => (Math.abs(b.y - a.y) > 2.5 ? b.y - a.y : a.x - b.x))
+
+  const lines = []
+  positioned.forEach((item) => {
+    let line = lines.find((candidate) => Math.abs(candidate.y - item.y) <= 2.5)
+    if (!line) {
+      line = { y: item.y, items: [] }
+      lines.push(line)
+    }
+    line.items.push(item)
+  })
+
+  return lines
+    .sort((a, b) => b.y - a.y)
+    .map((line) => {
+      const sorted = line.items.sort((a, b) => a.x - b.x)
+      const cells = []
+      sorted.forEach((item) => {
+        const previous = cells[cells.length - 1]
+        if (!previous) {
+          cells.push({ text: item.text, endX: item.x + item.width })
+          return
+        }
+
+        const gap = item.x - previous.endX
+        if (gap <= 16) {
+          previous.text = `${previous.text} ${item.text}`.replace(/\s+/g, ' ').trim()
+          previous.endX = Math.max(previous.endX, item.x + item.width)
+        } else {
+          cells.push({ text: item.text, endX: item.x + item.width })
+        }
+      })
+      return cells.map((cell) => cell.text)
+    })
+    .filter((row) => row.some((cell) => String(cell || '').trim()))
+}
+
+async function parsePdfFile(file) {
+  const pdfjs = await loadPdfJs()
+  const buffer = await file.arrayBuffer()
+  const pdf = await pdfjs.getDocument({ data: new Uint8Array(buffer) }).promise
+  const matrix = []
+
+  for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber += 1) {
+    const page = await pdf.getPage(pageNumber)
+    const content = await page.getTextContent()
+    matrix.push(...pdfItemsToMatrix(content.items))
+  }
+
+  if (!matrix.length) {
+    throw new Error(
+      "PDF reçu, mais aucun texte exploitable n'a été détecté. Il s'agit peut-être d'un scan : utilisez l'export Excel/CSV ou un PDF texte."
+    )
+  }
+
+  const rows = matrixToObjects(matrix)
+  const width = rows[0] ? Object.keys(rows[0]).length : 0
+  if (!rows.length || width < 2) {
+    throw new Error(
+      "PDF reçu, mais aucun tableau suffisamment structuré n'a été reconnu. Essayez l'export Excel/CSV du même état."
+    )
+  }
+
+  return rows
+}
+
 export function parseFile(file) {
   const name = file?.name?.toLowerCase() || ''
+
+  if (name.endsWith('.pdf')) {
+    return parsePdfFile(file)
+  }
 
   if (name.endsWith('.csv')) {
     return new Promise((resolve, reject) => {
@@ -162,7 +251,7 @@ export function parseFile(file) {
     })
   }
 
-  throw new Error('Format non pris en charge. Utilisez un fichier CSV, XLSX ou XLS.')
+  throw new Error('Format non pris en charge. Utilisez un fichier PDF, CSV, XLSX ou XLS.')
 }
 
 // Backward-compatible alias used by the current UI.
