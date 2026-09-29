@@ -198,7 +198,9 @@ function extractMhtmlSpreadsheetHtml(buffer) {
       ? 'top-products'
       : null
   const reportMetric = reportType === 'top-products'
-    ? (documentText.includes('caht') ? 'ca' : (documentText.includes('marge brute') ? 'margin' : null))
+    ? (documentText.includes('hit parade sur marge brute')
+        ? 'margin'
+        : (documentText.includes('hit parade sur caht brut') ? 'ca' : null))
     : null
 
   return { html: best.table.outerHTML, reportType, reportMetric }
