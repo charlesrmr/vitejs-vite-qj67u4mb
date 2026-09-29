@@ -14,6 +14,16 @@ import {
 import { C, PALETTE } from './tokens';
 import { DEMO } from './data/demo';
 import { eur, num, parseFile, detectColumns, buildFromFiles, getAISynthesis } from './utils';
+import {
+  createAccount,
+  createDossier,
+  getMe,
+  getSessionToken,
+  loginAccount,
+  saveSessionToken,
+  submitDossier,
+  uploadAllFiles,
+} from './api';
 import './App.css';
 
 function ScoreRing({ score }) {
@@ -687,6 +697,20 @@ function Landing({ onStart, onDemo }) {
 
 export default function App() {
   const [profile, setProfile] = useState(EMPTY_PROFILE);
+  const [password, setPassword] = useState('');
+  const [passwordConfirm, setPasswordConfirm] = useState('');
+  const [loginEmail, setLoginEmail] = useState('');
+  const [loginPassword, setLoginPassword] = useState('');
+  const [loginSaving, setLoginSaving] = useState(false);
+  const [loginError, setLoginError] = useState('');
+  const [sessionToken, setSessionToken] = useState(() => getSessionToken());
+  const [account, setAccount] = useState(null);
+  const [dossierId, setDossierId] = useState('');
+  const [filesPersisted, setFilesPersisted] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(null);
+  const [reviewSending, setReviewSending] = useState(false);
+  const [reviewSent, setReviewSent] = useState(false);
+  const [reviewError, setReviewError] = useState('');
   const [files, setFiles] = useState({ ventes: null, produits: null, stock: null });
   const [parsedFiles, setParsedFiles] = useState({});
   const [mappings, setMappings] = useState({});
@@ -699,7 +723,29 @@ export default function App() {
   const [accountSaving, setAccountSaving] = useState(false);
   const [accountError, setAccountError] = useState('');
 
-  const sf = (k) => (f) => setFiles((p) => ({ ...p, [k]: f }));
+  const sf = (k) => (f) => {
+    setFiles((p) => ({ ...p, [k]: f }));
+    setFilesPersisted(false);
+    setUploadProgress(null);
+  };
+
+  useEffect(() => {
+    let cancelled = false;
+    if (!sessionToken || account) return undefined;
+    getMe(sessionToken)
+      .then(({ account: restored }) => {
+        if (cancelled) return;
+        setAccount(restored);
+        setProfile((prev) => ({ ...prev, ...(restored?.profile || {}) }));
+      })
+      .catch(() => {
+        if (cancelled) return;
+        saveSessionToken('');
+        setSessionToken('');
+        setAccount(null);
+      });
+    return () => { cancelled = true; };
+  }, [sessionToken, account]);
 
   const finishAnalysis = async (res) => {
     setData(res);
@@ -732,6 +778,20 @@ export default function App() {
       setStep('loading');
       setLs(0);
       try {
+        if (!sessionToken || !dossierId) {
+          throw new Error('Votre dossier sécurisé n’est pas initialisé. Reconnectez-vous.');
+        }
+
+        if (!filesPersisted) {
+          await uploadAllFiles({
+            token: sessionToken,
+            dossierId,
+            files,
+            onProgress: setUploadProgress,
+          });
+          setFilesPersisted(true);
+        }
+
         const parsed = {};
         for (const [k, f] of Object.entries(files)) {
           if (f) parsed[k] = await parseFile(f);
@@ -753,7 +813,7 @@ export default function App() {
         setStep('upload');
       }
     },
-    [files]
+    [files, sessionToken, dossierId, filesPersisted]
   );
 
   const updateMapping = (fileType, field, value) => {
@@ -791,13 +851,39 @@ export default function App() {
     setParsedFiles({});
     setMappings({});
     setFiles({ ventes: null, produits: null, stock: null });
-    setProfile(EMPTY_PROFILE);
+    setDossierId('');
+    setFilesPersisted(false);
+    setUploadProgress(null);
+    setReviewSent(false);
+    setReviewError('');
     setAccountError('');
     setAccountSaving(false);
     setError('');
   };
-  const startAccount = () => {
+
+  const createFreshDossier = async (token) => {
+    const result = await createDossier(token);
+    setDossierId(result.dossier.id);
+    setFiles({ ventes: null, produits: null, stock: null });
+    setFilesPersisted(false);
+    setReviewSent(false);
+    return result.dossier;
+  };
+
+  const startAccount = async () => {
     setError('');
+    if (sessionToken && account) {
+      try {
+        await createFreshDossier(sessionToken);
+        setStep('upload');
+      } catch {
+        saveSessionToken('');
+        setSessionToken('');
+        setAccount(null);
+        setStep('login');
+      }
+      return;
+    }
     setStep('account');
   };
   const updateProfile = (key, value) => {
@@ -807,41 +893,62 @@ export default function App() {
     setAccountError('');
     setAccountSaving(true);
     try {
-      const body = new URLSearchParams({
-        'form-name': 'pilot-officine-account',
-        firstName: profile.firstName,
-        lastName: profile.lastName,
-        email: profile.email,
-        phone: profile.phone,
-        pharmacyName: profile.pharmacyName,
-        address: profile.address,
-        postalCode: profile.postalCode,
-        city: profile.city,
-        lgo: profile.lgo,
-        role: profile.role,
-        teamSize: profile.teamSize,
-        network: profile.network,
-        context: profile.context,
-        consent: profile.consent ? 'oui' : 'non',
-      }).toString();
-
-      const response = await fetch('/', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body,
-      });
-      if (!response.ok) throw new Error('Enregistrement impossible pour le moment.');
-
-      setError('');
+      if (password !== passwordConfirm) throw new Error('Les mots de passe ne correspondent pas.');
+      const result = await createAccount(profile, password);
+      saveSessionToken(result.sessionToken);
+      setSessionToken(result.sessionToken);
+      setAccount(result.account);
+      setProfile((prev) => ({ ...prev, ...(result.account?.profile || {}) }));
+      await createFreshDossier(result.sessionToken);
+      setPassword('');
+      setPasswordConfirm('');
       setStep('upload');
     } catch (err) {
-      setAccountError(err?.message || 'Impossible de créer le dossier. Réessayez.');
+      setAccountError(err?.message || 'Impossible de créer le compte. Réessayez.');
     } finally {
       setAccountSaving(false);
     }
   };
+
+  const completeLogin = async () => {
+    setLoginError('');
+    setLoginSaving(true);
+    try {
+      const result = await loginAccount(loginEmail, loginPassword);
+      saveSessionToken(result.sessionToken);
+      setSessionToken(result.sessionToken);
+      setAccount(result.account);
+      setProfile((prev) => ({ ...prev, ...(result.account?.profile || {}) }));
+      await createFreshDossier(result.sessionToken);
+      setLoginPassword('');
+      setStep('upload');
+    } catch (err) {
+      setLoginError(err?.message || 'Connexion impossible.');
+    } finally {
+      setLoginSaving(false);
+    }
+  };
+
   const prepareReview = () => {
+    setReviewError('');
     setStep('review');
+  };
+
+  const sendForReview = async () => {
+    if (!sessionToken || !dossierId || !data) return;
+    setReviewSending(true);
+    setReviewError('');
+    try {
+      await submitDossier(sessionToken, dossierId, {
+        ...data,
+        synthesis: syn || data.synthesis,
+      });
+      setReviewSent(true);
+    } catch (err) {
+      setReviewError(err?.message || 'Impossible d’envoyer le dossier pour relecture.');
+    } finally {
+      setReviewSending(false);
+    }
   };
   const tc = (t) => (t === 'up' ? C.emerald : t === 'down' ? C.rose : C.t3);
   const ti = (t) => (t === 'up' ? 'haut' : t === 'down' ? 'bas' : '-');
