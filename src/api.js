@@ -189,3 +189,18 @@ export async function deleteAccount(token, password) {
     body: { password, confirm: 'SUPPRIMER MON COMPTE' },
   });
 }
+
+
+export async function requestPasswordReset(email) {
+  return apiRequest('/api/account/reset-request', {
+    method: 'POST',
+    body: { email },
+  });
+}
+
+export async function resetPassword(token, newPassword) {
+  return apiRequest('/api/account/reset', {
+    method: 'POST',
+    body: { token, newPassword },
+  });
+}
