@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { eur, num } from './utils';
+import './admin.css';
 
 const blankItem = () => ({ title: '', body: '', metric: '' });
 const blankReview = () => ({
