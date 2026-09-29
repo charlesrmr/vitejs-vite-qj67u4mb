@@ -228,7 +228,10 @@ export function cleanAnalysis(input = {}) {
     marge_pct: finite(input.marge_pct),
     marge_eur: finite(input.marge_eur),
     stock_eur: finite(input.stock_eur),
+    stock_references: finite(input.stock_references),
     dormants: finite(input.dormants),
+    dormant_stock_eur: finite(input.dormant_stock_eur),
+    dormant_stock_pct: finite(input.dormant_stock_pct),
     activity: {
       days: finite(input.activity?.days),
       dailyCaAvg: finite(input.activity?.dailyCaAvg),
