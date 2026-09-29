@@ -61,4 +61,4 @@ export default async (req) => {
   });
 };
 
-export const config = { path: '/api/file/download', region: 'fra' };
+export const config = { path: '/api/file/download' };
