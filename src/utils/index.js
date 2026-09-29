@@ -465,7 +465,7 @@ function inferTopProductReportMeta(rows) {
   const positionColumn = Object.keys(rows[0]).find((column) =>
     ['pos', 'position', 'rang', 'rank'].includes(normalizeHeader(column))
   )
-  if (!positionColumn || !columns.produit || !columns.quantite) return null
+  if (!positionColumn || !columns.produit) return null
   if (!columns.caHt && !columns.caTtc && !columns.ca && !columns.margeEur) return null
 
   const ranked = rows
