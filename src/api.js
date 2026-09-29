@@ -204,3 +204,21 @@ export async function resetPassword(token, newPassword) {
     body: { token, newPassword },
   });
 }
+
+
+export async function downloadReviewedReport(token, dossierId) {
+  const response = await fetch(`/api/report/download?id=${encodeURIComponent(dossierId)}`, {
+    headers: { authorization: `Bearer ${token}` },
+  });
+  if (!response.ok) {
+    const data = await response.json().catch(() => ({}));
+    throw new Error(data?.error || 'Téléchargement du PDF impossible.');
+  }
+  const blob = await response.blob();
+  const disposition = response.headers.get('content-disposition') || '';
+  const match = disposition.match(/filename="([^"]+)"/i);
+  return {
+    blob,
+    fileName: match?.[1] || 'diagnostic-pilot-officine.pdf',
+  };
+}
