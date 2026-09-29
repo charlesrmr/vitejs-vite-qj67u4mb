@@ -76,6 +76,16 @@ export async function submitDossier(token, dossierId, analysis, patientDataConfi
   });
 }
 
+async function abortUploadChunks(token, dossierId, uploadId) {
+  try {
+    await apiRequest('/api/file/upload-abort', {
+      method: 'POST',
+      token,
+      body: { dossierId, uploadId },
+    });
+  } catch {}
+}
+
 export async function uploadFileChunks({
   token,
   dossierId,
@@ -90,37 +100,42 @@ export async function uploadFileChunks({
       ? crypto.randomUUID().replace(/-/g, '')
       : `${Date.now()}_${Math.random().toString(36).slice(2)}`;
 
-  for (let index = 0; index < chunkCount; index += 1) {
-    const start = index * CHUNK_SIZE;
-    const end = Math.min(file.size, start + CHUNK_SIZE);
-    const chunk = file.slice(start, end);
+  try {
+    for (let index = 0; index < chunkCount; index += 1) {
+      const start = index * CHUNK_SIZE;
+      const end = Math.min(file.size, start + CHUNK_SIZE);
+      const chunk = file.slice(start, end);
 
-    const response = await fetch('/api/file/upload-chunk', {
-      method: 'POST',
-      headers: {
-        authorization: `Bearer ${token}`,
-        'content-type': 'application/octet-stream',
-        'x-dossier-id': dossierId,
-        'x-upload-id': uploadId,
-        'x-file-slot': slot,
-        'x-file-name': encodeURIComponent(file.name),
-        'x-file-type': file.type || 'application/octet-stream',
-        'x-chunk-index': String(index),
-        'x-chunk-count': String(chunkCount),
-        'x-file-size': String(file.size),
-      },
-      body: chunk,
-    });
-    await parseResponse(response);
-    onProgress?.({
-      slot,
-      uploaded: index + 1,
-      total: chunkCount,
-      pct: Math.round(((index + 1) / chunkCount) * 100),
-    });
+      const response = await fetch('/api/file/upload-chunk', {
+        method: 'POST',
+        headers: {
+          authorization: `Bearer ${token}`,
+          'content-type': 'application/octet-stream',
+          'x-dossier-id': dossierId,
+          'x-upload-id': uploadId,
+          'x-file-slot': slot,
+          'x-file-name': encodeURIComponent(file.name),
+          'x-file-type': file.type || 'application/octet-stream',
+          'x-chunk-index': String(index),
+          'x-chunk-count': String(chunkCount),
+          'x-file-size': String(file.size),
+        },
+        body: chunk,
+      });
+      await parseResponse(response);
+      onProgress?.({
+        slot,
+        uploaded: index + 1,
+        total: chunkCount,
+        pct: Math.round(((index + 1) / chunkCount) * 100),
+      });
+    }
+
+    return { uploadId, chunkCount };
+  } catch (error) {
+    await abortUploadChunks(token, dossierId, uploadId);
+    throw error;
   }
-
-  return { uploadId, chunkCount };
 }
 
 export async function uploadAllFiles({
