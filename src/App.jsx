@@ -24,6 +24,7 @@ import {
   submitDossier,
   uploadAllFiles,
 } from './api';
+import AdminPanel from './AdminPanel';
 import './App.css';
 
 function ScoreRing({ score }) {
@@ -1009,6 +1010,10 @@ export default function App() {
     salesMap.ca ||
     (salesMap.produit && salesMap.quantite)
   );
+  const isAdmin = typeof window !== 'undefined' &&
+    new URLSearchParams(window.location.search).get('admin') === '1';
+
+  if (isAdmin) return <AdminPanel />;
 
   return (
     <div className="app">
