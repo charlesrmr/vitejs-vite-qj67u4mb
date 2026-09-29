@@ -520,7 +520,11 @@ export default function AdminPanel() {
         <div className="adm-brand"><div className="hd-mk">P</div><div><b>Pilot'Officine</b><span>Back-office · relecture</span></div></div>
         <div className="adm-header-health">
           <span className={`adm-health-dot${health?.ok && health?.storage === 'ready' ? ' ok' : ''}`} />
-          <small>{health?.ok && health?.storage === 'ready' ? 'Backend prêt' : 'Backend à vérifier'}</small>
+          <small>
+            {health?.ok && health?.storage === 'ready' ? 'Backend prêt' : 'Backend à vérifier'}
+            {health?.environment ? ` · ${health.environment}` : ''}
+            {health?.commitRef ? ` · ${health.commitRef.slice(0, 7)}` : ''}
+          </small>
         </div>
         <div className="adm-header-actions">
           <button onClick={() => { loadHealth(); loadList(token); }}>Actualiser</button>
