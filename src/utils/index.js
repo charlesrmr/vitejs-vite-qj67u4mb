@@ -346,10 +346,13 @@ export function parseFile(file) {
       })
       const rows = matrixToObjects(matrix)
       if (!rows.length) throw new Error('Aucune ligne exploitable détectée dans le classeur.')
-      if (mhtmlReport?.reportType) {
+      if (
+        mhtmlReport &&
+        (mhtmlReport.reportType || mhtmlReport.periodStart || mhtmlReport.periodEnd)
+      ) {
         Object.defineProperty(rows, '__pilotMeta', {
           value: {
-            reportType: mhtmlReport.reportType,
+            reportType: mhtmlReport.reportType || null,
             reportMetric: mhtmlReport.reportMetric || null,
             periodStart: mhtmlReport.periodStart || null,
             periodEnd: mhtmlReport.periodEnd || null,
@@ -728,7 +731,17 @@ export function buildFromFiles(filesMap, columnMappings = {}) {
 
   const data = emptyRealData()
   data.detectedColumns.ventes = salesCols
-  data.periode = inferPeriod(ventes, salesCols.date)
+  const inferredSalesPeriod = inferPeriod(ventes, salesCols.date)
+  const salesPeriodStart = ventes.__pilotMeta?.periodStart || null
+  const salesPeriodEnd = ventes.__pilotMeta?.periodEnd || null
+  const metadataSalesPeriod = salesPeriodStart && salesPeriodEnd
+    ? (salesPeriodStart === salesPeriodEnd
+        ? salesPeriodStart
+        : `${salesPeriodStart} → ${salesPeriodEnd}`)
+    : null
+  data.periode = inferredSalesPeriod !== 'Période importée'
+    ? inferredSalesPeriod
+    : (metadataSalesPeriod || inferredSalesPeriod)
   data.activity = buildActivity(ventes, salesCols.date, caDisplayCol)
 
   let ca = 0
