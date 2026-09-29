@@ -70,7 +70,7 @@ export function ClientPortal({
                 <div><span>CA</span><b>{eur(d.analysis?.ca)}</b></div>
                 <div><span>Marge</span><b>{Number.isFinite(d.analysis?.marge_pct) ? `${d.analysis.marge_pct}%` : 'N/D'}</b></div>
                 <div><span>Stock</span><b>{eur(d.analysis?.stock_eur)}</b></div>
-                <div><span>Sans vente</span><b>{num(d.analysis?.dormants)}</b></div>
+                <div><span>Stock sans vente</span><b>{Number.isFinite(d.analysis?.dormant_stock_eur) ? eur(d.analysis.dormant_stock_eur) : num(d.analysis?.dormants)}</b></div>
               </div>
 
               <div className="cp-card-foot">
@@ -117,7 +117,7 @@ export function ClientReport({ dossier, onBack }) {
           <div><span>CA</span><b>{eur(a.ca)}</b><small>{Number.isFinite(a.ca_ttc) ? 'TTC' : 'base importée'}</small></div>
           <div><span>Marge</span><b>{Number.isFinite(a.marge_pct) ? `${a.marge_pct}%` : 'N/D'}</b><small>{eur(a.marge_eur)}</small></div>
           <div><span>Stock</span><b>{eur(a.stock_eur)}</b><small>valorisation importée</small></div>
-          <div><span>Sans vente</span><b>{num(a.dormants)}</b><small>si rapprochement disponible</small></div>
+          <div><span>Stock sans vente</span><b>{Number.isFinite(a.dormant_stock_eur) ? eur(a.dormant_stock_eur) : num(a.dormants)}</b><small>{Number.isFinite(a.dormant_stock_pct) ? `${a.dormant_stock_pct}% du stock valorisé` : 'si rapprochement disponible'}</small></div>
         </div>
 
         <section className="cr-section cr-summary">
@@ -157,7 +157,7 @@ export function ClientReport({ dossier, onBack }) {
           <div><span>CA</span><b>{eur(a.ca)}</b></div>
           <div><span>Marge</span><b>{Number.isFinite(a.marge_pct) ? `${a.marge_pct}%` : 'N/D'}</b></div>
           <div><span>Stock</span><b>{eur(a.stock_eur)}</b></div>
-          <div><span>Sans vente</span><b>{num(a.dormants)}</b></div>
+          <div><span>Stock sans vente</span><b>{Number.isFinite(a.dormant_stock_eur) ? eur(a.dormant_stock_eur) : num(a.dormants)}</b></div>
         </div>
         <PrintSection eyebrow="SYNTHÈSE" title="Ce qu'il faut retenir" text={r.executiveSummary} />
         <PrintItems eyebrow="CONSTATS" title="Ce que montrent les données" items={r.findings} />
