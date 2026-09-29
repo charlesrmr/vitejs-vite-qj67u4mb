@@ -60,18 +60,32 @@ export default async (req) => {
       bytes[0] === 0x25 && bytes[1] === 0x50 && bytes[2] === 0x44 && bytes[3] === 0x46 && bytes[4] === 0x2D;
     const isZip = starts(0x50, 0x4B, 0x03, 0x04);
     const isOleXls = starts(0xD0, 0xCF, 0x11, 0xE0, 0xA1, 0xB1, 0x1A, 0xE1);
-    const headerText = new TextDecoder('utf-8', { fatal: false })
-      .decode(bytes)
-      .replace(/^\uFEFF/, '')
-      .trimStart()
-      .toLowerCase();
-    const isXmlXls =
+    const isLegacyBiff =
+      (bytes[0] === 0x09 && [0x00, 0x02, 0x04, 0x08].includes(bytes[1])) ||
+      (bytes[0] === 0x2F && bytes[1] === 0x00);
+
+    const decodeHeader = (encoding) =>
+      new TextDecoder(encoding, { fatal: false })
+        .decode(bytes)
+        .replace(/^\uFEFF/, '')
+        .trimStart()
+        .toLowerCase();
+
+    const utf8Header = decodeHeader('utf-8');
+    const utf16Header = decodeHeader('utf-16le');
+    const headers = [utf8Header, utf16Header];
+
+    const isXmlXls = headers.some((headerText) =>
       headerText.startsWith('<?xml') &&
-      (headerText.includes('spreadsheet') || headerText.includes('workbook'));
-    const isHtmlXls =
+      (headerText.includes('spreadsheet') || headerText.includes('workbook'))
+    );
+    const isHtmlXls = headers.some((headerText) =>
       (headerText.startsWith('<html') || headerText.startsWith('<!doctype html')) &&
-      (headerText.includes('<table') || headerText.includes('mso-'));
-    const isXls = isOleXls || isXmlXls || isHtmlXls;
+      (headerText.includes('<table') || headerText.includes('mso-'))
+    );
+    const isSylk = headers.some((headerText) => headerText.startsWith('id;'));
+    const isDif = headers.some((headerText) => headerText.startsWith('table'));
+    const isXls = isOleXls || isZip || isLegacyBiff || isXmlXls || isHtmlXls || isSylk || isDif;
     const hasNull = bytes.some((value) => value === 0x00);
 
     if (ext === '.pdf' && !isPdf) return json({ error: 'Le fichier ne correspond pas à un PDF valide.' }, 415);
