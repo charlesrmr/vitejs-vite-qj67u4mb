@@ -197,8 +197,11 @@ function extractMhtmlSpreadsheetHtml(buffer) {
     documentText.includes('hit parade') && documentText.includes('top 50')
       ? 'top-products'
       : null
+  const reportMetric = reportType === 'top-products'
+    ? (documentText.includes('caht') ? 'ca' : (documentText.includes('marge brute') ? 'margin' : null))
+    : null
 
-  return { html: best.table.outerHTML, reportType }
+  return { html: best.table.outerHTML, reportType, reportMetric }
 }
 
 async function loadPdfJs() {
@@ -333,7 +336,10 @@ export function parseFile(file) {
       if (!rows.length) throw new Error('Aucune ligne exploitable détectée dans le classeur.')
       if (mhtmlReport?.reportType) {
         Object.defineProperty(rows, '__pilotMeta', {
-          value: { reportType: mhtmlReport.reportType },
+          value: {
+            reportType: mhtmlReport.reportType,
+            reportMetric: mhtmlReport.reportMetric || null,
+          },
           enumerable: false,
         })
       }
@@ -668,6 +674,7 @@ function emptyRealData() {
       latestVsPreviousPct: null,
     },
     top10: [],
+    product_ranking_mode: null,
     flop: [],
     familles: [],
     chart: [],
@@ -767,12 +774,22 @@ export function buildFromFiles(filesMap, columnMappings = {}) {
       productReportRows.forEach((row) => {
         const quantity = parseFrenchNumber(row[productCols.quantite])
         const publicPrice = productCols.prixPublic ? parseFrenchNumber(row[productCols.prixPublic]) : null
+        const productCaColumn = productCols.caHt || productCols.caTtc || productCols.ca
+        const productCa = productCaColumn ? parseFrenchNumber(row[productCaColumn]) : null
+        const productMarginEur = productCols.margeEur ? parseFrenchNumber(row[productCols.margeEur]) : null
+        const productMarginPct = productCols.margePct
+          ? parseFrenchNumber(row[productCols.margePct])
+          : (Number.isFinite(productMarginEur) && Number.isFinite(productCa) && productCa > 0
+              ? (productMarginEur / productCa) * 100
+              : null)
+
         productReportProducts.push({
           nom: String(row[productCols.produit] || '?'),
-          ca: null,
+          ca: productCa,
           quantite: quantity,
           prix_public: publicPrice,
-          marge: null,
+          marge: productMarginPct,
+          marge_eur: productMarginEur,
           fam: productCols.famille ? String(row[productCols.famille] || '—') : '—',
           evo: '',
           key: productCols.cip
@@ -834,10 +851,28 @@ export function buildFromFiles(filesMap, columnMappings = {}) {
     ? products
     : products.filter((product) => product.quantite !== anomalousQuantity)
 
+  const productReportMetric = productReportRows.__pilotMeta?.reportMetric || null
+  data.product_ranking_mode = productReportProducts.length
+    ? (productReportMetric === 'margin'
+        ? 'margin'
+        : (productReportMetric === 'ca' || productReportProducts.some((p) => Number.isFinite(p.ca))
+            ? 'ca'
+            : 'quantity'))
+    : (salesProducts.some((p) => Number.isFinite(p.ca)) ? 'ca' : 'quantity')
+
   data.top10 = [...rankableProducts]
     .sort((a, b) => {
-      const aValue = Number.isFinite(a.ca) ? a.ca : (a.quantite || 0)
-      const bValue = Number.isFinite(b.ca) ? b.ca : (b.quantite || 0)
+      const metric = data.product_ranking_mode
+      const aValue = metric === 'margin'
+        ? (Number.isFinite(a.marge_eur) ? a.marge_eur : 0)
+        : metric === 'ca'
+          ? (Number.isFinite(a.ca) ? a.ca : 0)
+          : (Number.isFinite(a.quantite) ? a.quantite : 0)
+      const bValue = metric === 'margin'
+        ? (Number.isFinite(b.marge_eur) ? b.marge_eur : 0)
+        : metric === 'ca'
+          ? (Number.isFinite(b.ca) ? b.ca : 0)
+          : (Number.isFinite(b.quantite) ? b.quantite : 0)
       return bValue - aValue
     })
     .slice(0, 10)
