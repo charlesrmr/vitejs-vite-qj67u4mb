@@ -1,6 +1,12 @@
 import {
-  cleanAnalysis, getOwnedDossier, json, nowIso, requireUser, saveDossier,
-, publicDossier } from '../lib/pilot.mjs';
+  cleanAnalysis,
+  getOwnedDossier,
+  json,
+  nowIso,
+  publicDossier,
+  requireUser,
+  saveDossier,
+} from '../lib/pilot.mjs';
 
 export default async (req) => {
   if (req.method !== 'POST') return json({ error: 'Méthode non autorisée.' }, 405);
