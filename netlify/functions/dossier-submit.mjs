@@ -17,6 +17,12 @@ export default async (req) => {
 
   const dossier = await getOwnedDossier(body?.dossierId, auth.account.id, req);
   if (!dossier) return json({ error: 'Dossier introuvable.' }, 404);
+  if (dossier.status !== 'draft') {
+    return json({ error: 'Ce dossier a déjà été envoyé pour relecture.' }, 409);
+  }
+  if (!dossier.files?.ventes?.complete) {
+    return json({ error: 'Le fichier activité / ventes doit être enregistré avant l’envoi.' }, 400);
+  }
   if (body?.patientDataConfirmed !== true) {
     return json({ error: 'Confirmez que les fichiers ne contiennent aucune donnée nominative patient.' }, 400);
   }
