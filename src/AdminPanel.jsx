@@ -674,6 +674,9 @@ export default function AdminPanel() {
                   {selected.status === 'reviewed' && (
                     <>
                       <button className="print" onClick={downloadFinalReport}>Télécharger le PDF final</button>
+                      <button onClick={notifyClient} disabled={notifying}>
+                        {notifying ? 'Envoi...' : selected.notification?.clientReady ? 'Renvoyer l’email' : 'Envoyer l’email'}
+                      </button>
                       <button onClick={() => window.print()}>Imprimer la vue</button>
                     </>
                   )}
