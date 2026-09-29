@@ -1471,20 +1471,24 @@ export default function App() {
                         : null,
                     },
                     {
-                      l: 'Stock immobilise',
+                      l: 'Stock valorisé',
                       v: eur(data.stock_eur),
-                      f: Number.isFinite(data.extra.rotation) ? `rotation x${data.extra.rotation}` : 'export stock requis',
+                      f: Number.isFinite(data.stock_eur) ? 'valeur issue de l’export stock' : 'export stock requis',
                       ac: C.emerald,
                       bd: Number.isFinite(data.stock_eur)
-                        ? { t: 'stock importé', x: 'b' }
+                        ? { t: 'donnée importée', x: 'b' }
                         : null,
                     },
                     {
-                      l: 'Produits dormants',
+                      l: data.isDemo ? 'Produits dormants' : 'Sans vente période',
                       v: num(data.dormants),
-                      f: Number.isFinite(data.dormants) ? 'sans vente' : 'stock + référence requis',
+                      f: Number.isFinite(data.dormant_stock_eur)
+                        ? eur(data.dormant_stock_eur)
+                        : Number.isFinite(data.dormants) ? 'références en stock' : 'rapprochement requis',
                       ac: C.rose,
-                      bd: Number.isFinite(data.dormants) && data.dormants > 0
+                      bd: !data.isDemo && Number.isFinite(data.dormants)
+                        ? { t: 'signal à qualifier', x: 'b' }
+                        : data.isDemo && Number.isFinite(data.dormants) && data.dormants > 0
                         ? { t: 'action requise', x: 'r' }
                         : null,
                     },
@@ -1506,54 +1510,26 @@ export default function App() {
                   ))}
                 </div>
 
-                <SH label="KPIs de pilotage" />
+                <SH label={data.isDemo ? "KPIs de pilotage" : "Lecture opérationnelle"} />
                 <div className="g4">
-                  {[
-                    {
-                      l: 'Rotation stock',
-                      v: fx(data.extra.rotation),
-                      f: 'obj. >3x',
-                      ac: data.extra.rotation >= 3 ? C.emerald : C.amber,
-                    },
-                    {
-                      l: 'Panier moyen',
-                      v: fe(data.extra.panier),
-                      f: 'par passage',
-                      ac: C.cyan,
-                    },
-                    {
-                      l: 'Tx ventes assoc.',
-                      v: fp(data.extra.tx_assoc),
-                      f: 'obj. >18%',
-                      ac: data.extra.tx_assoc >= 18 ? C.emerald : C.amber,
-                    },
-                    {
-                      l: 'Clients / mois',
-                      v: num(data.extra.clients),
-                      f: 'passages',
-                      ac: C.violet,
-                    },
-                  ].map((k, i) => (
+                  {(data.isDemo
+                    ? [
+                        { l: 'Rotation stock', v: fx(data.extra.rotation), f: 'obj. >3x', ac: data.extra.rotation >= 3 ? C.emerald : C.amber },
+                        { l: 'Panier moyen', v: fe(data.extra.panier), f: 'par passage', ac: C.cyan },
+                        { l: 'Tx ventes assoc.', v: fp(data.extra.tx_assoc), f: 'obj. >18%', ac: data.extra.tx_assoc >= 18 ? C.emerald : C.amber },
+                        { l: 'Clients / mois', v: num(data.extra.clients), f: 'passages', ac: C.violet },
+                      ]
+                    : [
+                        { l: 'CA moyen / jour', v: eur(data.activity?.dailyCaAvg), f: Number.isFinite(data.activity?.days) ? `${data.activity.days} jour(s) présents` : 'dates requises', ac: C.violet },
+                        { l: 'Évolution moy./jour', v: Number.isFinite(data.activity?.latestVsPreviousPct) ? `${data.activity.latestVsPreviousPct >= 0 ? '+' : ''}${data.activity.latestVsPreviousPct}%` : 'N/D', f: '2 derniers mois si exploitables', ac: C.cyan },
+                        { l: 'Références stock', v: num(data.stock_references), f: Number.isFinite(data.stock_references) ? 'références détectées' : 'détail ou résumé stock requis', ac: C.emerald },
+                        { l: 'Stock sans vente', v: eur(data.dormant_stock_eur), f: Number.isFinite(data.dormant_stock_pct) ? `${data.dormant_stock_pct}% du stock valorisé` : 'si stock détaillé + ventes', ac: C.rose },
+                      ]
+                  ).map((k, i) => (
                     <div key={i} className="card-sm fu">
                       <div className="kpi-l">{k.l}</div>
-                      <div
-                        style={{
-                          fontSize: '1.35rem',
-                          fontWeight: 700,
-                          color: C.t1,
-                          marginBottom: 4,
-                        }}
-                      >
-                        {k.v}
-                      </div>
-                      <div
-                        style={{
-                          height: 3,
-                          borderRadius: 2,
-                          background: k.ac,
-                          marginBottom: 4,
-                        }}
-                      />
+                      <div style={{ fontSize: '1.35rem', fontWeight: 700, color: C.t1, marginBottom: 4 }}>{k.v}</div>
+                      <div style={{ height: 3, borderRadius: 2, background: k.ac, marginBottom: 4 }} />
                       <div className="kpi-f">{k.f}</div>
                     </div>
                   ))}
@@ -2096,8 +2072,8 @@ export default function App() {
                   </div>
                   <div className="tc">
                     <div className="tc-hd">
-                      <span className="tc-ht">Produits dormants</span>
-                      <span className="tc-hc">sans vente</span>
+                      <span className="tc-ht">{data.isDemo ? 'Produits dormants' : 'Stock sans vente sur la période'}</span>
+                      <span className="tc-hc">{data.isDemo ? 'sans vente' : 'à qualifier'}</span>
                     </div>
                     <table>
                       <thead>
@@ -2200,26 +2176,34 @@ export default function App() {
             <div className="exp fu">
               <div>
                 <div className="exp-t">
-                  Rapport Pilot Officine - {data?.periode}
+                  {data.isDemo ? 'Rapport de démonstration' : 'Pré-analyse prête pour relecture'} - {data?.periode}
                 </div>
                 <div className="exp-s">
-                  {data?.officine} - synthese + KPIs + marge + plan 30j
+                  {data.isDemo
+                    ? `${data?.officine} - aperçu produit fictif`
+                    : `${data?.officine} - les fichiers et calculs seront joints au dossier de relecture`}
                 </div>
               </div>
               <div className="exp-b">
                 <button
                   className="btn ghost"
                   style={{ borderColor: '#1E3A5F', color: '#94A3B8' }}
-                  onClick={reset}
+                  onClick={async () => {
+                    if (!data.isDemo && sessionToken) {
+                      await refreshPortal(sessionToken);
+                      setStep('portal');
+                    } else {
+                      reset();
+                    }
+                  }}
                 >
-                  Nouveau
+                  {data.isDemo ? 'Retour' : 'Mes dossiers'}
                 </button>
-                <button
-                  className="btn accent"
-                  onClick={() => alert('Export PDF : fonctionnalité en préparation')}
-                >
-                  PDF
-                </button>
+                {!data.isDemo && (
+                  <button className="btn accent" onClick={prepareReview}>
+                    Envoyer en relecture
+                  </button>
+                )}
               </div>
             </div>
           </div>
