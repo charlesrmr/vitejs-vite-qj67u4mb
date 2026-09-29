@@ -192,7 +192,13 @@ function extractMhtmlSpreadsheetHtml(buffer) {
     throw new Error('Export XLS MHTML détecté, mais aucun tableau suffisamment structuré n’a été reconnu.')
   }
 
-  return best.table.outerHTML
+  const documentText = normalizeLoose(doc.body?.textContent || '')
+  const reportType =
+    documentText.includes('hit parade') && documentText.includes('top 50')
+      ? 'top-products'
+      : null
+
+  return { html: best.table.outerHTML, reportType }
 }
 
 async function loadPdfJs() {
@@ -310,11 +316,11 @@ export function parseFile(file) {
 
   if (name.endsWith('.xlsx') || name.endsWith('.xls')) {
     return file.arrayBuffer().then((buffer) => {
-      const mhtmlTable = name.endsWith('.xls')
+      const mhtmlReport = name.endsWith('.xls')
         ? extractMhtmlSpreadsheetHtml(buffer)
         : null
-      const workbook = mhtmlTable
-        ? XLSX.read(mhtmlTable, { type: 'string', cellDates: false })
+      const workbook = mhtmlReport
+        ? XLSX.read(mhtmlReport.html, { type: 'string', cellDates: false })
         : XLSX.read(buffer, { type: 'array', cellDates: false })
       const firstSheet = workbook.SheetNames[0]
       if (!firstSheet) throw new Error('Classeur Excel vide')
@@ -325,6 +331,12 @@ export function parseFile(file) {
       })
       const rows = matrixToObjects(matrix)
       if (!rows.length) throw new Error('Aucune ligne exploitable détectée dans le classeur.')
+      if (mhtmlReport?.reportType) {
+        Object.defineProperty(rows, '__pilotMeta', {
+          value: { reportType: mhtmlReport.reportType },
+          enumerable: false,
+        })
+      }
       return rows
     })
   }
@@ -679,6 +691,11 @@ export function buildFromFiles(filesMap, columnMappings = {}) {
   const ventes = filesMap.ventes || []
   const productReportRows = filesMap.produits || []
   if (!ventes.length) throw new Error("Le fichier d'activité / ventes est vide ou illisible.")
+  if (ventes.__pilotMeta?.reportType === 'top-products') {
+    throw new Error(
+      "Ce fichier est un Hit Parade / TOP 50 produits. Déposez-le dans « Top produits ». Pour l’activité / ventes, utilisez un export couvrant l’ensemble de l’activité."
+    )
+  }
 
   const salesCols = { ...detectColumns(ventes), ...(columnMappings.ventes || {}) }
   const caDisplayCol = salesCols.caTtc || salesCols.ca || salesCols.caHt
