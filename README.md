@@ -139,7 +139,7 @@ Les PDF sont reconnus progressivement par format LGO. Les fichiers non structur�
 
 ## Limites assumées du MVP
 
-- Pas encore de vérification d'email
+- Vérification d'email disponible si l'email transactionnel est configuré ; elle reste non bloquante pendant le pilote
 - Récupération de mot de passe disponible si l'email transactionnel est configuré ; sinon support manuel pilote
 - Les emails automatiques sont optionnels et nécessitent la configuration Resend ci-dessus
 - Le PDF final est généré côté serveur ; l'impression navigateur reste uniquement un fallback
@@ -175,6 +175,7 @@ Ne pas ouvrir le pilote tant que les points suivants n'ont pas été testés au 
 - modification du profil
 - changement de mot de passe
 - récupération de mot de passe
+- vérification d'email
 - génération et téléchargement du PDF final
 
 ## Branche de travail
