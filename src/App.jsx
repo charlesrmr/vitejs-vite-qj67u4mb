@@ -18,6 +18,7 @@ import {
   createAccount,
   clearSession,
   createDossier,
+  deleteDossier,
   getDossier,
   getMe,
   getSessionToken,
@@ -934,6 +935,20 @@ export default function App() {
     }
   };
 
+  const deleteClientDossier = async (id, name) => {
+    if (!sessionToken) return;
+    const ok = window.confirm(`Supprimer définitivement le dossier ${name || ''} et ses fichiers ?\n\nCette action est irréversible.`);
+    if (!ok) return;
+    setPortalError('');
+    try {
+      await deleteDossier(sessionToken, id);
+      if (selectedClientDossier?.id === id) setSelectedClientDossier(null);
+      await refreshPortal(sessionToken);
+    } catch (err) {
+      setPortalError(err?.message || 'Suppression impossible.');
+    }
+  };
+
   const logoutClient = () => {
     clearSession();
     setSessionToken('');
@@ -1109,6 +1124,7 @@ export default function App() {
           onRefresh={() => refreshPortal(sessionToken)}
           onNew={startNewFromPortal}
           onOpen={openClientDossier}
+          onDelete={deleteClientDossier}
           onLogout={logoutClient}
         />
       )}
