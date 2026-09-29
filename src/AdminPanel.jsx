@@ -438,7 +438,8 @@ export default function AdminPanel() {
 
   const exportCsv = () => {
     const escape = (value) => {
-      const raw = String(value ?? '');
+      let raw = String(value ?? '');
+      if (/^\s*[=+\-@]/.test(raw)) raw = `'${raw}`;
       return `"${raw.replace(/"/g, '""')}"`;
     };
     const headers = ['Statut','Pharmacie','Prénom','Nom','Email','Téléphone','Ville','CP','LGO','Créé','Mis à jour','Dossier'];
