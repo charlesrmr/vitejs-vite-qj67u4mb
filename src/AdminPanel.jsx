@@ -572,6 +572,13 @@ export default function AdminPanel() {
                   <div className="adm-card-head"><span>OFFICINE</span><b>Contexte dossier</b></div>
                   <dl>
                     <div><dt>Adresse</dt><dd>{selected.profile?.address}<br />{selected.profile?.postalCode} {selected.profile?.city}</dd></div>
+                    <div><dt>Email diagnostic</dt><dd>
+                      {selected.notification?.clientReady
+                        ? 'Envoyé' + (selected.notification?.attemptedAt ? ' · ' + new Date(selected.notification.attemptedAt).toLocaleString('fr-FR') : '')
+                        : selected.notification?.attemptedAt
+                        ? 'Échec · ' + new Date(selected.notification.attemptedAt).toLocaleString('fr-FR')
+                        : 'Non envoyé'}
+                    </dd></div>
                     <div><dt>LGO</dt><dd>{selected.profile?.lgo}</dd></div>
                     <div><dt>Équipe</dt><dd>{selected.profile?.teamSize || 'N/R'}</dd></div>
                     <div><dt>Groupement</dt><dd>{selected.profile?.network || 'N/R'}</dd></div>
