@@ -1120,6 +1120,44 @@ export default function App() {
     }
   };
 
+  const requestAccountVerification = async () => {
+    if (!sessionToken) return;
+    setVerificationSaving(true);
+    setSettingsError('');
+    setVerificationResult(null);
+    try {
+      const result = await requestEmailVerification(sessionToken);
+      setVerificationResult(result);
+      if (result.alreadyVerified) {
+        const refreshed = await getMe(sessionToken);
+        setAccount(refreshed.account);
+      }
+    } catch (err) {
+      setSettingsError(err?.message || "Impossible d'envoyer le lien de vérification.");
+    } finally {
+      setVerificationSaving(false);
+    }
+  };
+
+  const completeEmailVerification = async () => {
+    if (!verifyToken || verifySaving || verifySuccess) return;
+    setVerifySaving(true);
+    setVerifyError('');
+    try {
+      const result = await verifyEmail(verifyToken);
+      saveSessionToken(result.sessionToken);
+      setSessionToken(result.sessionToken);
+      setAccount(result.account);
+      setProfile((prev) => ({ ...prev, ...(result.account?.profile || {}) }));
+      setVerifySuccess(true);
+      try { window.history.replaceState({}, '', window.location.pathname); } catch {}
+    } catch (err) {
+      setVerifyError(err?.message || "Impossible de vérifier cette adresse.");
+    } finally {
+      setVerifySaving(false);
+    }
+  };
+
   const changeAccountPassword = async (currentPassword, newPassword) => {
     if (!sessionToken) return;
     setSettingsSaving(true);
@@ -1433,6 +1471,9 @@ export default function App() {
           onSaveProfile={saveAccountProfile}
           onChangePassword={changeAccountPassword}
           onDeleteAccount={deleteClientAccount}
+          onRequestVerification={requestAccountVerification}
+          verificationSaving={verificationSaving}
+          verificationResult={verificationResult}
         />
       )}
 
@@ -1494,6 +1535,20 @@ export default function App() {
           saving={resetRequestSaving}
           error={resetRequestError}
           result={resetRequestResult}
+        />
+      )}
+
+      {step === 'verifyEmail' && (
+        <VerifyEmailStep
+          token={verifyToken}
+          onVerify={completeEmailVerification}
+          saving={verifySaving}
+          error={verifyError}
+          success={verifySuccess}
+          onHome={async () => {
+            await refreshPortal(sessionToken);
+            setStep('portal');
+          }}
         />
       )}
 
