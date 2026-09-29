@@ -1,0 +1,152 @@
+const SESSION_KEY = 'pilot_officine_session';
+
+async function parseResponse(response) {
+  const type = response.headers.get('content-type') || '';
+  const data = type.includes('application/json')
+    ? await response.json()
+    : { error: await response.text() };
+
+  if (!response.ok) {
+    const error = new Error(data?.error || 'Erreur serveur.');
+    error.status = response.status;
+    throw error;
+  }
+  return data;
+}
+
+export function getSessionToken() {
+  try { return localStorage.getItem(SESSION_KEY) || ''; } catch { return ''; }
+}
+
+export function saveSessionToken(token) {
+  try {
+    if (token) localStorage.setItem(SESSION_KEY, token);
+    else localStorage.removeItem(SESSION_KEY);
+  } catch {}
+}
+
+export async function apiRequest(path, { method = 'GET', token = '', body, headers = {} } = {}) {
+  const response = await fetch(path, {
+    method,
+    headers: {
+      ...(body !== undefined ? { 'content-type': 'application/json' } : {}),
+      ...(token ? { authorization: `Bearer ${token}` } : {}),
+      ...headers,
+    },
+    body: body !== undefined ? JSON.stringify(body) : undefined,
+  });
+  return parseResponse(response);
+}
+
+export async function createAccount(profile, password) {
+  return apiRequest('/api/account/create', {
+    method: 'POST',
+    body: { profile, password },
+  });
+}
+
+export async function loginAccount(email, password) {
+  return apiRequest('/api/account/login', {
+    method: 'POST',
+    body: { email, password },
+  });
+}
+
+export async function getMe(token) {
+  return apiRequest('/api/account/me', { token });
+}
+
+export async function createDossier(token) {
+  return apiRequest('/api/dossier/create', { method: 'POST', token, body: {} });
+}
+
+export async function listMyDossiers(token) {
+  return apiRequest('/api/dossier/list', { token });
+}
+
+export async function getDossier(token, dossierId) {
+  return apiRequest(`/api/dossier?id=${encodeURIComponent(dossierId)}`, { token });
+}
+
+export async function submitDossier(token, dossierId, analysis) {
+  return apiRequest('/api/dossier/submit', {
+    method: 'POST',
+    token,
+    body: { dossierId, analysis },
+  });
+}
+
+export async function uploadFileChunks({
+  token,
+  dossierId,
+  slot,
+  file,
+  onProgress,
+}) {
+  const CHUNK_SIZE = 3 * 1024 * 1024;
+  const chunkCount = Math.max(1, Math.ceil(file.size / CHUNK_SIZE));
+  const uploadId =
+    typeof crypto !== 'undefined' && crypto.randomUUID
+      ? crypto.randomUUID().replace(/-/g, '')
+      : `${Date.now()}_${Math.random().toString(36).slice(2)}`;
+
+  for (let index = 0; index < chunkCount; index += 1) {
+    const start = index * CHUNK_SIZE;
+    const end = Math.min(file.size, start + CHUNK_SIZE);
+    const chunk = file.slice(start, end);
+
+    const response = await fetch('/api/file/upload-chunk', {
+      method: 'POST',
+      headers: {
+        authorization: `Bearer ${token}`,
+        'content-type': 'application/octet-stream',
+        'x-dossier-id': dossierId,
+        'x-upload-id': uploadId,
+        'x-file-slot': slot,
+        'x-file-name': encodeURIComponent(file.name),
+        'x-file-type': file.type || 'application/octet-stream',
+        'x-chunk-index': String(index),
+        'x-chunk-count': String(chunkCount),
+        'x-file-size': String(file.size),
+      },
+      body: chunk,
+    });
+    await parseResponse(response);
+    onProgress?.({
+      slot,
+      uploaded: index + 1,
+      total: chunkCount,
+      pct: Math.round(((index + 1) / chunkCount) * 100),
+    });
+  }
+
+  return { uploadId, chunkCount };
+}
+
+export async function uploadAllFiles({
+  token,
+  dossierId,
+  files,
+  onProgress,
+}) {
+  const entries = Object.entries(files).filter(([, file]) => Boolean(file));
+  for (let i = 0; i < entries.length; i += 1) {
+    const [slot, file] = entries[i];
+    await uploadFileChunks({
+      token,
+      dossierId,
+      slot,
+      file,
+      onProgress: (item) => onProgress?.({
+        ...item,
+        fileIndex: i + 1,
+        fileCount: entries.length,
+        fileName: file.name,
+      }),
+    });
+  }
+}
+
+export function clearSession() {
+  saveSessionToken('');
+}
