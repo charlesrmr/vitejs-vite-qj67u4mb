@@ -219,6 +219,8 @@ export default function AdminPanel() {
   const [filter, setFilter] = useState('all');
   const [search, setSearch] = useState('');
   const [health, setHealth] = useState(null);
+  const [selfTest, setSelfTest] = useState(null);
+  const [selfTesting, setSelfTesting] = useState(false);
 
   const loadHealth = async () => {
     try {
@@ -227,6 +229,24 @@ export default function AdminPanel() {
       setHealth(data);
     } catch {
       setHealth({ ok: false, storage: 'unavailable' });
+    }
+  };
+
+  const runSelfTest = async () => {
+    if (!token) return;
+    setSelfTesting(true);
+    setError('');
+    try {
+      const data = await adminFetch('/api/admin/self-test', token, {
+        method: 'POST',
+        body: JSON.stringify({}),
+      });
+      setSelfTest(data);
+    } catch (err) {
+      setSelfTest({ ok: false, checks: [], error: err.message });
+      setError(err.message);
+    } finally {
+      setSelfTesting(false);
     }
   };
 
@@ -527,7 +547,10 @@ export default function AdminPanel() {
               <div className="adm-readiness">
                 <div className="adm-readiness-head">
                   <b>État du MVP</b>
-                  <button onClick={loadHealth}>Revérifier</button>
+                  <div>
+                    <button onClick={loadHealth}>Revérifier</button>
+                    <button onClick={runSelfTest} disabled={selfTesting}>{selfTesting ? 'Test...' : 'Auto-test complet'}</button>
+                  </div>
                 </div>
                 {[
                   ['Stockage privé', health?.storage === 'ready'],
@@ -544,6 +567,21 @@ export default function AdminPanel() {
                 <small>
                   Les emails sont optionnels pour fonctionner, mais recommandés avant l'ouverture aux pharmacies fondatrices.
                 </small>
+                {selfTest && (
+                  <div className={`adm-selftest${selfTest.ok ? ' ok' : ' fail'}`}>
+                    <div className="adm-selftest-title">
+                      <b>{selfTest.ok ? 'Auto-test critique réussi' : 'Auto-test à corriger'}</b>
+                      {selfTest.checkedAt && <time>{new Date(selfTest.checkedAt).toLocaleString('fr-FR')}</time>}
+                    </div>
+                    {(selfTest.checks || []).map((check) => (
+                      <div className="adm-selftest-row" key={check.name}>
+                        <span>{check.name}</span>
+                        <strong className={check.ok ? 'ready' : 'missing'}>{check.ok ? 'OK' : 'À voir'}</strong>
+                        <small>{check.detail}</small>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           ) : (
