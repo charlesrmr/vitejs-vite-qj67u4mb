@@ -39,6 +39,12 @@ export default async (req) => {
     await STORE.dossiers(req).delete(dossierKey(dossier.id));
   }
 
+  const { blobs: resetBlobs } = await STORE.resets(req).list({ prefix: 'reset/' });
+  for (const blob of resetBlobs) {
+    const reset = await STORE.resets(req).get(blob.key, { type: 'json', consistency: 'strong' });
+    if (reset?.accountId === auth.account.id) await STORE.resets(req).delete(blob.key);
+  }
+
   const { blobs: sessionBlobs } = await STORE.sessions(req).list({ prefix: 'session/' });
   for (const blob of sessionBlobs) {
     const session = await STORE.sessions(req).get(blob.key, { type: 'json', consistency: 'strong' });
