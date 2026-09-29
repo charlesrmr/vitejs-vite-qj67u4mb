@@ -330,7 +330,9 @@ export default function AdminPanel() {
     () => dossiers.filter((d) => filter === 'all' || d.status === filter),
     [dossiers, filter]
   );
+  const canReview = selected?.status && selected.status !== 'draft';
   const reviewReady = Boolean(
+    canReview &&
     review.executiveSummary.trim().length >= 20 &&
     review.findings.filter((x) => x.title || x.body).length >= 1 &&
     review.priorities.filter((x) => x.title || x.body).length >= 3 &&
@@ -407,7 +409,7 @@ export default function AdminPanel() {
                   <p>{selected.profile?.firstName} {selected.profile?.lastName} · {selected.profile?.email} · {selected.profile?.phone}</p>
                 </div>
                 <div className="adm-dossier-head-actions">
-                  <button onClick={() => save('in_review')} disabled={saving}>Enregistrer</button>
+                  <button onClick={() => save('in_review')} disabled={saving || !canReview}>Enregistrer</button>
                   <button className="primary" onClick={() => save('reviewed')} disabled={saving || !reviewReady}>Valider le diagnostic</button>
                 </div>
               </div>
@@ -496,6 +498,11 @@ export default function AdminPanel() {
 
               <section className="adm-review">
                 <div className="adm-review-title"><span>RELECTURE</span><h2>Transformer la pré-analyse en diagnostic.</h2></div>
+                {!canReview && (
+                  <div className="adm-draft-warning">
+                    Ce dossier est encore un brouillon côté titulaire. Les champs restent visibles, mais la relecture ne peut commencer qu'après son envoi.
+                  </div>
+                )}
 
                 <label className="adm-big-field">
                   <span>Synthèse dirigeant</span>
@@ -516,7 +523,7 @@ export default function AdminPanel() {
                   <small>Synthèse · ≥1 constat · 3 priorités · ≥1 action</small>
                 </div>
                 <div className="adm-review-actions">
-                  <button onClick={() => save('in_review')} disabled={saving}>{saving ? 'Enregistrement...' : 'Enregistrer le brouillon'}</button>
+                  <button onClick={() => save('in_review')} disabled={saving || !canReview}>{saving ? 'Enregistrement...' : 'Enregistrer le brouillon'}</button>
                   <button className="primary" onClick={() => save('reviewed')} disabled={saving || !reviewReady}>Valider le diagnostic</button>
                   {selected.status === 'reviewed' && <button className="print" onClick={() => window.print()}>Imprimer / enregistrer le PDF</button>}
                 </div>
