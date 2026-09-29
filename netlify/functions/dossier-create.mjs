@@ -18,7 +18,7 @@ export default async (req) => {
     createdAt: nowIso(),
     updatedAt: nowIso(),
   };
-  await saveDossier(dossier);
+  await saveDossier(dossier, req);
   return json({ ok: true, dossier }, 201);
 };
 
