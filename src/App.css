@@ -655,3 +655,25 @@
      .map-confirm { width: 100%; }
      .map-back { align-self: center; }
    }
+
+
+   /* ── PARTIAL-DATA TAB STATES ── */
+   .tab-next { margin-top: 12px; padding: 18px 20px; border: 1px solid #E2E7ED; border-radius: 14px; background: linear-gradient(135deg,#FAFBFC,#F7F4FF); display: flex; justify-content: space-between; gap: 20px; align-items: center; }
+   .tab-next span { display: block; color: #7C3AED; font-size: 8px; font-weight: 850; text-transform: uppercase; letter-spacing: 1.1px; margin-bottom: 4px; }
+   .tab-next strong { display: block; color: #182231; font-size: 13px; margin-bottom: 3px; }
+   .tab-next p { margin: 0; color: #758190; font-size: 10.5px; line-height: 1.55; }
+   .tab-next button, .analysis-empty > button { flex-shrink: 0; border: 0; border-radius: 9px; padding: 9px 12px; background: #0B1929; color: #fff; font: inherit; font-size: 9.5px; font-weight: 700; cursor: pointer; }
+
+   .analysis-empty { border: 1px solid #E1E7ED; border-radius: 16px; background: #fff; padding: 22px; box-shadow: 0 10px 34px rgba(15,23,42,.035); }
+   .analysis-empty-copy > span { display: block; color: #7C3AED; font-size: 8px; font-weight: 850; text-transform: uppercase; letter-spacing: 1.1px; margin-bottom: 6px; }
+   .analysis-empty-copy h3 { margin: 0 0 7px; color: #172033; font-size: 19px; letter-spacing: -.45px; }
+   .analysis-empty-copy p { margin: 0; max-width: 720px; color: #748091; font-size: 11.5px; line-height: 1.65; }
+   .analysis-empty-kpis { display: grid; grid-template-columns: repeat(3,1fr); gap: 9px; margin: 18px 0; }
+   .analysis-empty-kpis > div { border: 1px solid #E7EBF0; border-radius: 11px; background: #FAFBFC; padding: 12px; }
+   .analysis-empty-kpis small { display: block; color: #8D98A6; font-size: 7.5px; text-transform: uppercase; letter-spacing: .8px; font-weight: 800; margin-bottom: 5px; }
+   .analysis-empty-kpis b { color: #16202E; font-size: 13px; word-break: break-word; }
+
+   @media (max-width: 680px) {
+     .tab-next { align-items: flex-start; flex-direction: column; }
+     .analysis-empty-kpis { grid-template-columns: 1fr; }
+   }
