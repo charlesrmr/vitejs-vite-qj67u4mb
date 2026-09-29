@@ -361,7 +361,7 @@ function ForgotPasswordStep({ email, onEmail, onSubmit, onBack, saving, error, r
           {result && (
             <div className={result.deliveryAvailable ? 'settings-success' : 'account-error'}>
               {result.deliveryAvailable
-                ? "Si cette adresse correspond à un compte, un lien valable 30 minutes vient d'être envoyé."
+                ? "Si cette adresse correspond à un compte, un lien valable 30 minutes sera envoyé à cette adresse."
                 : "L'envoi automatique d'email n'est pas encore activé sur ce pilote. Contactez Pilot'Officine pour réinitialiser l'accès."}
             </div>
           )}
