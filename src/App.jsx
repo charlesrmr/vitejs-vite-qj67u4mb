@@ -164,6 +164,7 @@ const EMPTY_PROFILE = {
   lgo: '',
   role: 'Titulaire',
   teamSize: '',
+  network: '',
   context: '',
   consent: false,
 };
@@ -245,7 +246,7 @@ function AccountStep({ profile, onChange, onSubmit, onDemo }) {
                 <option>Autre</option>
               </select>
             </label>
-            <label className="full">
+            <label>
               <span>Taille de l'équipe <small>optionnel</small></span>
               <select {...field('teamSize')}>
                 <option value="">Non renseigné</option>
@@ -254,6 +255,10 @@ function AccountStep({ profile, onChange, onSubmit, onDemo }) {
                 <option>7 à 10 personnes</option>
                 <option>11 personnes et +</option>
               </select>
+            </label>
+            <label>
+              <span>Groupement / enseigne <small>optionnel</small></span>
+              <input {...field('network')} placeholder="Totum, Giphar, indépendant..." />
             </label>
             <label className="full">
               <span>Un contexte à connaître ? <small>optionnel</small></span>
@@ -423,9 +428,10 @@ function ColumnMappingCard({ type, rows, mapping, onChange }) {
 function Landing({ onStart, onDemo }) {
   const faq = [
     ['Quels fichiers faut-il fournir ?', "Un export d'activité est suffisant pour démarrer. Un top produits et un état de stock détaillé enrichissent ensuite le diagnostic."],
-    ['Quels formats sont acceptés ?', 'CSV, XLS et XLSX. Pendant la phase fondatrice, certains PDF peuvent aussi être traités manuellement.'],
+    ['Quels formats sont acceptés ?', 'PDF, CSV, XLS et XLSX. Les PDF structurés issus des LGO sont reconnus progressivement ; les données extraites restent vérifiées avant restitution.'],
     ['Faut-il transmettre des données patients ?', 'Non. Pilot\'Officine a besoin de données de gestion : activité, marge, produits, stock et familles lorsque ces informations sont disponibles.'],
     ['Que se passe-t-il si une donnée manque ?', 'Elle est indiquée comme indisponible. Pilot\'Officine ne remplace jamais une donnée manquante par une valeur de démonstration.'],
+    ['Le diagnostic est-il automatique ?', 'La lecture des exports est automatisée. Pendant la phase pilote, le diagnostic final est relu avant restitution afin d’éviter de transformer un signal incomplet en mauvaise décision.'],
     ['Combien coûte Pilot\'Officine ?', 'La tarification finale sera fixée après la phase fondatrice. Les premières pharmacies bénéficient de conditions préférentielles.'],
   ];
 
@@ -439,17 +445,17 @@ function Landing({ onStart, onDemo }) {
             <div className="lp-kicker">Pilot'Officine · vos chiffres deviennent des décisions</div>
             <h1>Vous avez déjà les chiffres.<br /><em>Il vous manque les priorités.</em></h1>
             <p>
-              Pilot'Officine lit vos exports LGO, fait ressortir les signaux qui comptent
-              et transforme vos données en décisions concrètes sur la marge, le stock
-              et la performance de l'officine.
+              Pilot'Officine lit vos exports LGO et prépare une première lecture de votre activité.
+              Les signaux sont ensuite relus avant restitution pour transformer les données
+              en priorités concrètes sur la marge, le stock et la performance de l'officine.
             </p>
             <div className="lp-actions">
-              <button className="lp-btn primary" onClick={onStart}>Découvrir ce que mes données racontent</button>
+              <button className="lp-btn primary" onClick={onStart}>Préparer mon diagnostic</button>
               <button className="lp-btn secondary" onClick={onDemo}>Voir le diagnostic en action</button>
             </div>
             <div className="lp-proof">
-              <span>Quelques minutes pour y voir plus clair</span>
-              <span>Quelques priorités, pas 50 KPI</span>
+              <span>Pré-analyse automatisée</span>
+              <span>Diagnostic relu avant restitution</span>
               <span>Aucune donnée inventée</span>
             </div>
           </div>
@@ -519,7 +525,7 @@ function Landing({ onStart, onDemo }) {
           <div className="lp-product-head">
             <div>
               <span>Le produit, pour de vrai</span>
-              <h2>Une lecture courte.<br />Des décisions visibles.</h2>
+              <h2>Une pré-analyse rapide.<br />Un diagnostic relu.</h2>
             </div>
           </div>
 
@@ -578,11 +584,11 @@ function Landing({ onStart, onDemo }) {
             <h2>Vos exports entrent.<br />Vos priorités ressortent.</h2>
           </div>
           <div className="lp-process-line">
-            <div><b>01</b><h3>Exportez</h3><p>Activité en priorité. Produits et stock pour aller plus loin.</p></div>
+            <div><b>01</b><h3>Déposez</h3><p>PDF, CSV ou Excel. Activité d'abord, produits et stock pour enrichir la lecture.</p></div>
             <div className="lp-process-arrow">→</div>
-            <div><b>02</b><h3>Déposez</h3><p>CSV ou Excel. Pilot'Officine identifie ce qui est réellement exploitable.</p></div>
+            <div><b>02</b><h3>Pré-analyse</h3><p>Pilot'Officine structure les données, calcule les indicateurs et fait remonter les signaux.</p></div>
             <div className="lp-process-arrow">→</div>
-            <div><b>03</b><h3>Décidez</h3><p>Une synthèse courte, des alertes utiles et quelques actions prioritaires.</p></div>
+            <div><b>03</b><h3>Restitution</h3><p>Le dossier est relu puis restitué sous forme de diagnostic PDF avec quelques priorités concrètes.</p></div>
           </div>
         </div>
       </section>
@@ -637,7 +643,7 @@ function Landing({ onStart, onDemo }) {
           <h2>Vos données sont déjà là.<br />Voyons ce qu'elles vous disent.</h2>
           <p>Commencez avec vos exports actuels. Pas de migration, pas de projet informatique.</p>
           <div className="lp-actions center">
-            <button className="lp-btn primary" onClick={onStart}>Tester mes exports</button>
+            <button className="lp-btn primary" onClick={onStart}>Préparer mon diagnostic</button>
             <button className="lp-btn secondary light" onClick={onDemo}>Voir le produit</button>
           </div>
         </div>
