@@ -24,13 +24,17 @@ function seedReview(dossier) {
   const alerts = Array.isArray(analysis.alerts) ? analysis.alerts : [];
   const warnings = Array.isArray(analysis.qualityWarnings) ? analysis.qualityWarnings : [];
 
-  const findings = alerts.slice(0, 5).map((alert) => ({
+  const businessAlerts = alerts.filter(
+    (alert) => alert?.title !== 'Contrôle qualité des données'
+  );
+
+  const findings = businessAlerts.slice(0, 5).map((alert) => ({
     title: alert.title || '',
     body: alert.body || '',
     metric: '',
   }));
 
-  const priorities = alerts
+  const priorities = businessAlerts
     .filter((alert) => alert?.type === 'r' || alert?.type === 'a')
     .slice(0, 3)
     .map((alert) => ({
