@@ -163,26 +163,70 @@ export function publicAccount(account) {
 }
 
 export function cleanAnalysis(input = {}) {
-  const keep = {
-    officine: input.officine || null,
-    periode: input.periode || null,
-    lgo: input.lgo || null,
-    ca: Number.isFinite(input.ca) ? input.ca : null,
-    ca_ht: Number.isFinite(input.ca_ht) ? input.ca_ht : null,
-    ca_ttc: Number.isFinite(input.ca_ttc) ? input.ca_ttc : null,
-    marge_pct: Number.isFinite(input.marge_pct) ? input.marge_pct : null,
-    marge_eur: Number.isFinite(input.marge_eur) ? input.marge_eur : null,
-    stock_eur: Number.isFinite(input.stock_eur) ? input.stock_eur : null,
-    dormants: Number.isFinite(input.dormants) ? input.dormants : null,
-    synthesis: String(input.synthesis || '').slice(0, 8000),
-    qualityWarnings: Array.isArray(input.qualityWarnings) ? input.qualityWarnings.slice(0, 30) : [],
-    alerts: Array.isArray(input.alerts) ? input.alerts.slice(0, 30) : [],
-    top10: Array.isArray(input.top10) ? input.top10.slice(0, 20) : [],
-    flop: Array.isArray(input.flop) ? input.flop.slice(0, 20) : [],
-    familles: Array.isArray(input.familles) ? input.familles.slice(0, 50) : [],
-    detectedColumns: input.detectedColumns || {},
+  const txt = (value, max = 1000) => String(value ?? '').trim().slice(0, max);
+  const finite = (value) => Number.isFinite(value) ? Number(value) : null;
+  const alerts = Array.isArray(input.alerts)
+    ? input.alerts.slice(0, 30).map((item) => ({
+        type: ['r', 'a', 'g', 'b'].includes(item?.type) ? item.type : 'b',
+        title: txt(item?.title, 300),
+        body: txt(item?.body, 1800),
+      }))
+    : [];
+  const products = (list, max = 20) =>
+    Array.isArray(list)
+      ? list.slice(0, max).map((item) => ({
+          nom: txt(item?.nom, 300),
+          fam: txt(item?.fam, 160),
+          ca: finite(item?.ca),
+          quantite: finite(item?.quantite),
+          marge: finite(item?.marge),
+          stock: finite(item?.stock),
+          evo: txt(item?.evo, 40),
+        }))
+      : [];
+  const familles = Array.isArray(input.familles)
+    ? input.familles.slice(0, 50).map((item) => ({
+        nom: txt(item?.nom, 200),
+        ca: finite(item?.ca),
+        pct_ca: finite(item?.pct_ca),
+        pct_stk: finite(item?.pct_stk),
+        marge: finite(item?.marge),
+        trend: txt(item?.trend, 30),
+      }))
+    : [];
+  const detectedColumns = {};
+  if (input.detectedColumns && typeof input.detectedColumns === 'object') {
+    for (const [group, columns] of Object.entries(input.detectedColumns)) {
+      if (!columns || typeof columns !== 'object') continue;
+      detectedColumns[txt(group, 50)] = Object.fromEntries(
+        Object.entries(columns)
+          .slice(0, 30)
+          .map(([key, value]) => [txt(key, 80), value == null ? null : txt(value, 200)])
+      );
+    }
+  }
+
+  return {
+    officine: txt(input.officine, 200) || null,
+    periode: txt(input.periode, 200) || null,
+    lgo: txt(input.lgo, 100) || null,
+    ca: finite(input.ca),
+    ca_ht: finite(input.ca_ht),
+    ca_ttc: finite(input.ca_ttc),
+    marge_pct: finite(input.marge_pct),
+    marge_eur: finite(input.marge_eur),
+    stock_eur: finite(input.stock_eur),
+    dormants: finite(input.dormants),
+    synthesis: txt(input.synthesis, 8000),
+    qualityWarnings: Array.isArray(input.qualityWarnings)
+      ? input.qualityWarnings.slice(0, 30).map((item) => txt(item, 1200))
+      : [],
+    alerts,
+    top10: products(input.top10, 20),
+    flop: products(input.flop, 20),
+    familles,
+    detectedColumns,
   };
-  return JSON.parse(JSON.stringify(keep));
 }
 
 export function sanitizeReview(input = {}) {
