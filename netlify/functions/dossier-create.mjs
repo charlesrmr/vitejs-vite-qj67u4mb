@@ -7,6 +7,21 @@ export default async (req) => {
   const auth = await requireUser(req);
   if (auth.error) return auth.error;
 
+  const { blobs } = await STORE.dossiers(req).list({ prefix: 'dossier/' });
+  const drafts = [];
+  for (const blob of blobs || []) {
+    const item = await STORE.dossiers(req).get(blob.key, {
+      type: 'json',
+      consistency: 'strong',
+    });
+    if (item?.accountId === auth.account.id && item.status === 'draft') drafts.push(item);
+  }
+
+  if (drafts.length) {
+    drafts.sort((a, b) => String(b.updatedAt).localeCompare(String(a.updatedAt)));
+    return json({ ok: true, dossier: drafts[0], reused: true });
+  }
+
   const dossier = {
     id: newId('dos'),
     accountId: auth.account.id,
