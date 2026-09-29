@@ -45,3 +45,5 @@
 }
 @media(max-width:950px){.adm-layout{grid-template-columns:1fr}.adm-sidebar{position:static;height:auto;max-height:340px;border-right:0;border-bottom:1px solid #dfe5eb}.adm-kpis{grid-template-columns:1fr 1fr}.adm-two{grid-template-columns:1fr}}
 @media(max-width:650px){.adm-main{padding:14px}.adm-kpis{grid-template-columns:1fr}.adm-dossier-head{align-items:flex-start;flex-direction:column}.adm-two-fields{grid-template-columns:1fr}.adm-item-editor{grid-template-columns:24px 1fr}.adm-item-editor input:nth-of-type(2),.adm-item-editor textarea{grid-column:2}.adm-auto-alerts{grid-template-columns:1fr}}
+
+.adm-quality-gate{display:flex;justify-content:space-between;align-items:center;gap:12px;margin:16px 0 8px;padding:9px 11px;border-radius:9px;background:#fff8e7;border:1px solid rgba(217,119,6,.15);color:#9a6200}.adm-quality-gate.ready{background:#ecfdf5;border-color:rgba(5,150,105,.16);color:#047857}.adm-quality-gate span{font-size:9px;font-weight:800}.adm-quality-gate small{font-size:8px;color:inherit;opacity:.8}.adm-dossier-head-actions button:disabled,.adm-review-actions button:disabled{opacity:.38;cursor:not-allowed}
