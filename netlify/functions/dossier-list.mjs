@@ -1,4 +1,4 @@
-import { STORE, json, requireUser } from './_pilot.mjs';
+import { STORE, json, requireUser } from '../lib/pilot.mjs';
 
 export default async (req) => {
   if (req.method !== 'GET') return json({ error: 'Méthode non autorisée.' }, 405);
