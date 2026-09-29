@@ -16,17 +16,17 @@ export default async (req) => {
   try { body = await req.json(); } catch { return json({ error: 'Requête invalide.' }, 400); }
   if (body?.confirm !== 'SUPPRIMER') return json({ error: 'Confirmation de suppression invalide.' }, 400);
 
-  const dossier = await getOwnedDossier(body?.dossierId, auth.account.id);
+  const dossier = await getOwnedDossier(body?.dossierId, auth.account.id, req);
   if (!dossier) return json({ error: 'Dossier introuvable.' }, 404);
 
   for (const file of Object.values(dossier.files || {})) {
     if (!file?.uploadId || !Number.isInteger(file.chunkCount)) continue;
     for (let i = 0; i < file.chunkCount; i += 1) {
-      await STORE.files().delete(fileChunkKey(dossier.id, file.uploadId, i));
+      await STORE.files(req).delete(fileChunkKey(dossier.id, file.uploadId, i));
     }
   }
 
-  await STORE.dossiers().delete(dossierKey(dossier.id));
+  await STORE.dossiers(req).delete(dossierKey(dossier.id));
   return json({ ok: true });
 };
 
