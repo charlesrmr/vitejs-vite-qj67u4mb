@@ -15,13 +15,13 @@ export default async (req) => {
   let body;
   try { body = await req.json(); } catch { return json({ error: 'Requête invalide.' }, 400); }
 
-  const dossier = await getOwnedDossier(body?.dossierId, auth.account.id);
+  const dossier = await getOwnedDossier(body?.dossierId, auth.account.id, req);
   if (!dossier) return json({ error: 'Dossier introuvable.' }, 404);
 
   dossier.analysis = cleanAnalysis(body?.analysis || {});
   dossier.status = 'submitted';
   dossier.submittedAt = nowIso();
-  await saveDossier(dossier);
+  await saveDossier(dossier, req);
   return json({ ok: true, dossier: publicDossier(dossier) });
 };
 
