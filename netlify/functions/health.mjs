@@ -7,9 +7,11 @@ export default async (req) => {
     await STORE.dossiers(req).list({ prefix: '__health__/' });
     let storageScope = 'preview';
     try {
-      const requestHost = new URL(req.url).hostname;
-      const primaryHost = process.env.URL ? new URL(process.env.URL).hostname : '';
-      storageScope = primaryHost && requestHost === primaryHost ? 'production' : 'preview';
+      const host = new URL(req.url).hostname.toLowerCase();
+      const isDeployPreview =
+        host.startsWith('deploy-preview-') ||
+        host.includes('--pilotofficine.netlify.app');
+      storageScope = isDeployPreview ? 'preview' : 'production';
     } catch {}
 
     return json({
