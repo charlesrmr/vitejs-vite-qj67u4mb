@@ -818,9 +818,18 @@ export function buildFromFiles(filesMap, columnMappings = {}) {
       }
     }
 
-    if (productCols.produit && productCols.quantite) {
+    const hasProductRankingMetric = Boolean(
+      productCols.quantite ||
+      productCols.caHt ||
+      productCols.caTtc ||
+      productCols.ca ||
+      productCols.margeEur ||
+      productCols.margePct
+    )
+
+    if (productCols.produit && hasProductRankingMetric) {
       productReportRows.forEach((row) => {
-        const quantity = parseFrenchNumber(row[productCols.quantite])
+        const quantity = productCols.quantite ? parseFrenchNumber(row[productCols.quantite]) : null
         const publicPrice = productCols.prixPublic ? parseFrenchNumber(row[productCols.prixPublic]) : null
         const productCaColumn = productCols.caHt || productCols.caTtc || productCols.ca
         const productCa = productCaColumn ? parseFrenchNumber(row[productCaColumn]) : null
@@ -847,7 +856,7 @@ export function buildFromFiles(filesMap, columnMappings = {}) {
       })
     } else {
       data.qualityWarnings.push(
-        "Le fichier produits a été lu, mais les colonnes produit/quantité n'ont pas été reconnues."
+        "Le fichier produits a été lu, mais aucune combinaison produit + indicateur (CA, marge ou quantité) n'a été reconnue."
       )
     }
   }
