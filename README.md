@@ -13,7 +13,8 @@ Pilot'Officine transforme des exports LGO en pré-analyse, puis organise une rel
 7. Envoi du dossier pour relecture
 8. Back-office opérateur
 9. Relecture, correction et validation
-10. Diagnostic disponible dans l'espace officine et imprimable en PDF
+10. Génération serveur du PDF final
+11. Diagnostic disponible dans l'espace officine et téléchargeable
 
 ## Architecture
 
@@ -29,7 +30,7 @@ Pilot'Officine transforme des exports LGO en pré-analyse, puis organise une rel
 - PDF : parseur PDF.js empaqueté avec l'application, sans chargement de code parser depuis un CDN
 - Excel : SheetJS CE 0.20.3 depuis la source officielle SheetJS, en remplacement de l'ancien paquet npm 0.18.5 vulnérable
 - Back-office : protégé par `PILOT_ADMIN_TOKEN`
-- Restitution : rapport relu, rendu print A4 / PDF
+- Restitution : PDF A4 généré côté serveur avec `pdf-lib`, stocké dans le dossier puis téléchargeable
 
 ## Configuration Netlify indispensable
 
@@ -99,7 +100,8 @@ Le token est demandé à l'ouverture et conservé uniquement dans `sessionStorag
 - Renseigner les constats, 3 priorités et plan 30 jours
 - Enregistrer en « En relecture »
 - Valider le diagnostic
-- Tester « Imprimer / enregistrer le PDF »
+- Vérifier que la validation génère réellement le PDF serveur
+- Télécharger le PDF final depuis le back-office
 
 ### Retour titulaire
 
@@ -107,7 +109,8 @@ Le token est demandé à l'ouverture et conservé uniquement dans `sessionStorag
 - Vérifier le statut « Diagnostic disponible »
 - Ouvrir le diagnostic
 - Vérifier toutes les valeurs
-- Tester l'impression / enregistrement PDF
+- Télécharger le PDF final serveur
+- Tester aussi l'impression de la vue comme solution de secours
 - Supprimer un dossier test et vérifier qu'il disparaît
 
 ## Règles de données
@@ -137,9 +140,9 @@ Les PDF sont reconnus progressivement par format LGO. Les fichiers non structur�
 ## Limites assumées du MVP
 
 - Pas encore de vérification d'email
-- Pas encore de récupération de mot de passe
+- Récupération de mot de passe disponible si l'email transactionnel est configuré ; sinon support manuel pilote
 - Les emails automatiques sont optionnels et nécessitent la configuration Resend ci-dessus
-- Le PDF utilise pour l'instant l'impression navigateur A4
+- Le PDF final est généré côté serveur ; l'impression navigateur reste uniquement un fallback
 - Le moteur automatique reste une pré-analyse ; la restitution finale est relue
 - Aucun traitement de donnée patient / donnée nominative de santé ne doit être introduit sans revue juridique et d'hébergement dédiée
 - Le lockfile historique a été retiré car il ne correspondait plus aux dépendances du MVP ; les dépendances directes sont épinglées. Régénérer et committer un lockfile propre avant industrialisation
@@ -169,6 +172,10 @@ Ne pas ouvrir le pilote tant que les points suivants n'ont pas été testés au 
 - validation
 - restitution client
 - suppression dossier
+- modification du profil
+- changement de mot de passe
+- récupération de mot de passe
+- génération et téléchargement du PDF final
 
 ## Branche de travail
 
