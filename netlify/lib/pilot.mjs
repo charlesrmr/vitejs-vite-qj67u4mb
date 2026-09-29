@@ -292,7 +292,7 @@ export const fileChunkKey = (id, uploadId, index) =>
 
 export function publicDossier(dossier) {
   if (!dossier) return null;
-  const review = dossier.review
+  const review = dossier.status === 'reviewed' && dossier.review
     ? {
         executiveSummary: dossier.review.executiveSummary || '',
         findings: dossier.review.findings || [],
