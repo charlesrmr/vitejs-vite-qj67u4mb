@@ -41,6 +41,17 @@ Une seule variable sensible est obligatoire pour utiliser le back-office :
 PILOT_ADMIN_TOKEN=<secret long et aléatoire>
 ```
 
+Variables optionnelles pour les notifications transactionnelles :
+
+```
+RESEND_API_KEY=<clé d'envoi Resend>
+PILOT_EMAIL_FROM=Pilot'Officine <diagnostic@votre-domaine.fr>
+PILOT_NOTIFY_TO=<email opérateur>
+PILOT_PUBLIC_URL=https://pilotofficine.fr
+```
+
+Sans ces variables, le MVP fonctionne normalement : seule la notification email est désactivée.
+
 Dans Netlify :
 
 1. Project configuration
@@ -127,7 +138,7 @@ Les PDF sont reconnus progressivement par format LGO. Les fichiers non structur�
 
 - Pas encore de vérification d'email
 - Pas encore de récupération de mot de passe
-- Pas d'envoi email automatique quand le diagnostic est prêt
+- Les emails automatiques sont optionnels et nécessitent la configuration Resend ci-dessus
 - Le PDF utilise pour l'instant l'impression navigateur A4
 - Le moteur automatique reste une pré-analyse ; la restitution finale est relue
 - Aucun traitement de donnée patient / donnée nominative de santé ne doit être introduit sans revue juridique et d'hébergement dédiée
