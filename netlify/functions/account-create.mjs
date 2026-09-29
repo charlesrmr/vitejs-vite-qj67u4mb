@@ -48,5 +48,6 @@ export default async (req) => {
 
 export const config = {
   path: '/api/account/create',
+  region: 'fra',
   rateLimit: { windowLimit: 5, windowSize: 60, aggregateBy: ['ip', 'domain'] },
 };
