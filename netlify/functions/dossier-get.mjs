@@ -5,7 +5,7 @@ export default async (req) => {
   const auth = await requireUser(req);
   if (auth.error) return auth.error;
   const id = new URL(req.url).searchParams.get('id');
-  const dossier = await getOwnedDossier(id, auth.account.id);
+  const dossier = await getOwnedDossier(id, auth.account.id, req);
   if (!dossier) return json({ error: 'Dossier introuvable.' }, 404);
   return json({ dossier: publicDossier(dossier) });
 };
