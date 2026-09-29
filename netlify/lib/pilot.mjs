@@ -323,6 +323,14 @@ export function publicDossier(dossier) {
     files,
     analysis: dossier.analysis || null,
     review,
+    report: dossier.status === 'reviewed' && dossier.report
+      ? {
+          available: true,
+          fileName: dossier.report.fileName || 'diagnostic-pilot-officine.pdf',
+          fileSize: Number.isFinite(dossier.report.fileSize) ? dossier.report.fileSize : null,
+          generatedAt: dossier.report.generatedAt || dossier.reviewedAt || null,
+        }
+      : null,
     createdAt: dossier.createdAt,
     updatedAt: dossier.updatedAt,
     submittedAt: dossier.submittedAt || null,
