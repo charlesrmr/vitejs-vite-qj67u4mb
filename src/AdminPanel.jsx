@@ -545,6 +545,10 @@ export default function AdminPanel() {
               <p>Sélectionnez une officine à gauche. Les exports originaux, la pré-analyse et la fiche client restent réunis dans le même dossier.</p>
 
               <div className="adm-readiness">
+                <div className="adm-envline">
+                  <span>{health?.environment || 'environnement inconnu'}</span>
+                  <code>{health?.commitRef ? health.commitRef.slice(0, 8) : 'commit N/D'}</code>
+                </div>
                 <div className="adm-readiness-head">
                   <b>État du MVP</b>
                   <div>
