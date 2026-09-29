@@ -985,19 +985,33 @@ export default function App() {
   const completeAccount = async () => {
     setAccountError('');
     setAccountSaving(true);
+    let createdSession = '';
     try {
       if (password !== passwordConfirm) throw new Error('Les mots de passe ne correspondent pas.');
       const result = await createAccount(profile, password);
+      createdSession = result.sessionToken;
       saveSessionToken(result.sessionToken);
       setSessionToken(result.sessionToken);
       setAccount(result.account);
       setProfile((prev) => ({ ...prev, ...(result.account?.profile || {}) }));
-      await createFreshDossier(result.sessionToken);
       setPassword('');
       setPasswordConfirm('');
-      setStep('upload');
+
+      try {
+        await createFreshDossier(result.sessionToken);
+        setStep('upload');
+      } catch (dossierError) {
+        setPortalError('Votre compte est créé, mais le premier dossier n’a pas pu être initialisé. Vous pouvez réessayer depuis votre espace.');
+        setClientDossiers([]);
+        setStep('portal');
+      }
     } catch (err) {
-      setAccountError(err?.message || 'Impossible de créer le compte. Réessayez.');
+      if (createdSession) {
+        setPortalError(err?.message || 'Votre compte est créé. Reprenez depuis votre espace.');
+        setStep('portal');
+      } else {
+        setAccountError(err?.message || 'Impossible de créer le compte. Réessayez.');
+      }
     } finally {
       setAccountSaving(false);
     }
@@ -1013,9 +1027,15 @@ export default function App() {
       setAccount(result.account);
       setProfile((prev) => ({ ...prev, ...(result.account?.profile || {}) }));
       setLoginPassword('');
-      const dossierResult = await listMyDossiers(result.sessionToken);
-      setClientDossiers(dossierResult.dossiers || []);
       setStep('portal');
+
+      try {
+        const dossierResult = await listMyDossiers(result.sessionToken);
+        setClientDossiers(dossierResult.dossiers || []);
+      } catch (listError) {
+        setClientDossiers([]);
+        setPortalError('Connexion réussie, mais vos dossiers n’ont pas pu être chargés. Utilisez « Actualiser » pour réessayer.');
+      }
     } catch (err) {
       setLoginError(err?.message || 'Connexion impossible.');
     } finally {
