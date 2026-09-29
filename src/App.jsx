@@ -129,7 +129,7 @@ function ScoreRing({ score }) {
           color: '#94A3B8',
         }}
       >
-        Score sante
+        Score santé
       </div>
     </div>
   );
@@ -169,7 +169,7 @@ function Slot({ label, hint, optional, file, onFile }) {
       {file && <div className="slot-f">{file.name}</div>}
       {(optional || file) && (
         <span className={`slot-badge ${file ? 'ok' : 'opt'}`}>
-          {file ? 'ready' : 'optional'}
+          {file ? 'prêt' : 'optionnel'}
         </span>
       )}
     </div>
@@ -472,7 +472,7 @@ function SH({ label }) {
 }
 
 const TABS = [
-  { id: 'synthese', label: 'Synthese' },
+  { id: 'synthese', label: 'Synthèse' },
   { id: 'marge', label: 'Marge' },
   { id: 'analyse', label: 'Analyse' },
   { id: 'produits', label: 'Produits' },
@@ -483,9 +483,9 @@ const STEPS = [
   'Lecture des fichiers LGO...',
   'Normalisation des colonnes...',
   'Calcul des KPI...',
-  'Detection des alertes...',
-  'Synthese en cours...',
-  'Rapport pret',
+  'Détection des alertes...',
+  'Synthèse en cours...',
+  'Rapport prêt',
 ];
 
 
@@ -1567,11 +1567,11 @@ export default function App() {
           <div className="up-blob" />
           <div className="up-blob2" />
           <div className="up-in">
-            <div className="up-kicker">Pilot Officine - CRC Pharma</div>
+            <div className="up-kicker">Pilot'Officine · CRC Pharma</div>
             <h1 className="up-h">
               Vos exports LGO valent
               <br />
-              plus qu un tableau Excel.
+              plus qu’un tableau Excel.
             </h1>
             <p className="up-s">
               Déposez vos exports pour préparer la pré-analyse qui servira de base
@@ -1592,7 +1592,7 @@ export default function App() {
                 onFile={sf('produits')}
               />
               <Slot
-                label="Etat du Stock"
+                label="État du stock"
                 hint="Inventaire / stock · PDF accepté"
                 optional
                 file={files.stock}
@@ -1615,7 +1615,7 @@ export default function App() {
               Préparer ma pré-analyse
             </button>
             <button className="btn-demo" onClick={() => run(true)}>
-              Tester avec les donnees de demonstration
+              Tester avec les données de démonstration
             </button>
             <div className="trust">
               <span className="trust-i">dossier sécurisé</span>
@@ -1677,7 +1677,7 @@ export default function App() {
         <div className="ld">
           <div className="ld-ring" />
           <div className="ld-t">Analyse en cours...</div>
-          <p className="ld-s">Pilot Officine calcule vos indicateurs</p>
+          <p className="ld-s">Pilot'Officine calcule vos indicateurs</p>
           <ul className="ld-steps">
             {STEPS.map((s, i) => (
               <li key={i} className={i < ls ? 'd' : i === ls ? 'a' : ''}>
@@ -1919,11 +1919,11 @@ export default function App() {
                   ))}
                 </div>
 
-                <SH label="Synthese et Alertes" />
+                <SH label="Synthèse et alertes" />
                 <div className="g2">
                   <div className="synth fu">
                     <div className="synth-tag">
-                      {data.isDemo ? 'AI synthesis - Pilot Officine' : 'Synthèse Pilot Officine'}
+                      {data.isDemo ? 'Synthèse IA · exemple fictif' : "Synthèse Pilot'Officine"}
                     </div>
                     <div className="synth-b">{syn || data.synthesis}</div>
                   </div>
@@ -1988,7 +1988,7 @@ export default function App() {
                         ok: data.extra.rotation >= 3,
                       },
                       {
-                        l: 'Ventes associees',
+                        l: 'Ventes associées',
                         v: `${data.extra.tx_assoc}%`,
                         ok: data.extra.tx_assoc >= 18,
                       },
@@ -2111,7 +2111,7 @@ export default function App() {
                 <div className="mg-split fu">
                   <div className="mg-univ rembourse">
                     <div className="mg-tag" style={{ color: C.t3 }}>
-                      Rembourse - marge reglementee
+                      Remboursé · marge réglementée
                     </div>
                     <div className="mg-val">
                       {data.marge.rembourse.marge_pct}%
@@ -2134,7 +2134,7 @@ export default function App() {
                   </div>
                   <div className="mg-univ libre">
                     <div className="mg-tag" style={{ color: C.emerald }}>
-                      Non-rembourse - marge libre
+                      Non-remboursé · marge libre
                     </div>
                     <div className="mg-val" style={{ color: C.emerald }}>
                       {data.marge.libre.marge_pct}%
@@ -2160,7 +2160,7 @@ export default function App() {
                 <SH label="Marge libre par famille" />
                 <div className="tc fu">
                   <div className="tc-hd">
-                    <span className="tc-ht">Familles hors rembourse</span>
+                    <span className="tc-ht">Familles hors remboursé</span>
                     <span className="tc-hc">valeurs fictives de démonstration</span>
                   </div>
                   <div style={{ padding: '0.75rem 1rem' }}>
