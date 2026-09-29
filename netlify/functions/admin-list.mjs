@@ -33,4 +33,7 @@ export default async (req) => {
   });
 };
 
-export const config = { path: '/api/admin/dossiers' };
+export const config = {
+  path: '/api/admin/dossiers',
+  rateLimit: { windowLimit: 60, windowSize: 60, aggregateBy: ['ip', 'domain'] },
+};
