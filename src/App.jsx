@@ -626,6 +626,13 @@ export default function App() {
   const fx = (v) => (Number.isFinite(v) ? `x${v}` : 'N/D');
   const fe = (v) => (Number.isFinite(v) ? `${v}EUR` : 'N/D');
   const hasProductCa = Boolean(data?.top10?.some((p) => Number.isFinite(p.ca) && p.ca > 0));
+  const salesMap = mappings.ventes || {};
+  const mappingReady = Boolean(
+    salesMap.caTtc ||
+    salesMap.caHt ||
+    salesMap.ca ||
+    (salesMap.produit && salesMap.quantite)
+  );
 
   return (
     <div className="app">
@@ -703,6 +710,53 @@ export default function App() {
               <span className="trust-i">analyse locale</span>
               <span className="trust-i">CSV + Excel</span>
               <span className="trust-i">aucune donnée patient requise</span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {step === 'mapping' && (
+        <div className="mapping-page">
+          <div className="mapping-shell">
+            <div className="mapping-head">
+              <div className="mapping-kicker">Étape 2 · Vérification</div>
+              <h1>On a reconnu vos colonnes.<br /><em>Vous gardez la main.</em></h1>
+              <p>
+                Vérifiez simplement que chaque indicateur correspond à la bonne colonne.
+                Une donnée absente reste absente : Pilot'Officine ne la reconstitue pas.
+              </p>
+            </div>
+
+            <div className="mapping-summary">
+              <span><b>{Object.keys(parsedFiles).length}</b> fichier(s) lu(s)</span>
+              <span><b>{Object.values(parsedFiles).reduce((total, rows) => total + rows.length, 0)}</b> lignes exploitables</span>
+              <span className={mappingReady ? 'good' : 'warn'}>
+                {mappingReady ? 'Base activité reconnue' : 'CA à confirmer'}
+              </span>
+            </div>
+
+            <div className="mapping-grid">
+              {Object.entries(parsedFiles).map(([type, rows]) => (
+                <ColumnMappingCard
+                  key={type}
+                  type={type}
+                  rows={rows}
+                  mapping={mappings[type]}
+                  onChange={(field, value) => updateMapping(type, field, value)}
+                />
+              ))}
+            </div>
+
+            {error && <div className="map-error">{error}</div>}
+
+            <div className="mapping-actions">
+              <button className="map-back" onClick={() => setStep('upload')}>← Modifier les fichiers</button>
+              <div>
+                <small>Vous pourrez corriger le mapping avant chaque analyse.</small>
+                <button className="map-confirm" onClick={confirmMapping} disabled={!mappingReady}>
+                  Confirmer et lancer l'analyse →
+                </button>
+              </div>
             </div>
           </div>
         </div>
