@@ -203,6 +203,7 @@ export function cleanAnalysis(input = {}) {
           ca: finite(item?.ca),
           quantite: finite(item?.quantite),
           marge: finite(item?.marge),
+          marge_eur: finite(item?.marge_eur),
           stock: finite(item?.stock),
           evo: txt(item?.evo, 40),
         }))
@@ -261,6 +262,9 @@ export function cleanAnalysis(input = {}) {
       ? input.qualityWarnings.slice(0, 30).map((item) => txt(item, 1200))
       : [],
     alerts,
+    product_ranking_mode: ['ca', 'margin', 'quantity'].includes(input.product_ranking_mode)
+      ? input.product_ranking_mode
+      : null,
     top10: products(input.top10, 20),
     flop: products(input.flop, 20),
     familles,
