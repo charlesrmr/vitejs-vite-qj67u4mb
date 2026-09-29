@@ -1,6 +1,6 @@
 import {
   cleanAnalysis, getOwnedDossier, json, nowIso, requireUser, saveDossier,
-} from '../lib/pilot.mjs';
+, publicDossier } from '../lib/pilot.mjs';
 
 export default async (req) => {
   if (req.method !== 'POST') return json({ error: 'Méthode non autorisée.' }, 405);
@@ -16,7 +16,7 @@ export default async (req) => {
   dossier.status = 'submitted';
   dossier.submittedAt = nowIso();
   await saveDossier(dossier);
-  return json({ ok: true, dossier });
+  return json({ ok: true, dossier: publicDossier(dossier) });
 };
 
 export const config = { path: '/api/dossier/submit' };
