@@ -1,3 +1,4 @@
+import { adminSubmissionEmail, sendPilotEmail } from '../lib/notify.mjs';
 import {
   cleanAnalysis,
   getOwnedDossier,
@@ -31,6 +32,9 @@ export default async (req) => {
   dossier.privacyConfirmedAt = nowIso();
   dossier.status = 'submitted';
   dossier.submittedAt = nowIso();
+  await saveDossier(dossier, req);
+  const notification = await sendPilotEmail(adminSubmissionEmail(dossier));
+  dossier.notification = { adminSubmitted: notification.sent === true, attemptedAt: nowIso() };
   await saveDossier(dossier, req);
   return json({ ok: true, dossier: publicDossier(dossier) });
 };
