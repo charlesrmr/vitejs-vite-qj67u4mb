@@ -523,7 +523,7 @@ function buildFamilies(rows, columns, totalCa, marginMode) {
 
 function parseSaleDate(value) {
   const raw = String(value || '').trim()
-  const fr = raw.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/)
+  const fr = raw.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})(?:[ T]\d{1,2}:\d{2}(?::\d{2})?)?$/)
   if (fr) {
     const date = new Date(Number(fr[3]), Number(fr[2]) - 1, Number(fr[1]))
     return Number.isNaN(date.getTime()) ? null : date
@@ -641,24 +641,26 @@ function buildLocalSynthesis(data) {
   return parts.join('\n\n')
 }
 
+function formatFrenchDate(date) {
+  if (!(date instanceof Date) || Number.isNaN(date.getTime())) return ''
+  return [
+    String(date.getDate()).padStart(2, '0'),
+    String(date.getMonth() + 1).padStart(2, '0'),
+    date.getFullYear(),
+  ].join('/')
+}
+
 function inferPeriod(rows, dateColumn) {
   if (!dateColumn) return 'Période importée'
   const dates = rows
-    .map((row) => String(row[dateColumn] || '').trim())
-    .map((value) => {
-      const match = value.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/)
-      if (!match) return null
-      const [, d, m, y] = match
-      const date = new Date(Number(y), Number(m) - 1, Number(d))
-      return Number.isNaN(date.getTime()) ? null : { date, label: value }
-    })
+    .map((row) => parseSaleDate(row[dateColumn]))
     .filter(Boolean)
-    .sort((a, b) => a.date - b.date)
+    .sort((a, b) => a - b)
 
   if (!dates.length) return 'Période importée'
-  const first = dates[0]
-  const last = dates[dates.length - 1]
-  return first.label === last.label ? first.label : `${first.label} → ${last.label}`
+  const first = formatFrenchDate(dates[0])
+  const last = formatFrenchDate(dates[dates.length - 1])
+  return first === last ? first : `${first} → ${last}`
 }
 
 function emptyRealData() {
