@@ -169,7 +169,7 @@ const EMPTY_PROFILE = {
   consent: false,
 };
 
-function AccountStep({ profile, onChange, onSubmit, onDemo }) {
+function AccountStep({ profile, onChange, onSubmit, onDemo, saving, submitError }) {
   const requiredReady = Boolean(
     profile.firstName.trim() &&
     profile.lastName.trim() &&
@@ -275,8 +275,9 @@ function AccountStep({ profile, onChange, onSubmit, onDemo }) {
             <span>J'accepte que ces informations soient utilisées pour traiter ma demande de diagnostic et me recontacter à ce sujet.</span>
           </label>
 
-          <button className="account-submit" type="submit" disabled={!requiredReady}>
-            Continuer vers mes exports →
+          {submitError && <div className="account-error">{submitError}</div>}
+          <button className="account-submit" type="submit" disabled={!requiredReady || saving}>
+            {saving ? 'Création du dossier...' : 'Continuer vers mes exports →'}
           </button>
           <button className="account-demo" type="button" onClick={onDemo}>Voir la démonstration sans créer de compte</button>
 
@@ -663,6 +664,8 @@ export default function App() {
   const [syn, setSyn] = useState('');
   const [tab, setTab] = useState('synthese');
   const [error, setError] = useState('');
+  const [accountSaving, setAccountSaving] = useState(false);
+  const [accountError, setAccountError] = useState('');
 
   const sf = (k) => (f) => setFiles((p) => ({ ...p, [k]: f }));
 
@@ -757,6 +760,8 @@ export default function App() {
     setMappings({});
     setFiles({ ventes: null, produits: null, stock: null });
     setProfile(EMPTY_PROFILE);
+    setAccountError('');
+    setAccountSaving(false);
     setError('');
   };
   const startAccount = () => {
@@ -766,9 +771,42 @@ export default function App() {
   const updateProfile = (key, value) => {
     setProfile((prev) => ({ ...prev, [key]: value }));
   };
-  const completeAccount = () => {
-    setError('');
-    setStep('upload');
+  const completeAccount = async () => {
+    setAccountError('');
+    setAccountSaving(true);
+    try {
+      const body = new URLSearchParams({
+        'form-name': 'pilot-officine-account',
+        firstName: profile.firstName,
+        lastName: profile.lastName,
+        email: profile.email,
+        phone: profile.phone,
+        pharmacyName: profile.pharmacyName,
+        address: profile.address,
+        postalCode: profile.postalCode,
+        city: profile.city,
+        lgo: profile.lgo,
+        role: profile.role,
+        teamSize: profile.teamSize,
+        network: profile.network,
+        context: profile.context,
+        consent: profile.consent ? 'oui' : 'non',
+      }).toString();
+
+      const response = await fetch('/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body,
+      });
+      if (!response.ok) throw new Error('Enregistrement impossible pour le moment.');
+
+      setError('');
+      setStep('upload');
+    } catch (err) {
+      setAccountError(err?.message || 'Impossible de créer le dossier. Réessayez.');
+    } finally {
+      setAccountSaving(false);
+    }
   };
   const prepareReview = () => {
     setStep('review');
@@ -935,6 +973,8 @@ export default function App() {
           onChange={updateProfile}
           onSubmit={completeAccount}
           onDemo={() => run(true)}
+          saving={accountSaving}
+          submitError={accountError}
         />
       )}
 
