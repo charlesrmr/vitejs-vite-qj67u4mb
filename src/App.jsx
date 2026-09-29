@@ -761,7 +761,7 @@ function Landing({ onStart, onDemo }) {
               <div><i>02</i><p><b>Une restitution directe</b><span>et un échange de feedback</span></p></div>
               <div><i>03</i><p><b>Des conditions préférentielles</b><span>réservées au cercle fondateur</span></p></div>
             </div>
-            <a className="lp-btn founder" href="mailto:charlesromier@gmail.com?subject=Pilot%27Officine%20-%20Pharmacie%20fondatrice">Je veux faire partie des fondateurs →</a>
+            <button className="lp-btn founder" type="button" onClick={onStart}>Je veux faire partie des fondateurs →</button>
           </div>
         </div>
       </section>
