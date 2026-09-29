@@ -90,6 +90,7 @@ export default async (req) => {
       ...(dossier.notification || {}),
       clientReady: notification.sent === true,
       attemptedAt: nowIso(),
+      lastReason: notification.sent ? null : notification.reason || 'unknown',
     };
     await saveDossier(dossier, req);
   }
