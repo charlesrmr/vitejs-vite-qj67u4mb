@@ -123,6 +123,76 @@ function matrixToObjects(matrix) {
   )
 }
 
+function decodeBase64Text(value) {
+  const binary = atob(String(value || '').replace(/\s+/g, ''))
+  const bytes = Uint8Array.from(binary, (char) => char.charCodeAt(0))
+  return new TextDecoder('utf-8', { fatal: false }).decode(bytes)
+}
+
+function extractMhtmlSpreadsheetHtml(buffer) {
+  const source = new TextDecoder('utf-8', { fatal: false }).decode(buffer)
+  if (!/^mime-version:/i.test(source.trimStart()) || !/content-type:\s*multipart\/related/i.test(source)) {
+    return null
+  }
+
+  const boundaryMatch = source.match(/boundary\s*=\s*"?([^"\r\n;]+)"?/i)
+  if (!boundaryMatch) return null
+
+  const boundary = boundaryMatch[1].trim()
+  const parts = source.split(`--${boundary}`)
+  const htmlPart = parts.find((part) => /content-type:\s*text\/html/i.test(part))
+  if (!htmlPart) return null
+
+  const separator = htmlPart.match(/\r?\n\r?\n/)
+  if (!separator || separator.index === undefined) return null
+
+  const headers = htmlPart.slice(0, separator.index)
+  let body = htmlPart.slice(separator.index + separator[0].length).trim()
+
+  if (/content-transfer-encoding:\s*base64/i.test(headers)) {
+    try {
+      body = decodeBase64Text(body)
+    } catch {
+      throw new Error('Export XLS MHTML détecté, mais son contenu base64 est illisible.')
+    }
+  }
+
+  const doc = new DOMParser().parseFromString(body, 'text/html')
+  const tables = Array.from(doc.querySelectorAll('table'))
+  if (!tables.length) {
+    throw new Error('Export XLS MHTML détecté, mais aucun tableau HTML exploitable n’a été trouvé.')
+  }
+
+  const scored = tables.map((table) => {
+    const rows = Array.from(table.rows || [])
+    const widths = rows.map((row) => row.cells?.length || 0)
+    const maxWidth = widths.length ? Math.max(...widths) : 0
+    const sample = rows
+      .slice(0, 5)
+      .flatMap((row) => Array.from(row.cells || []).map((cell) => normalizeLoose(cell.textContent)))
+      .filter(Boolean)
+    const hints = sample.reduce(
+      (score, cell) =>
+        score + (HEADER_HINTS.some((hint) => {
+          const normalizedHint = normalizeLoose(hint)
+          return cell === normalizedHint || cell.includes(normalizedHint)
+        }) ? 5 : 0),
+      0
+    )
+    return { table, score: hints + maxWidth * 3 + Math.min(rows.length, 100) }
+  })
+
+  const best = scored
+    .filter((item) => (item.table.rows?.length || 0) >= 2)
+    .sort((a, b) => b.score - a.score)[0]
+
+  if (!best || !best.table) {
+    throw new Error('Export XLS MHTML détecté, mais aucun tableau suffisamment structuré n’a été reconnu.')
+  }
+
+  return best.table.outerHTML
+}
+
 async function loadPdfJs() {
   const pdfjsLib = await import('pdfjs-dist')
   pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker
@@ -238,7 +308,12 @@ export function parseFile(file) {
 
   if (name.endsWith('.xlsx') || name.endsWith('.xls')) {
     return file.arrayBuffer().then((buffer) => {
-      const workbook = XLSX.read(buffer, { type: 'array', cellDates: false })
+      const mhtmlTable = name.endsWith('.xls')
+        ? extractMhtmlSpreadsheetHtml(buffer)
+        : null
+      const workbook = mhtmlTable
+        ? XLSX.read(mhtmlTable, { type: 'string', cellDates: false })
+        : XLSX.read(buffer, { type: 'array', cellDates: false })
       const firstSheet = workbook.SheetNames[0]
       if (!firstSheet) throw new Error('Classeur Excel vide')
       const matrix = XLSX.utils.sheet_to_json(workbook.Sheets[firstSheet], {
