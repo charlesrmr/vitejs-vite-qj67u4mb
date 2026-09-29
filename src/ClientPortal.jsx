@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { eur, num } from './utils';
 import './client-portal.css';
 
@@ -89,6 +90,120 @@ export function ClientPortal({
             </article>
           ))}
         </div>
+      </div>
+    </div>
+  );
+}
+
+
+
+export function AccountSettings({
+  account,
+  saving,
+  error,
+  success,
+  onBack,
+  onSaveProfile,
+  onChangePassword,
+  onDeleteAccount,
+}) {
+  const [form, setForm] = useState(account?.profile || {});
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [deletePassword, setDeletePassword] = useState('');
+  const [deleteText, setDeleteText] = useState('');
+
+  useEffect(() => {
+    setForm(account?.profile || {});
+  }, [account]);
+
+  const field = (key) => ({
+    value: form?.[key] || '',
+    onChange: (e) => setForm((prev) => ({ ...prev, [key]: e.target.value })),
+  });
+
+  const submitPassword = (e) => {
+    e.preventDefault();
+    if (newPassword !== confirmPassword) return;
+    onChangePassword(currentPassword, newPassword);
+  };
+
+  const deleteReady = deleteText === 'SUPPRIMER MON COMPTE' && Boolean(deletePassword);
+
+  return (
+    <div className="cp-page">
+      <div className="cp-shell settings-shell">
+        <div className="cr-toolbar">
+          <button onClick={onBack}>← Mes dossiers</button>
+        </div>
+
+        <header className="settings-head">
+          <span>MON COMPTE</span>
+          <h1>Informations et sécurité.</h1>
+          <p>Corrigez vos coordonnées, changez votre mot de passe ou supprimez définitivement votre compte pilote.</p>
+        </header>
+
+        {error && <div className="cp-error">{error}</div>}
+        {success && <div className="settings-success">{success}</div>}
+
+        <section className="settings-card">
+          <div className="settings-card-head">
+            <span>OFFICINE</span>
+            <h2>Vos informations</h2>
+            <p>L'adresse email du compte n'est pas modifiable pendant la phase pilote.</p>
+          </div>
+          <form onSubmit={(e) => { e.preventDefault(); onSaveProfile(form); }} className="settings-grid">
+            <label><span>Prénom</span><input {...field('firstName')} /></label>
+            <label><span>Nom</span><input {...field('lastName')} /></label>
+            <label className="full"><span>Email</span><input value={form?.email || ''} disabled /></label>
+            <label><span>Téléphone</span><input {...field('phone')} /></label>
+            <label><span>Rôle</span><input {...field('role')} /></label>
+            <label className="full"><span>Nom de la pharmacie</span><input {...field('pharmacyName')} /></label>
+            <label className="full"><span>Adresse</span><input {...field('address')} /></label>
+            <label><span>Code postal</span><input {...field('postalCode')} /></label>
+            <label><span>Ville</span><input {...field('city')} /></label>
+            <label><span>LGO</span><input {...field('lgo')} /></label>
+            <label><span>Taille de l'équipe</span><input {...field('teamSize')} /></label>
+            <label className="full"><span>Groupement / enseigne</span><input {...field('network')} /></label>
+            <label className="full"><span>Contexte</span><textarea rows="4" {...field('context')} /></label>
+            <div className="settings-actions full">
+              <button className="primary" type="submit" disabled={saving}>{saving ? 'Enregistrement...' : 'Enregistrer mes informations'}</button>
+            </div>
+          </form>
+        </section>
+
+        <section className="settings-card">
+          <div className="settings-card-head">
+            <span>SÉCURITÉ</span>
+            <h2>Changer le mot de passe</h2>
+            <p>Le changement invalide les anciennes sessions et reconnecte cet appareil avec une nouvelle session.</p>
+          </div>
+          <form onSubmit={submitPassword} className="settings-grid">
+            <label className="full"><span>Mot de passe actuel</span><input type="password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} autoComplete="current-password" /></label>
+            <label><span>Nouveau mot de passe</span><input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} autoComplete="new-password" /></label>
+            <label><span>Confirmer</span><input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} autoComplete="new-password" /></label>
+            {newPassword && confirmPassword && newPassword !== confirmPassword && <div className="settings-inline-error full">Les mots de passe ne correspondent pas.</div>}
+            <div className="settings-actions full">
+              <button className="primary" type="submit" disabled={saving || newPassword.length < 8 || newPassword !== confirmPassword || !currentPassword}>Changer mon mot de passe</button>
+            </div>
+          </form>
+        </section>
+
+        <section className="settings-card danger-zone">
+          <div className="settings-card-head">
+            <span>ZONE SENSIBLE</span>
+            <h2>Supprimer mon compte</h2>
+            <p>Cette action supprime le compte, tous les dossiers et les fichiers stockés. Elle est irréversible.</p>
+          </div>
+          <div className="settings-grid">
+            <label className="full"><span>Mot de passe</span><input type="password" value={deletePassword} onChange={(e) => setDeletePassword(e.target.value)} /></label>
+            <label className="full"><span>Écrivez exactement : SUPPRIMER MON COMPTE</span><input value={deleteText} onChange={(e) => setDeleteText(e.target.value)} /></label>
+            <div className="settings-actions full">
+              <button className="danger" type="button" disabled={saving || !deleteReady} onClick={() => onDeleteAccount(deletePassword)}>Supprimer définitivement mon compte</button>
+            </div>
+          </div>
+        </section>
       </div>
     </div>
   );
