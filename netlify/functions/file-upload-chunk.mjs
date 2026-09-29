@@ -85,7 +85,11 @@ export default async (req) => {
     );
     const isSylk = headers.some((headerText) => headerText.startsWith('id;'));
     const isDif = headers.some((headerText) => headerText.startsWith('table'));
-    const isXls = isOleXls || isZip || isLegacyBiff || isXmlXls || isHtmlXls || isSylk || isDif;
+    const isMhtmlXls =
+      utf8Header.startsWith('mime-version:') &&
+      utf8Header.includes('content-type: multipart/related') &&
+      utf8Header.includes('content-type: text/html');
+    const isXls = isOleXls || isZip || isLegacyBiff || isXmlXls || isHtmlXls || isSylk || isDif || isMhtmlXls;
     const hasNull = bytes.some((value) => value === 0x00);
 
     if (ext === '.pdf' && !isPdf) return json({ error: 'Le fichier ne correspond pas à un PDF valide.' }, 415);
