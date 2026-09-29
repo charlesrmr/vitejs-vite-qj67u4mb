@@ -1,3 +1,4 @@
+import { clientReadyEmail, sendPilotEmail } from '../lib/notify.mjs';
 import {
   STORE, json, nowIso, requireAdmin, sanitizeReview, saveDossier,
 } from '../lib/pilot.mjs';
@@ -42,10 +43,21 @@ export default async (req) => {
     }
   }
 
+  const wasReviewed = dossier.status === 'reviewed';
   dossier.review = review;
   dossier.status = status;
   dossier.reviewedAt = status === 'reviewed' ? nowIso() : null;
   await saveDossier(dossier, req);
+
+  if (status === 'reviewed' && !wasReviewed) {
+    const notification = await sendPilotEmail(clientReadyEmail(dossier));
+    dossier.notification = {
+      ...(dossier.notification || {}),
+      clientReady: notification.sent === true,
+      attemptedAt: nowIso(),
+    };
+    await saveDossier(dossier, req);
+  }
 
   return json({ ok: true, dossier });
 };
