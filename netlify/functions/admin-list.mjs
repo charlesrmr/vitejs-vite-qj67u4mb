@@ -35,6 +35,5 @@ export default async (req) => {
 
 export const config = {
   path: '/api/admin/dossiers',
-  region: 'fra',
   rateLimit: { windowLimit: 60, windowSize: 60, aggregateBy: ['ip', 'domain'] },
 };
