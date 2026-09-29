@@ -1193,6 +1193,83 @@ export default function App() {
         </div>
       )}
 
+      {step === 'review' && data && (
+        <div className="review-page">
+          <div className="review-shell">
+            <div className="review-head">
+              <div className="review-kicker">Étape 4 · Relecture</div>
+              <h1>Votre dossier est prêt<br /><em>à être relu.</em></h1>
+              <p>
+                La pré-analyse et les fichiers originaux sont désormais associés à votre dossier sécurisé.
+                Vous pouvez l'envoyer pour relecture avant la restitution du diagnostic final.
+              </p>
+            </div>
+
+            <div className="review-grid">
+              <section className="review-card">
+                <span>CONTACT</span>
+                <h3>{profile.firstName} {profile.lastName}</h3>
+                <p>{profile.email}<br />{profile.phone}</p>
+              </section>
+              <section className="review-card">
+                <span>OFFICINE</span>
+                <h3>{profile.pharmacyName}</h3>
+                <p>{profile.address}<br />{profile.postalCode} {profile.city}</p>
+              </section>
+              <section className="review-card">
+                <span>DOSSIER</span>
+                <h3>{profile.lgo || 'LGO non renseigné'}</h3>
+                <p>{Object.values(files).filter(Boolean).length} fichier(s) sécurisé(s)<br />Réf. {dossierId.slice(-10)}</p>
+              </section>
+            </div>
+
+            <div className="review-package">
+              <div>
+                <span>CE QUI PART EN RELECTURE</span>
+                <h2>Exports originaux + pré-analyse + contexte officine</h2>
+                <p>
+                  Les calculs automatiques servent de base. La restitution finale ne doit reprendre que
+                  les constats confirmés après contrôle du dossier.
+                </p>
+              </div>
+              <div className="review-file-list">
+                {Object.entries(files).filter(([, file]) => file).map(([type, file]) => (
+                  <div key={type}><b>{type}</b><span>{file.name}</span></div>
+                ))}
+              </div>
+            </div>
+
+            <div className="review-output">
+              <div className="review-output-number">PDF</div>
+              <div>
+                <span>RESTITUTION PRÉVUE</span>
+                <h3>Un diagnostic court, relu, directement exploitable.</h3>
+                <p>Constats clés · points de vigilance · 3 priorités · plan d'action 30 jours · données à compléter.</p>
+              </div>
+            </div>
+
+            {reviewError && <div className="account-error">{reviewError}</div>}
+            {reviewSent ? (
+              <div className="review-success">
+                <b>Dossier envoyé pour relecture.</b>
+                <span>La pré-analyse et les exports sont maintenant enregistrés côté serveur.</span>
+              </div>
+            ) : (
+              <div className="review-notice">
+                <b>Avant envoi :</b> vérifiez que les fichiers déposés ne contiennent aucune donnée nominative patient.
+              </div>
+            )}
+
+            <div className="review-actions">
+              <button className="map-back" onClick={() => setStep('dashboard')}>← Retour à la pré-analyse</button>
+              <button className="map-confirm" onClick={sendForReview} disabled={reviewSending || reviewSent}>
+                {reviewSent ? 'Dossier envoyé ✓' : reviewSending ? 'Envoi sécurisé...' : 'Envoyer pour relecture →'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {step === 'dashboard' && data && (
         <div className="dash">
           <div className="dtb">
