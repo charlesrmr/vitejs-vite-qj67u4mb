@@ -1028,3 +1028,9 @@
   line-height: 1.45;
   text-align: left;
 }
+
+/* ── MVP AUTH / UPLOAD / SUBMISSION POLISH ── */
+.login-shell{width:min(520px,100%);margin:5vh auto 0}.login-shell>h1{margin:0 0 10px;font-size:clamp(2.5rem,6vw,4rem);line-height:.98;letter-spacing:-2.8px;color:#101827}.login-shell>h1 em{font-style:normal;background:linear-gradient(135deg,#6d28d9,#0891b2);-webkit-background-clip:text;-webkit-text-fill-color:transparent}.login-shell>p{margin:0 0 20px;color:#738090;font-size:12px;line-height:1.6}.login-card{max-width:520px}
+.upload-progress{max-width:500px;margin:0 auto 12px;padding:10px 12px;border:1px solid #dfe5eb;border-radius:10px;background:#fff;text-align:left}.upload-progress>div:first-child{display:flex;justify-content:space-between;gap:12px;margin-bottom:7px}.upload-progress span{color:#7c3aed;font-size:8px;font-weight:800;text-transform:uppercase;letter-spacing:.8px}.upload-progress b{max-width:290px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#4a5665;font-size:9px}.upload-progress-track{height:5px;border-radius:999px;background:#edf0f3;overflow:hidden}.upload-progress-track i{display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,#6d28d9,#0891b2);transition:width .2s}.upload-progress small{display:block;margin-top:5px;color:#8995a3;font-size:8px}
+.review-success{margin-top:12px;border:1px solid rgba(5,150,105,.18);background:#ecfdf5;color:#065f46;border-radius:11px;padding:12px 14px}.review-success b{display:block;font-size:11px;margin-bottom:3px}.review-success span{display:block;font-size:9.5px;line-height:1.5}
+.account-consent a,.ft a{color:inherit;text-decoration:underline;text-underline-offset:2px}.ft a:hover{color:#93c5fd}
