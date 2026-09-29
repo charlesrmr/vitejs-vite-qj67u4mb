@@ -297,76 +297,156 @@ function Landing({ onStart, onDemo }) {
         </div>
       </section>
 
-      <section className="lp-section">
+      <section className="lp-manifesto">
+        <div className="lp-manifesto-track">
+          <span>MOINS DE TABLEAUX</span><i>+</i>
+          <span>PLUS DE DÉCISIONS</span><i>+</i>
+          <span>MOINS DE BRUIT</span><i>+</i>
+          <span>PLUS DE PRIORITÉS</span>
+        </div>
+      </section>
+
+      <section className="lp-section lp-editorial">
         <div className="lp-shell">
-          <div className="lp-section-head">
-            <span>Le problème</span>
-            <h2>Vous n'avez pas besoin de plus de chiffres.<br />Vous avez besoin de savoir lesquels regarder.</h2>
-            <p>
-              Les données sont déjà dans votre LGO. Pilot'Officine les trie, les met en perspective
-              et fait ressortir ce qui mérite votre attention maintenant et ce qui peut attendre.
-            </p>
+          <div className="lp-editorial-head">
+            <span>Le vrai problème</span>
+            <h2>Le chiffre n'est pas le problème.<br /><em>C'est de savoir quoi en faire.</em></h2>
           </div>
-          <div className="lp-value-grid">
-            <div className="lp-value"><b>01</b><h3>Lire</h3><p>CA, marge, évolution, produits et stock selon les exports réellement disponibles.</p></div>
-            <div className="lp-value"><b>02</b><h3>Comprendre</h3><p>Repérer les écarts, les anomalies et les zones qui demandent une décision.</p></div>
-            <div className="lp-value"><b>03</b><h3>Agir</h3><p>Ramener l'analyse à quelques priorités concrètes plutôt qu'à un tableau de bord de plus.</p></div>
+          <div className="lp-editorial-list">
+            <div className="lp-editorial-row">
+              <b>01</b>
+              <h3>Votre marge bouge.</h3>
+              <p>Mais est-ce une variation normale, un problème de mix ou un signal à traiter maintenant ?</p>
+            </div>
+            <div className="lp-editorial-row">
+              <b>02</b>
+              <h3>Votre stock immobilise du cash.</h3>
+              <p>Mais quelles références méritent réellement une décision et lesquelles tournent correctement ?</p>
+            </div>
+            <div className="lp-editorial-row">
+              <b>03</b>
+              <h3>Votre LGO sait beaucoup de choses.</h3>
+              <p>Pilot'Officine fait le tri pour que vous sachiez où regarder avant votre prochaine décision.</p>
+            </div>
           </div>
         </div>
       </section>
 
-      <section className="lp-section alt">
+      <section className="lp-diagnostic-stage">
         <div className="lp-shell">
-          <div className="lp-section-head compact">
-            <span>Comment ça marche</span>
-            <h2>Trois étapes. Pas une usine à gaz.</h2>
+          <div className="lp-stage-head">
+            <span>Un diagnostic, pas un reporting</span>
+            <h2>En quelques minutes, passez de « j'ai des chiffres » à « je sais quoi regarder ».</h2>
+            <p>Voici le type de lecture que Pilot'Officine doit faire ressortir. Peu d'informations, mais celles qui appellent une décision.</p>
           </div>
-          <div className="lp-steps">
-            <div><i>1</i><h3>Exportez</h3><p>Activité / ventes en priorité. Produits et stock si disponibles.</p></div>
-            <div><i>2</i><h3>Déposez</h3><p>Pilot'Officine lit les fichiers et identifie les données exploitables.</p></div>
-            <div><i>3</i><h3>Décidez</h3><p>Vous récupérez une synthèse courte, des alertes et vos priorités.</p></div>
-          </div>
-          <div className="lp-center">
-            <button className="lp-btn dark" onClick={onDemo}>Ouvrir le diagnostic de démonstration</button>
+
+          <div className="lp-stage-board">
+            <div className="lp-stage-rail">
+              <div className="active"><i>01</i><span>Synthèse</span></div>
+              <div><i>02</i><span>Marge</span></div>
+              <div><i>03</i><span>Stock</span></div>
+              <div><i>04</i><span>Produits</span></div>
+              <div><i>05</i><span>Actions</span></div>
+            </div>
+
+            <div className="lp-stage-main">
+              <div className="lp-stage-topline">
+                <div>
+                  <small>EXEMPLE FICTIF · SYNTHÈSE DIRIGEANT</small>
+                  <h3>Trois signaux. Trois décisions.</h3>
+                </div>
+                <span className="lp-stage-score">Lecture 5 min</span>
+              </div>
+
+              <div className="lp-stage-priority">
+                <div className="lp-stage-rank">01</div>
+                <div>
+                  <small>À REGARDER EN PREMIER</small>
+                  <h4>Le stock augmente alors que l'activité ralentit.</h4>
+                  <p>Le sujet n'est pas de réduire le stock partout. Il est d'identifier les familles où le cash est immobilisé sans soutenir suffisamment l'activité.</p>
+                </div>
+                <div className="lp-stage-impact"><span>À challenger</span><b>18,4 k€</b></div>
+              </div>
+
+              <div className="lp-stage-signals">
+                <article>
+                  <span>MARGE</span>
+                  <b>28,4 %</b>
+                  <small>−1,2 pt</small>
+                  <p>Vérifier le mix et les familles à marge libre.</p>
+                </article>
+                <article>
+                  <span>STOCK</span>
+                  <b>142 k€</b>
+                  <small>+9 %</small>
+                  <p>Repérer les poches de surstock avant de recommander.</p>
+                </article>
+                <article>
+                  <span>PRODUITS</span>
+                  <b>86</b>
+                  <small>à revoir</small>
+                  <p>Références faibles ou sans mouvement à challenger.</p>
+                </article>
+              </div>
+
+              <div className="lp-stage-action">
+                <span>PROCHAINE ACTION</span>
+                <p>Commencer par les deux familles où le stock progresse le plus vite, puis valider les commandes et le plan de sortie.</p>
+                <button onClick={onDemo}>Explorer le diagnostic complet →</button>
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
-      <section className="lp-section">
-        <div className="lp-shell lp-two-col">
-          <div>
-            <div className="lp-section-head left">
-              <span>Ce que l'on regarde</span>
-              <h2>Les chiffres qui changent vraiment une décision.</h2>
-            </div>
-            <div className="lp-tags">
-              {['Chiffre d’affaires','Marge € et %','Évolution','Top produits','Stock valorisé','Produits dormants','Familles / rayons','Anomalies de données','Priorités 30 jours'].map((x) => <span key={x}>{x}</span>)}
-            </div>
+      <section className="lp-process">
+        <div className="lp-shell">
+          <div className="lp-process-head">
+            <span>Simple volontairement</span>
+            <h2>Vos exports entrent.<br />Vos priorités ressortent.</h2>
           </div>
-          <div className="lp-note-card">
-            <div className="lp-note-kicker">Principe produit</div>
-            <blockquote>« Si la donnée n'est pas disponible, Pilot'Officine le dit. Il ne l'invente pas. »</blockquote>
-            <p>Le moteur est actuellement validé sur des exports anonymisés d'officines réelles avant ouverture plus large.</p>
+          <div className="lp-process-line">
+            <div><b>01</b><h3>Exportez</h3><p>Activité en priorité. Produits et stock pour aller plus loin.</p></div>
+            <div className="lp-process-arrow">→</div>
+            <div><b>02</b><h3>Déposez</h3><p>CSV ou Excel. Pilot'Officine identifie ce qui est réellement exploitable.</p></div>
+            <div className="lp-process-arrow">→</div>
+            <div><b>03</b><h3>Décidez</h3><p>Une synthèse courte, des alertes utiles et quelques actions prioritaires.</p></div>
+          </div>
+          <div className="lp-process-proof">
+            <span>CA</span><span>Marge</span><span>Évolution</span><span>Top produits</span><span>Stock</span><span>Dormants</span><span>Familles</span><span>Qualité des données</span>
           </div>
         </div>
       </section>
 
       <section className="lp-founder">
+        <div className="lp-founder-number">10</div>
         <div className="lp-shell lp-founder-grid">
           <div>
-            <div className="lp-kicker gold">Cercle fondateur</div>
-            <h2>Je cherche 5 à 10 titulaires pour construire la suite avec moi.</h2>
+            <div className="lp-kicker gold">Cercle des pharmacies fondatrices</div>
+            <h2>Les premières officines ne seront pas des clientes comme les autres.</h2>
             <p>
-              Pas des « bêta-testeurs ». Des pharmaciens qui veulent une lecture plus
-              utile de leurs données et qui acceptent de me dire franchement ce qui
-              leur sert — ou pas.
+              Je veux construire Pilot'Officine avec quelques titulaires exigeants, sur de vrais exports,
+              de vraies décisions et de vrais irritants terrain. Le but n'est pas de tester un gadget.
+              Le but est de construire l'outil que j'aurais envie d'utiliser moi-même en officine.
             </p>
+            <div className="lp-founder-slots">
+              <span><b>5 à 10</b> officines maximum</span>
+              <span><b>1 mois</b> offert</span>
+              <span><b>Accès direct</b> au fondateur</span>
+            </div>
           </div>
           <div className="lp-founder-card">
-            <div><b>1 mois offert</b><span>pour tester sur vos propres exports</span></div>
-            <div><b>Accès direct</b><span>échanges avec Charles pendant la phase fondatrice</span></div>
-            <div><b>Conditions préférentielles</b><span>réservées aux pharmacies fondatrices lors du lancement</span></div>
-            <a className="lp-btn founder" href="mailto:charlesromier@gmail.com?subject=Pilot%27Officine%20-%20Pharmacie%20fondatrice">Candidater comme pharmacie fondatrice</a>
+            <div className="lp-founder-card-top">
+              <span>PHARMACIE FONDATRICE</span>
+              <strong>Vous entrez avant le lancement.</strong>
+              <p>En échange : vos retours servent directement à décider ce qu'on garde, ce qu'on simplifie et ce qu'on automatise.</p>
+            </div>
+            <div className="lp-founder-benefits">
+              <div><i>01</i><p><b>Votre premier mois offert</b><span>sur vos propres données</span></p></div>
+              <div><i>02</i><p><b>Une restitution directe</b><span>et un échange de feedback</span></p></div>
+              <div><i>03</i><p><b>Des conditions préférentielles</b><span>réservées au cercle fondateur</span></p></div>
+            </div>
+            <a className="lp-btn founder" href="mailto:charlesromier@gmail.com?subject=Pilot%27Officine%20-%20Pharmacie%20fondatrice">Je veux faire partie des fondateurs →</a>
           </div>
         </div>
       </section>
