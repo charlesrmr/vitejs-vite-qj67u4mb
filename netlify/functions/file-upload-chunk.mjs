@@ -1,6 +1,6 @@
 import {
   STORE, fileChunkKey, getOwnedDossier, json, nowIso, requireUser, saveDossier,
-} from './_pilot.mjs';
+} from '../lib/pilot.mjs';
 
 const MAX_CHUNK = 4 * 1024 * 1024;
 
