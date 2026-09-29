@@ -49,6 +49,11 @@ export default async (req) => {
   dossier.status = status;
   dossier.reviewedAt = status === 'reviewed' ? nowIso() : null;
 
+  if (status !== 'reviewed' && dossier.report?.key) {
+    try { await STORE.files(req).delete(dossier.report.key); } catch {}
+    dossier.report = null;
+  }
+
   if (status === 'reviewed') {
     try {
       const pdfBytes = await buildReviewedPdf(dossier);
