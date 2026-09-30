@@ -1767,7 +1767,7 @@ export default function App() {
             {!reviewSent && account && !account.emailVerifiedAt && (
               <div className="account-error">
                 <b>Adresse email non vérifiée.</b>{' '}
-                En production, la vérification peut être requise avant l’envoi du dossier.
+                Pour sécuriser l’envoi de votre dossier, confirmez votre adresse email.
                 <button
                   type="button"
                   onClick={requestAccountVerification}
