@@ -5,6 +5,7 @@ import {
   json,
   newId,
   nowIso,
+  publicDossier,
   requireAdmin,
 } from '../lib/pilot.mjs';
 
@@ -94,6 +95,62 @@ export default async (req) => {
     add('Persistance classement produits', false, error?.message || 'Échec du contrôle');
   }
 
+  try {
+    const publicView = publicDossier({
+      id: 'dos_public_boundary',
+      accountId: 'acct_secret',
+      status: 'reviewed',
+      profile: { pharmacyName: 'Officine test' },
+      files: {
+        ventes: {
+          uploadId: 'upload_secret',
+          fileName: 'activite.csv',
+          contentType: 'text/csv',
+          fileSize: 123,
+          uploadedAt: nowIso(),
+          complete: true,
+        },
+      },
+      analysis: { ca: 100000 },
+      review: {
+        executiveSummary: 'Synthèse publique',
+        findings: [],
+        priorities: [],
+        actions: [],
+        missingData: '',
+        privateNotes: 'NOTE PRIVÉE À NE JAMAIS EXPOSER',
+      },
+      notification: { adminSubmitted: true },
+      report: {
+        fileName: 'diagnostic.pdf',
+        fileSize: 456,
+        generatedAt: nowIso(),
+        storageKey: 'secret/report-key',
+      },
+      createdAt: nowIso(),
+      updatedAt: nowIso(),
+      reviewedAt: nowIso(),
+    });
+
+    const serialized = JSON.stringify(publicView);
+    const boundaryOk =
+      publicView?.review?.executiveSummary === 'Synthèse publique' &&
+      !serialized.includes('NOTE PRIVÉE') &&
+      !serialized.includes('acct_secret') &&
+      !serialized.includes('upload_secret') &&
+      !serialized.includes('secret/report-key');
+
+    add(
+      'Frontière données publiques',
+      boundaryOk,
+      boundaryOk
+        ? 'Notes privées, identifiants de stockage et données internes masqués'
+        : 'Une donnée interne est exposée par publicDossier'
+    );
+  } catch (error) {
+    add('Frontière données publiques', false, error?.message || 'Échec du contrôle');
+  }
+
   const adminToken = String(process.env.PILOT_ADMIN_TOKEN || '');
   const adminTokenStrong = adminToken.length >= 32;
   add(
@@ -122,7 +179,7 @@ export default async (req) => {
   add('URL publique', Boolean(process.env.PILOT_PUBLIC_URL), process.env.PILOT_PUBLIC_URL ? 'Configurée' : 'À configurer pour les liens email');
 
   const critical = checks.filter((c) =>
-    ['Stockage privé', 'Génération PDF', 'Persistance classement produits', 'Secret administrateur'].includes(c.name)
+    ['Stockage privé', 'Génération PDF', 'Persistance classement produits', 'Frontière données publiques', 'Secret administrateur'].includes(c.name)
   );
   const ok = critical.every((c) => c.ok);
 
