@@ -1,6 +1,7 @@
 import { buildReviewedPdf } from '../lib/report.mjs';
 import {
   STORE,
+  buildHistorySnapshots,
   cleanAnalysis,
   getBillingAccess,
   json,
@@ -100,6 +101,57 @@ export default async (req) => {
     );
   } catch (error) {
     add('Persistance classement produits', false, error?.message || 'Échec du contrôle');
+  }
+
+  try {
+    const snapshots = buildHistorySnapshots([
+      {
+        id: 'dos_july',
+        status: 'submitted',
+        analysis: {
+          periode: '01/07/2026 → 31/07/2026',
+          period_start: '2026-07-01',
+          period_end: '2026-07-31',
+          ca: 34100,
+          ca_basis: 'gross_ttc',
+          activity: { days: 31, dailyCaAvg: 1100 },
+          marge_pct: 30.2,
+        },
+        submittedAt: '2026-08-01T10:00:00.000Z',
+      },
+      {
+        id: 'dos_june',
+        status: 'reviewed',
+        analysis: {
+          periode: '01/06/2026 → 30/06/2026',
+          period_start: '2026-06-01',
+          period_end: '2026-06-30',
+          ca: 30000,
+          ca_basis: 'gross_ttc',
+          activity: { days: 30, dailyCaAvg: 1000 },
+          marge_pct: 29.8,
+        },
+        submittedAt: '2026-07-01T10:00:00.000Z',
+      },
+    ]);
+
+    const historyOk =
+      snapshots.length === 2 &&
+      snapshots[0]?.dossierId === 'dos_june' &&
+      snapshots[0]?.periodDays === 30 &&
+      snapshots[1]?.dossierId === 'dos_july' &&
+      snapshots[1]?.periodDays === 31 &&
+      snapshots[1]?.dailyCaAvg === 1100;
+
+    add(
+      'Historique snapshots',
+      historyOk,
+      historyOk
+        ? 'Périodes structurées, durées et ordre chronologique cohérents'
+        : 'Normalisation historique incohérente'
+    );
+  } catch (error) {
+    add('Historique snapshots', false, error?.message || 'Échec du contrôle');
   }
 
   try {
@@ -217,7 +269,7 @@ export default async (req) => {
   add('URL publique', Boolean(process.env.PILOT_PUBLIC_URL), process.env.PILOT_PUBLIC_URL ? 'Configurée' : 'À configurer pour les liens email');
 
   const critical = checks.filter((c) =>
-    ['Stockage privé', 'Génération PDF', 'Persistance classement produits', 'Droits abonnement', 'Frontière données publiques', 'Secret administrateur'].includes(c.name)
+    ['Stockage privé', 'Génération PDF', 'Persistance classement produits', 'Historique snapshots', 'Droits abonnement', 'Frontière données publiques', 'Secret administrateur'].includes(c.name)
   );
   const ok = critical.every((c) => c.ok);
 
