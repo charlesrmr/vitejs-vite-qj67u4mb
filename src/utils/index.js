@@ -729,6 +729,15 @@ function formatFrenchDate(date) {
   ].join('/')
 }
 
+function formatIsoDate(date) {
+  if (!(date instanceof Date) || Number.isNaN(date.getTime())) return null
+  return [
+    date.getFullYear(),
+    String(date.getMonth() + 1).padStart(2, '0'),
+    String(date.getDate()).padStart(2, '0'),
+  ].join('-')
+}
+
 function inferPeriod(rows, dateColumn) {
   if (!dateColumn) return 'Période importée'
   const dates = rows
@@ -747,6 +756,8 @@ function emptyRealData() {
     isDemo: false,
     officine: 'Analyse importée',
     periode: 'Période du fichier',
+    period_start: null,
+    period_end: null,
     lgo: 'LGO importé',
     ca: null,
     ca_ht: null,
@@ -850,6 +861,8 @@ export function buildFromFiles(filesMap, columnMappings = {}) {
   data.periode = inferredSalesPeriod !== 'Période importée'
     ? inferredSalesPeriod
     : (metadataSalesPeriod || inferredSalesPeriod)
+  data.period_start = salesPeriodStart ? formatIsoDate(parseSaleDate(salesPeriodStart)) : null
+  data.period_end = salesPeriodEnd ? formatIsoDate(parseSaleDate(salesPeriodEnd)) : null
   data.activity = buildActivity(ventes, salesCols.date, caDisplayCol)
 
   let ca = 0
