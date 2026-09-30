@@ -95,8 +95,17 @@ export function ClientPortal({
             <h2>Vos données entrent.<br />La relecture fait la différence.</h2>
             <p>Chaque dossier conserve les exports déposés, la pré-analyse et le diagnostic final une fois validé.</p>
           </div>
-          <button onClick={onNew}>+ Nouveau diagnostic</button>
+          <button onClick={onNew} disabled={!canWrite}>
+            {canWrite ? '+ Nouveau diagnostic' : 'Accès en lecture seule'}
+          </button>
         </section>
+
+        {!canWrite && (
+          <div className="settings-inline-info">
+            Votre accès est actuellement en lecture seule. Vos anciens diagnostics et rapports restent disponibles.
+            <button type="button" onClick={onSettings}>Voir mon abonnement</button>
+          </div>
+        )}
 
         {error && <div className="cp-error">{error}</div>}
         {loading && <div className="cp-loading">Chargement de vos dossiers...</div>}
