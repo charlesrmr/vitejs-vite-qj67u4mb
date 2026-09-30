@@ -16,6 +16,7 @@ import { DEMO } from './data/demo';
 import { eur, num, parseFile, detectColumns, buildFromFiles, getAISynthesis } from './utils';
 import {
   createAccount,
+  createPharmacyAction,
   changePassword,
   clearSession,
   createDossier,
@@ -836,6 +837,7 @@ export default function App() {
   const [clientHistory, setClientHistory] = useState([]);
   const [clientHistoryComparison, setClientHistoryComparison] = useState(null);
   const [clientActions, setClientActions] = useState([]);
+  const [actionSaving, setActionSaving] = useState(false);
   const [portalLoading, setPortalLoading] = useState(false);
   const [portalError, setPortalError] = useState('');
   const [settingsSaving, setSettingsSaving] = useState(false);
@@ -1044,6 +1046,22 @@ export default function App() {
       setClientActions([]);
       setPortalError('Vos diagnostics sont chargés, mais le plan d’action est temporairement indisponible. Actualisez pour réessayer.');
       return false;
+    }
+  };
+
+  const createClientAction = async (action) => {
+    if (!sessionToken) return false;
+    setActionSaving(true);
+    setPortalError('');
+    try {
+      await createPharmacyAction(sessionToken, action);
+      await loadClientActions(sessionToken);
+      return true;
+    } catch (err) {
+      setPortalError(err?.message || 'Impossible d’enregistrer cette action.');
+      return false;
+    } finally {
+      setActionSaving(false);
     }
   };
 
