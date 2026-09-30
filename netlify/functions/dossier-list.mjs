@@ -1,4 +1,4 @@
-import { STORE, buildHistorySnapshots, json, requireUser, publicDossier } from '../lib/pilot.mjs';
+import { STORE, buildHistoryComparison, buildHistorySnapshots, json, requireUser, publicDossier } from '../lib/pilot.mjs';
 
 export default async (req) => {
   if (req.method !== 'GET') return json({ error: 'Méthode non autorisée.' }, 405);
@@ -12,9 +12,11 @@ export default async (req) => {
     if (item?.accountId === auth.account.id) dossiers.push(item);
   }
   dossiers.sort((a, b) => String(b.updatedAt).localeCompare(String(a.updatedAt)));
+  const history = buildHistorySnapshots(dossiers);
   return json({
     dossiers: dossiers.map(publicDossier),
-    history: buildHistorySnapshots(dossiers),
+    history,
+    historyComparison: buildHistoryComparison(history),
   });
 };
 
