@@ -30,6 +30,82 @@ const formatActionDate = (value) => {
   return match ? `${match[3]}/${match[2]}/${match[1]}` : '';
 };
 
+function RecruitmentSimulator({ history = [] }) {
+  const latestMarginPct = [...history]
+    .reverse()
+    .find((item) => Number.isFinite(item?.marginPct))?.marginPct ?? null;
+  const [monthlyCost, setMonthlyCost] = useState('');
+  const [marginPct, setMarginPct] = useState('');
+
+  useEffect(() => {
+    if (!marginPct && Number.isFinite(latestMarginPct)) {
+      setMarginPct(String(latestMarginPct));
+    }
+  }, [latestMarginPct, marginPct]);
+
+  const cost = Number(String(monthlyCost).replace(',', '.'));
+  const margin = Number(String(marginPct).replace(',', '.'));
+  const valid = Number.isFinite(cost) && cost > 0 && Number.isFinite(margin) && margin > 0 && margin < 100;
+  const monthlyRevenueNeeded = valid ? cost / (margin / 100) : null;
+  const annualCost = valid ? cost * 12 : null;
+  const annualRevenueNeeded = valid ? monthlyRevenueNeeded * 12 : null;
+
+  return (
+    <article className="cp-card">
+      <div className="cp-card-top">
+        <div>
+          <span className="cp-status in_review">SIMULATEUR</span>
+          <h3>Un recrutement peut-il s’autofinancer ?</h3>
+          <p>Transformez un coût employeur en objectif de marge et de CA additionnel.</p>
+        </div>
+      </div>
+
+      <div className="settings-grid">
+        <label>
+          <span>Coût employeur mensuel, charges comprises</span>
+          <input
+            inputMode="decimal"
+            value={monthlyCost}
+            onChange={(e) => setMonthlyCost(e.target.value)}
+            placeholder="Ex. 4 200"
+          />
+        </label>
+        <label>
+          <span>Marge utilisée pour la simulation (%)</span>
+          <input
+            inputMode="decimal"
+            value={marginPct}
+            onChange={(e) => setMarginPct(e.target.value)}
+            placeholder="Ex. 30"
+          />
+        </label>
+      </div>
+
+      {valid ? (
+        <div className="cp-kpis">
+          <div><span>Coût annuel</span><b>{eur(annualCost)}</b></div>
+          <div><span>CA additionnel / mois</span><b>{eur(monthlyRevenueNeeded)}</b></div>
+          <div><span>CA additionnel / an</span><b>{eur(annualRevenueNeeded)}</b></div>
+          <div>
+            <span>Marge de calcul</span>
+            <b>{margin.toLocaleString('fr-FR', { maximumFractionDigits: 1 })}%</b>
+          </div>
+        </div>
+      ) : (
+        <div className="cp-wait">
+          Renseignez le coût employeur et la marge pour obtenir le seuil de CA additionnel.
+        </div>
+      )}
+
+      <div className="settings-inline-info">
+        <b>Lecture :</b> ce calcul est un seuil économique simplifié. Le coût employeur est une hypothèse saisie ;
+        la marge est préremplie depuis la dernière analyse lorsqu’elle est disponible. Le résultat n’intègre pas
+        automatiquement les autres coûts, gains de productivité ou effets organisationnels.
+      </div>
+    </article>
+  );
+}
+
 export function ClientPortal({
   account,
   dossiers,
@@ -285,6 +361,8 @@ export function ClientPortal({
             )}
           </article>
         )}
+
+        {!loading && <RecruitmentSimulator history={history} />}
 
         <div className="cp-list">
           {dossiers.map((d) => (
