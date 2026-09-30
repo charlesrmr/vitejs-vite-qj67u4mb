@@ -871,6 +871,11 @@ export function buildFromFiles(filesMap, columnMappings = {}) {
       "Le PDF d’activité est une synthèse agrégée : le CA total et la période sont exploitables, mais ce document seul ne permet pas d’analyser le détail journalier, la marge, les familles ou les produits."
     )
   }
+  if (salesReportMeta?.reportType === 'accounting-summary') {
+    data.qualityWarnings.push(
+      "Le PDF comptable est une synthèse agrégée : le CA net TTC et la période sont exploitables, mais ce document seul ne permet pas de calculer la marge brute ni d’analyser le détail journalier, les familles ou les produits."
+    )
+  }
   data.detectedColumns.ventes = salesCols
   const inferredSalesPeriod = inferPeriod(ventes, salesCols.date)
   const salesPeriodStart = ventes.__pilotMeta?.periodStart || null
