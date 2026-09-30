@@ -1550,6 +1550,8 @@ export default function App() {
           history={clientHistory}
           historyComparison={clientHistoryComparison}
           actions={clientActions}
+          actionSaving={actionSaving}
+          onCreateAction={createClientAction}
           loading={portalLoading}
           error={portalError}
           onRefresh={() => refreshPortal(sessionToken)}
