@@ -896,8 +896,18 @@ export function buildFromFiles(filesMap, columnMappings = {}) {
   }
   data.detectedColumns.ventes = salesCols
   const inferredSalesPeriod = inferPeriod(ventes, salesCols.date)
-  const salesPeriodStart = ventes.__pilotMeta?.periodStart || null
-  const salesPeriodEnd = ventes.__pilotMeta?.periodEnd || null
+  const datedSalesRows = salesCols.date
+    ? ventes
+        .map((row) => parseSaleDate(row[salesCols.date]))
+        .filter(Boolean)
+        .sort((a, b) => a - b)
+    : []
+  const salesPeriodStart =
+    ventes.__pilotMeta?.periodStart ||
+    (datedSalesRows.length ? formatFrenchDate(datedSalesRows[0]) : null)
+  const salesPeriodEnd =
+    ventes.__pilotMeta?.periodEnd ||
+    (datedSalesRows.length ? formatFrenchDate(datedSalesRows[datedSalesRows.length - 1]) : null)
   const metadataSalesPeriod = salesPeriodStart && salesPeriodEnd
     ? (salesPeriodStart === salesPeriodEnd
         ? salesPeriodStart
