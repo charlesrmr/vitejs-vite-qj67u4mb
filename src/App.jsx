@@ -26,6 +26,7 @@ import {
   getMe,
   getSessionToken,
   listMyDossiers,
+  listPharmacyActions,
   loginAccount,
   logoutAccount,
   requestEmailVerification,
@@ -834,6 +835,7 @@ export default function App() {
   const [clientDossiers, setClientDossiers] = useState([]);
   const [clientHistory, setClientHistory] = useState([]);
   const [clientHistoryComparison, setClientHistoryComparison] = useState(null);
+  const [clientActions, setClientActions] = useState([]);
   const [portalLoading, setPortalLoading] = useState(false);
   const [portalError, setPortalError] = useState('');
   const [settingsSaving, setSettingsSaving] = useState(false);
@@ -1033,6 +1035,18 @@ export default function App() {
     return result.dossier;
   };
 
+  const loadClientActions = async (token) => {
+    try {
+      const result = await listPharmacyActions(token);
+      setClientActions(result.actions || []);
+      return true;
+    } catch {
+      setClientActions([]);
+      setPortalError('Vos diagnostics sont chargés, mais le plan d’action est temporairement indisponible. Actualisez pour réessayer.');
+      return false;
+    }
+  };
+
   const refreshPortal = async (token = sessionToken) => {
     if (!token) return;
     setPortalLoading(true);
@@ -1042,6 +1056,7 @@ export default function App() {
       setClientDossiers(result.dossiers || []);
       setClientHistory(result.history || []);
       setClientHistoryComparison(result.historyComparison || null);
+      await loadClientActions(token);
     } catch (err) {
       setPortalError(err?.message || 'Impossible de charger vos dossiers.');
     } finally {
@@ -1235,6 +1250,7 @@ export default function App() {
       setClientDossiers([]);
       setClientHistory([]);
       setClientHistoryComparison(null);
+      setClientActions([]);
       setSelectedClientDossier(null);
       setStep('landing');
     } catch (err) {
@@ -1253,6 +1269,7 @@ export default function App() {
     setClientDossiers([]);
     setClientHistory([]);
     setClientHistoryComparison(null);
+    setClientActions([]);
     setSelectedClientDossier(null);
     setStep('landing');
     if (token) {
@@ -1328,6 +1345,7 @@ export default function App() {
       setClientDossiers(dossierResult.dossiers || []);
       setClientHistory(dossierResult.history || []);
       setClientHistoryComparison(dossierResult.historyComparison || null);
+      await loadClientActions(result.sessionToken);
 
       try {
         const url = new URL(window.location.href);
@@ -1359,6 +1377,8 @@ export default function App() {
         const dossierResult = await listMyDossiers(result.sessionToken);
         setClientDossiers(dossierResult.dossiers || []);
         setClientHistory(dossierResult.history || []);
+        setClientHistoryComparison(dossierResult.historyComparison || null);
+        await loadClientActions(result.sessionToken);
       } catch (listError) {
         setClientDossiers([]);
         setClientHistory([]);
