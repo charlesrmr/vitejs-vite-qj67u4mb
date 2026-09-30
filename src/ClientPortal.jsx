@@ -210,7 +210,7 @@ export function ClientPortal({
                   <input
                     value={newAction.title}
                     onChange={(e) => setNewAction((prev) => ({ ...prev, title: e.target.value }))}
-                    placeholder="Ex. Réduire le stock dormant de 5 000 €"
+                    placeholder="Ex. Réduire de 5 000 € le stock sans vente sur la période"
                   />
                 </label>
                 <label>
