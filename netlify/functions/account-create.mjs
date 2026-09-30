@@ -32,6 +32,16 @@ export default async (req) => {
     ...passwordData,
     consentAcceptedAt: createdAt,
     privacyNoticeVersion: 'pilote-2026-09',
+    billingProfile: {
+      legalName: profile.pharmacyName,
+      siren: '',
+      vatNumber: '',
+      email: profile.email,
+      address: profile.address,
+      postalCode: profile.postalCode,
+      city: profile.city,
+      country: 'FR',
+    },
     billing: {
       plan: 'pilot',
       status: 'pilot',
