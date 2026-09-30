@@ -5,6 +5,7 @@ import { DEMO } from '../data/demo'
 import { parseKnownPdfInventory } from './pdfInventory'
 import { parseKnownPdfActivity, parseKnownPdfAccounting } from './pdfActivity'
 import { inferNamedPdfProductRankingMeta } from './pdfProducts'
+import { reconcileNoSaleStock } from './stockSignals'
 
 // ── FORMATTERS ───────────────────────────────────────────────────
 export const eur = (n) => {
@@ -1141,40 +1142,30 @@ export function buildFromFiles(filesMap, columnMappings = {}) {
       )
     }
     if (stockKeyColumn && salesKeys.size) {
-      const dormantRows = []
-      let noSaleStockValue = 0
-      let hasNoSaleStockValue = false
-      stockRows.forEach((row) => {
+      const stockItems = stockRows.map((row) => {
         const key = stockCols.cip
           ? String(row[stockCols.cip] || '').trim()
           : String(row[stockCols.produit] || '').trim().toLowerCase()
-        const stockValue = stockCols.stockValeur ? parseFrenchNumber(row[stockCols.stockValeur]) : null
-        const stockQty = stockCols.stockQte ? parseFrenchNumber(row[stockCols.stockQte]) : null
-        const hasStock = (stockValue !== null && stockValue > 0) || (stockQty !== null && stockQty > 0)
-
-        if (key && hasStock && !salesKeys.has(key)) {
-          if (Number.isFinite(stockValue) && stockValue > 0) {
-            noSaleStockValue += stockValue
-            hasNoSaleStockValue = true
-          }
-          dormantRows.push({
-            nom: stockCols.produit ? String(row[stockCols.produit] || '?') : key,
-            fam: stockCols.famille ? String(row[stockCols.famille] || '—') : '—',
-            ca: 0,
-            stock: stockQty ?? stockValue ?? 0,
-            valeur_stock: stockValue,
-          })
+        return {
+          key,
+          nom: stockCols.produit ? String(row[stockCols.produit] || '?') : key,
+          fam: stockCols.famille ? String(row[stockCols.famille] || '—') : '—',
+          stockValue: stockCols.stockValeur ? parseFrenchNumber(row[stockCols.stockValeur]) : null,
+          stockQty: stockCols.stockQte ? parseFrenchNumber(row[stockCols.stockQte]) : null,
         }
       })
-      data.dormants = dormantRows.length
-      data.dormant_stock_eur = hasNoSaleStockValue ? Math.round(noSaleStockValue) : null
-      data.dormant_stock_pct =
-        Number.isFinite(data.dormant_stock_eur) && Number.isFinite(data.stock_eur) && data.stock_eur > 0
-          ? pct(data.dormant_stock_eur, data.stock_eur)
-          : null
-      data.flop = dormantRows
-        .sort((a, b) => (b.valeur_stock || b.stock || 0) - (a.valeur_stock || a.stock || 0))
-        .slice(0, 10)
+      const noSaleStock = reconcileNoSaleStock(salesKeys, stockItems)
+      if (noSaleStock) {
+        data.dormants = noSaleStock.items.length
+        data.dormant_stock_eur = noSaleStock.stockValue
+        data.dormant_stock_pct =
+          Number.isFinite(data.dormant_stock_eur) && Number.isFinite(data.stock_eur) && data.stock_eur > 0
+            ? pct(data.dormant_stock_eur, data.stock_eur)
+            : null
+        data.flop = [...noSaleStock.items]
+          .sort((a, b) => (b.valeur_stock || b.stock || 0) - (a.valeur_stock || a.stock || 0))
+          .slice(0, 10)
+      }
     }
   }
 
