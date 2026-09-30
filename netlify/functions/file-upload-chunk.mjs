@@ -21,6 +21,13 @@ export default async (req) => {
   const chunkIndex = Number(req.headers.get('x-chunk-index'));
   const chunkCount = Number(req.headers.get('x-chunk-count'));
   const fileSize = Number(req.headers.get('x-file-size'));
+  const privacyConfirmed = req.headers.get('x-privacy-confirmed') === 'true';
+
+  if (!privacyConfirmed) {
+    return json({
+      error: 'Confirmez que les fichiers ne contiennent aucune donnée nominative patient avant l’envoi.',
+    }, 400);
+  }
 
   if (
     !dossierId ||
@@ -45,6 +52,11 @@ export default async (req) => {
   if (!dossier) return json({ error: 'Dossier introuvable.' }, 404);
   if (dossier.status !== 'draft') {
     return json({ error: 'Ce dossier a déjà été envoyé et ne peut plus recevoir de nouveaux fichiers.' }, 409);
+  }
+
+  if (!dossier.uploadPrivacyConfirmedAt) {
+    dossier.uploadPrivacyConfirmedAt = nowIso();
+    await saveDossier(dossier, req);
   }
 
   const data = await req.arrayBuffer();
