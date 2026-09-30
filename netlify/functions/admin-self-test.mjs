@@ -94,7 +94,17 @@ export default async (req) => {
     add('Persistance classement produits', false, error?.message || 'Échec du contrôle');
   }
 
-  add('Secret administrateur', Boolean(process.env.PILOT_ADMIN_TOKEN), process.env.PILOT_ADMIN_TOKEN ? 'Configuré' : 'Absent');
+  const adminToken = String(process.env.PILOT_ADMIN_TOKEN || '');
+  const adminTokenStrong = adminToken.length >= 32;
+  add(
+    'Secret administrateur',
+    adminTokenStrong,
+    adminTokenStrong
+      ? 'Configuré · longueur suffisante'
+      : adminToken
+        ? 'Configuré mais trop court · utilisez au moins 32 caractères'
+        : 'Absent'
+  );
   const notificationsConfigured = Boolean(process.env.RESEND_API_KEY && process.env.PILOT_EMAIL_FROM);
   const context = String(process.env.CONTEXT || '').toLowerCase();
   const allowNonProd = String(process.env.PILOT_ALLOW_NONPROD_EMAILS || '').toLowerCase() === 'true';
