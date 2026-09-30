@@ -1,5 +1,5 @@
 import {
-  STORE, json, newId, nowIso, requireUser, saveDossier,
+  STORE, getPharmacyId, json, newId, nowIso, requireUser, saveDossier,
 } from '../lib/pilot.mjs';
 
 export default async (req) => {
@@ -35,6 +35,7 @@ export default async (req) => {
   const dossier = {
     id: newId('dos'),
     accountId: auth.account.id,
+    pharmacyId: getPharmacyId(auth.account),
     profile: auth.account.profile,
     status: 'draft',
     files: {},
