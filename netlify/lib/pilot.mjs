@@ -237,6 +237,7 @@ export function cleanAnalysis(input = {}) {
     ca: finite(input.ca),
     ca_ht: finite(input.ca_ht),
     ca_ttc: finite(input.ca_ttc),
+    ca_basis: ['gross_ttc', 'net_ttc'].includes(input.ca_basis) ? input.ca_basis : null,
     marge_pct: finite(input.marge_pct),
     marge_eur: finite(input.marge_eur),
     stock_eur: finite(input.stock_eur),
