@@ -1895,7 +1895,9 @@ export default function App() {
                     {
                       l: 'Stock valorisé',
                       v: eur(data.stock_eur),
-                      f: Number.isFinite(data.stock_eur) ? 'valeur issue de l’export stock' : 'export stock requis',
+                      f: Number.isFinite(data.stock_eur)
+                        ? (data.stock_date ? `photographie au ${data.stock_date}` : 'valeur issue de l’export stock')
+                        : 'export stock requis',
                       ac: C.emerald,
                       bd: Number.isFinite(data.stock_eur)
                         ? { t: 'donnée importée', x: 'b' }
