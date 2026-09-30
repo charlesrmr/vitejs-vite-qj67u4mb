@@ -190,11 +190,42 @@ export async function saveDossier(dossier, req) {
   return dossier;
 }
 
+export function getBillingAccess(account, at = Date.now()) {
+  const billing = account?.billing || {};
+  const status = String(billing.status || 'pilot');
+  const after = (value) => {
+    const time = value ? new Date(value).getTime() : NaN;
+    return Number.isFinite(time) && time > at;
+  };
+
+  if (status === 'pilot' || status === 'active') {
+    return { mode: 'full', reason: status };
+  }
+  if (status === 'trialing') {
+    return after(billing.trialEndsAt)
+      ? { mode: 'full', reason: 'trialing' }
+      : { mode: 'read_only', reason: 'trial_expired' };
+  }
+  if (status === 'past_due') {
+    return after(billing.graceEndsAt)
+      ? { mode: 'full', reason: 'payment_grace' }
+      : { mode: 'read_only', reason: 'payment_overdue' };
+  }
+  if (status === 'canceled' && after(billing.currentPeriodEnd)) {
+    return { mode: 'full', reason: 'cancel_at_period_end' };
+  }
+  return { mode: 'read_only', reason: status || 'inactive' };
+}
+
 export function publicBilling(account) {
   const billing = account?.billing || {};
+  const access = getBillingAccess(account);
   return {
     plan: String(billing.plan || 'pilot'),
     status: String(billing.status || 'pilot'),
+    accessMode: access.mode,
+    accessReason: access.reason,
+    trialEndsAt: billing.trialEndsAt || null,
     currentPeriodEnd: billing.currentPeriodEnd || null,
     cancelAtPeriodEnd: Boolean(billing.cancelAtPeriodEnd),
   };
