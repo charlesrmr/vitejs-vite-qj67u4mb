@@ -10,6 +10,7 @@ import {
   publicDossier,
   requireAdmin,
   requireWriteAccess,
+  sanitizeActionInput,
 } from '../lib/pilot.mjs';
 
 export default async (req) => {
@@ -212,6 +213,41 @@ export default async (req) => {
   }
 
   try {
+    const validAction = sanitizeActionInput({
+      title: 'Réduire le stock immobilisé',
+      ownerName: 'Responsable stock',
+      dueDate: '2026-10-31',
+      priority: 'high',
+      status: 'in_progress',
+      impactEur: 5000,
+      metricLabel: 'Stock sans vente',
+    });
+    const invalidDateAction = sanitizeActionInput({
+      title: 'Date impossible',
+      dueDate: '2026-02-30',
+    });
+
+    const actionModelOk =
+      validAction.title === 'Réduire le stock immobilisé' &&
+      validAction.ownerName === 'Responsable stock' &&
+      validAction.dueDate === '2026-10-31' &&
+      validAction.priority === 'high' &&
+      validAction.status === 'in_progress' &&
+      validAction.impactEur === 5000 &&
+      invalidDateAction.dueDate === null;
+
+    add(
+      'Modèle plan d’action',
+      actionModelOk,
+      actionModelOk
+        ? 'Responsable, échéance, priorité, statut et impact correctement normalisés'
+        : 'Normalisation du plan d’action incohérente'
+    );
+  } catch (error) {
+    add('Modèle plan d’action', false, error?.message || 'Échec du contrôle');
+  }
+
+  try {
     const publicView = publicDossier({
       id: 'dos_public_boundary',
       accountId: 'acct_secret',
@@ -295,7 +331,7 @@ export default async (req) => {
   add('URL publique', Boolean(process.env.PILOT_PUBLIC_URL), process.env.PILOT_PUBLIC_URL ? 'Configurée' : 'À configurer pour les liens email');
 
   const critical = checks.filter((c) =>
-    ['Stockage privé', 'Génération PDF', 'Persistance classement produits', 'Historique snapshots', 'Droits abonnement', 'Verrou écriture abonnement', 'Frontière données publiques', 'Secret administrateur'].includes(c.name)
+    ['Stockage privé', 'Génération PDF', 'Persistance classement produits', 'Historique snapshots', 'Droits abonnement', 'Verrou écriture abonnement', 'Modèle plan d’action', 'Frontière données publiques', 'Secret administrateur'].includes(c.name)
   );
   const ok = critical.every((c) => c.ok);
 
