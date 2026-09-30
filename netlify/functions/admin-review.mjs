@@ -1,7 +1,7 @@
 import { buildReviewedPdf } from '../lib/report.mjs';
 import { clientReadyEmail, sendPilotEmail } from '../lib/notify.mjs';
 import {
-  STORE, actionKey, json, newId, nowIso, requireAdmin, sanitizeReview, saveDossier,
+  STORE, actionKey, json, nowIso, requireAdmin, sanitizeReview, saveDossier,
 } from '../lib/pilot.mjs';
 
 export default async (req) => {
@@ -86,31 +86,30 @@ export default async (req) => {
 
   if (status === 'reviewed') {
     const pharmacyId = String(dossier.pharmacyId || dossier.accountId || '');
-    if (pharmacyId) {
-      const { blobs: actionBlobs } = await STORE.actions(req).list({
-        prefix: `pharmacy/${pharmacyId}/action/`,
-      });
-      let alreadySeeded = false;
-      for (const blob of actionBlobs || []) {
-        const action = await STORE.actions(req).get(blob.key, {
-          type: 'json',
-          consistency: 'strong',
-        });
-        if (action?.sourceDossierId === dossier.id) {
-          alreadySeeded = true;
-          break;
-        }
-      }
+    const attemptedAt = nowIso();
 
-      if (!alreadySeeded) {
-        const reviewedAt = dossier.reviewedAt || nowIso();
+    try {
+      if (pharmacyId) {
+        const reviewedAt = dossier.reviewedAt || attemptedAt;
         const due = new Date(reviewedAt);
         due.setUTCDate(due.getUTCDate() + 30);
         const dueDate = due.toISOString().slice(0, 10);
 
-        for (const item of review.actions || []) {
-          if (!item?.title && !item?.body) continue;
-          const id = newId('act');
+        const reviewActions = (review.actions || []).filter(
+          (item) => item?.title || item?.body
+        );
+
+        for (let index = 0; index < reviewActions.length; index += 1) {
+          const item = reviewActions[index];
+          const stableSuffix = String(dossier.id).replace(/[^a-z0-9]/gi, '').slice(-20);
+          const id = `act_${stableSuffix}_${index + 1}`;
+          const key = actionKey(pharmacyId, id);
+          const existing = await STORE.actions(req).get(key, {
+            type: 'json',
+            consistency: 'strong',
+          });
+          if (existing) continue;
+
           const action = {
             id,
             pharmacyId,
@@ -129,10 +128,26 @@ export default async (req) => {
             updatedAt: reviewedAt,
             completedAt: null,
           };
-          await STORE.actions(req).setJSON(actionKey(pharmacyId, id), action);
+          await STORE.actions(req).setJSON(key, action);
         }
+
+        dossier.actionSync = {
+          status: 'seeded',
+          attemptedAt,
+          count: reviewActions.length,
+          reason: null,
+        };
       }
+    } catch (error) {
+      dossier.actionSync = {
+        status: 'failed',
+        attemptedAt,
+        count: 0,
+        reason: String(error?.message || 'unknown').slice(0, 300),
+      };
     }
+
+    await saveDossier(dossier, req);
   }
 
   if (status === 'reviewed' && !wasReviewed) {
