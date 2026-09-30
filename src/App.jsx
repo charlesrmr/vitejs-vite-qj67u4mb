@@ -932,6 +932,7 @@ export default function App() {
             token: sessionToken,
             dossierId,
             files,
+            privacyConfirmed: patientDataConfirmed,
             onProgress: setUploadProgress,
           });
           setFilesPersisted(true);
