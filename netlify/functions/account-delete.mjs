@@ -1,7 +1,6 @@
 import {
   STORE,
   dossierKey,
-  fileChunkKey,
   json,
   requireUser,
   verifyPassword,
@@ -27,15 +26,13 @@ export default async (req) => {
     const dossier = await STORE.dossiers(req).get(blob.key, { type: 'json', consistency: 'strong' });
     if (dossier?.accountId !== auth.account.id) continue;
 
-    for (const file of Object.values(dossier.files || {})) {
-      if (!file?.uploadId || !Number.isInteger(file.chunkCount)) continue;
-      for (let i = 0; i < file.chunkCount; i += 1) {
-        await STORE.files(req).delete(fileChunkKey(dossier.id, file.uploadId, i));
-      }
+    const { blobs: storedFiles } = await STORE.files(req).list({
+      prefix: `dossier/${dossier.id}/`,
+    });
+    for (const storedFile of storedFiles || []) {
+      await STORE.files(req).delete(storedFile.key);
     }
-    if (dossier.report?.key) {
-      await STORE.files(req).delete(dossier.report.key);
-    }
+
     await STORE.dossiers(req).delete(dossierKey(dossier.id));
   }
 
