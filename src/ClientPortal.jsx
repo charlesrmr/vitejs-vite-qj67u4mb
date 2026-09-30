@@ -320,7 +320,7 @@ export function ClientPortal({
           <div className="cp-empty">
             <b>Aucun diagnostic pour le moment.</b>
             <span>Commencez avec votre export activité ; stock et top produits pourront enrichir la lecture.</span>
-            <button onClick={onNew}>Préparer mon premier diagnostic →</button>
+            <button onClick={onNew} disabled={!canWrite}>\n              {canWrite ? 'Préparer mon premier diagnostic →' : 'Accès en lecture seule'}\n            </button>
           </div>
         )}
 
