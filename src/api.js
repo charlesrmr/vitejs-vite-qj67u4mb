@@ -91,6 +91,7 @@ export async function uploadFileChunks({
   dossierId,
   slot,
   file,
+  privacyConfirmed = false,
   onProgress,
 }) {
   const CHUNK_SIZE = 3 * 1024 * 1024;
@@ -119,6 +120,7 @@ export async function uploadFileChunks({
           'x-chunk-index': String(index),
           'x-chunk-count': String(chunkCount),
           'x-file-size': String(file.size),
+          'x-privacy-confirmed': privacyConfirmed ? 'true' : 'false',
         },
         body: chunk,
       });
@@ -142,6 +144,7 @@ export async function uploadAllFiles({
   token,
   dossierId,
   files,
+  privacyConfirmed = false,
   onProgress,
 }) {
   const entries = Object.entries(files).filter(([, file]) => Boolean(file));
@@ -152,6 +155,7 @@ export async function uploadAllFiles({
       dossierId,
       slot,
       file,
+      privacyConfirmed,
       onProgress: (item) => onProgress?.({
         ...item,
         fileIndex: i + 1,
