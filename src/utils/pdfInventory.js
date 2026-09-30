@@ -54,7 +54,7 @@ export function parseKnownPdfInventory(matrix) {
   }
 
   const detailed = [];
-  const rowPattern = /^(.*?)\s+(\d{7,16})\s+(-?\d+(?:[.,]\d+)?)\s+(-?[\d ]+[.,]\d{2,3})\s*€?\s+(Exo\.?|\d{1,2}[.,]\d\s*%)\s+(-?[\d ]+[.,]\d{2,3})\s*€?$/i;
+  const rowPattern = /^(.*?)\s+(\d{7,16})\s+(?:(\d+)\s+)?(-?\d+(?:[.,]\d+)?)\s+(-?[\d ]+[.,]\d{2,3})\s*€?\s+(Exo\.?|\d{1,2}[.,]\d\s*%)\s+(-?[\d ]+[.,]\d{2,3})\s*€?$/i;
 
   lines.forEach((line) => {
     const match = line.match(rowPattern);
@@ -62,10 +62,10 @@ export function parseKnownPdfInventory(matrix) {
     detailed.push({
       'Désignation': match[1].trim(),
       'CIP': match[2].trim(),
-      'Stock': match[3].trim(),
-      'Px Ach. Net HT': match[4].trim(),
-      'TVA': match[5].trim(),
-      'Montant Net HT': match[6].trim(),
+      'Stock': match[4].trim(),
+      'Px Ach. Net HT': match[5].trim(),
+      'TVA': match[6].trim(),
+      'Montant Net HT': match[7].trim(),
     });
   });
 
