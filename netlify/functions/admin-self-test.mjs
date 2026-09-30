@@ -33,6 +33,31 @@ export default async (req) => {
     try { await STORE.files(req).delete(key); } catch {}
   }
 
+  const actionTestKey = `selftest/${newId('action')}.json`;
+  try {
+    const payload = {
+      id: 'act_selftest',
+      pharmacyId: 'pharm_selftest',
+      title: 'Action technique',
+      status: 'todo',
+      createdAt: nowIso(),
+    };
+    await STORE.actions(req).setJSON(actionTestKey, payload);
+    const read = await STORE.actions(req).get(actionTestKey, {
+      type: 'json',
+      consistency: 'strong',
+    });
+    add(
+      'Plan d’action',
+      read?.id === payload.id && read?.title === payload.title,
+      read?.id === payload.id ? 'Écriture / lecture Actions OK' : 'Lecture Actions incohérente'
+    );
+  } catch (error) {
+    add('Plan d’action', false, error?.message || 'Échec du store Actions');
+  } finally {
+    try { await STORE.actions(req).delete(actionTestKey); } catch {}
+  }
+
   try {
     const fake = {
       id: 'dos_selftest',
