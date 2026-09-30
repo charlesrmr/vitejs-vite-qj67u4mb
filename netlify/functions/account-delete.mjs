@@ -1,6 +1,7 @@
 import {
   STORE,
   dossierKey,
+  getPharmacyId,
   json,
   requireUser,
   verifyPassword,
@@ -46,6 +47,14 @@ export default async (req) => {
   for (const blob of verificationBlobs) {
     const verification = await STORE.verifications(req).get(blob.key, { type: 'json', consistency: 'strong' });
     if (verification?.accountId === auth.account.id) await STORE.verifications(req).delete(blob.key);
+  }
+
+  const pharmacyId = getPharmacyId(auth.account);
+  const { blobs: actionBlobs } = await STORE.actions(req).list({
+    prefix: `pharmacy/${pharmacyId}/action/`,
+  });
+  for (const blob of actionBlobs || []) {
+    await STORE.actions(req).delete(blob.key);
   }
 
   const { blobs: sessionBlobs } = await STORE.sessions(req).list({ prefix: 'session/' });
