@@ -302,6 +302,7 @@ function parseKnownPdfActivity(matrix) {
     value: {
       reportType: 'activity-summary',
       reportMetric: null,
+      caBasis: 'gross_ttc',
       periodStart: periodMatch?.[1] || null,
       periodEnd: periodMatch?.[2] || null,
     },
@@ -339,6 +340,7 @@ function parseKnownPdfAccounting(matrix) {
     value: {
       reportType: 'accounting-summary',
       reportMetric: null,
+      caBasis: 'net_ttc',
       periodStart: periodMatch?.[1] || null,
       periodEnd: periodMatch?.[2] || null,
     },
@@ -740,7 +742,14 @@ function buildActivity(rows, dateColumn, caColumn) {
 function buildLocalSynthesis(data) {
   const parts = []
   if (Number.isFinite(data.ca)) {
-    const caLabel = Number.isFinite(data.ca_ttc) ? 'CA TTC' : (Number.isFinite(data.ca_ht) ? 'CA HT' : "chiffre d'affaires")
+    const caLabel =
+      data.ca_basis === 'gross_ttc'
+        ? 'CA brut TTC'
+        : data.ca_basis === 'net_ttc'
+          ? 'CA net TTC'
+          : Number.isFinite(data.ca_ttc)
+            ? 'CA TTC'
+            : (Number.isFinite(data.ca_ht) ? 'CA HT' : "chiffre d'affaires")
     parts.push(`Le ${caLabel} analysé est de ${eur(data.ca)}.`)
   }
   if (Number.isFinite(data.activity?.dailyCaAvg) && Number.isFinite(data.activity?.days)) {
@@ -808,6 +817,7 @@ function emptyRealData() {
     ca: null,
     ca_ht: null,
     ca_ttc: null,
+    ca_basis: null,
     marge_pct: null,
     marge_eur: null,
     stock_eur: null,
@@ -871,9 +881,12 @@ export function buildFromFiles(filesMap, columnMappings = {}) {
   }
 
   const data = emptyRealData()
+  data.ca_basis = ['gross_ttc', 'net_ttc'].includes(salesReportMeta?.caBasis)
+    ? salesReportMeta.caBasis
+    : null
   if (salesReportMeta?.reportType === 'activity-summary') {
     data.qualityWarnings.push(
-      "Le PDF d’activité est une synthèse agrégée : le CA total et la période sont exploitables, mais ce document seul ne permet pas d’analyser le détail journalier, la marge, les familles ou les produits."
+      "Le PDF d’activité est une synthèse agrégée : le brut TTC et la période sont exploitables, mais ce document seul ne permet pas de connaître le CA net après remises ni d’analyser le détail journalier, la marge, les familles ou les produits."
     )
   }
   if (salesReportMeta?.reportType === 'accounting-summary') {
