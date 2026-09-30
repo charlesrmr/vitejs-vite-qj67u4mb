@@ -252,9 +252,19 @@ export function getPharmacyId(account) {
 export function sanitizeActionInput(input = {}) {
   const text = (value, max = 1000) => String(value ?? '').trim().slice(0, max);
   const finite = (value) => Number.isFinite(value) ? Number(value) : null;
-  const dueDate = /^\d{4}-\d{2}-\d{2}$/.test(String(input.dueDate || ''))
-    ? String(input.dueDate)
-    : null;
+  const rawDueDate = String(input.dueDate || '').trim();
+  let dueDate = null;
+  if (/^\d{4}-\d{2}-\d{2}$/.test(rawDueDate)) {
+    const [year, month, day] = rawDueDate.split('-').map(Number);
+    const parsed = new Date(Date.UTC(year, month - 1, day));
+    if (
+      parsed.getUTCFullYear() === year &&
+      parsed.getUTCMonth() === month - 1 &&
+      parsed.getUTCDate() === day
+    ) {
+      dueDate = rawDueDate;
+    }
+  }
 
   return {
     title: text(input.title, 240),
