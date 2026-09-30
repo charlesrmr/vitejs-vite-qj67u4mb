@@ -903,6 +903,19 @@ export function buildFromFiles(filesMap, columnMappings = {}) {
 
   if (productReportRows.length) {
     const productCols = { ...detectColumns(productReportRows), ...(columnMappings.produits || {}) }
+
+    // A TOP Marge export converted to CSV/XLSX may lose the € formatting.
+    // In that specific report context, a bare "Marge" column is the ranking amount, not a percentage.
+    if (
+      productReportMeta?.reportMetric === 'margin' &&
+      !productCols.margeEur &&
+      productCols.margePct &&
+      normalizeHeader(productCols.margePct) === 'marge'
+    ) {
+      productCols.margeEur = productCols.margePct
+      productCols.margePct = null
+    }
+
     data.detectedColumns.produits = productCols
 
     if (productCols.cip) {
