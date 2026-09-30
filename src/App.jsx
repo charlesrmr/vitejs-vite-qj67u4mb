@@ -1873,7 +1873,13 @@ export default function App() {
                 <div className="g4">
                   {[
                     {
-                      l: data.isDemo ? 'CA Total' : (Number.isFinite(data.ca_ttc) ? 'CA TTC' : (Number.isFinite(data.ca_ht) ? 'CA HT' : 'CA')),
+                      l: data.isDemo
+                        ? 'CA Total'
+                        : data.ca_basis === 'gross_ttc'
+                          ? 'CA brut TTC'
+                          : data.ca_basis === 'net_ttc'
+                            ? 'CA net TTC'
+                            : (Number.isFinite(data.ca_ttc) ? 'CA TTC' : (Number.isFinite(data.ca_ht) ? 'CA HT' : 'CA')),
                       v: eur(data.ca),
                       f: !data.isDemo && Number.isFinite(data.ca_ht) && Number.isFinite(data.ca_ttc)
                         ? `HT : ${eur(data.ca_ht)}`
