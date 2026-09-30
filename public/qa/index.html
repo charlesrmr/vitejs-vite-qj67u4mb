@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Pilot'Officine — Launch drill QA</title>
+  <style>
+    body{font-family:system-ui,-apple-system,sans-serif;max-width:900px;margin:48px auto;padding:0 20px;color:#17211b;line-height:1.5}
+    h1,h2{line-height:1.15} .box{border:1px solid #d9e2dc;border-radius:14px;padding:18px;margin:18px 0;background:#fbfdfb}
+    a{display:inline-block;margin:6px 8px 6px 0;padding:10px 14px;border-radius:10px;background:#17211b;color:white;text-decoration:none}
+    code{background:#eef3ef;padding:2px 6px;border-radius:6px} li{margin:6px 0} .muted{color:#66736b}
+  </style>
+</head>
+<body>
+  <p class="muted">QA interne · données 100 % synthétiques · Deploy Preview uniquement</p>
+  <h1>Pilot'Officine — Launch drill</h1>
+  <p>Ce pack sert à vérifier le parcours complet sans utiliser de donnée client réelle.</p>
+
+  <div class="box">
+    <h2>1. Fichiers</h2>
+    <a href="./pilot-activity-exhaustive.csv" download>Activité exhaustive</a>
+    <a href="./pilot-top-products.csv" download>Top produits</a>
+    <a href="./pilot-stock-snapshot.csv" download>Stock</a>
+  </div>
+
+  <div class="box">
+    <h2>2. Résultats attendus après pré-analyse</h2>
+    <ul>
+      <li>CA TTC : <strong>8 968 €</strong> (8 967,50 € avant arrondi d'affichage)</li>
+      <li>CA HT : <strong>8 500 €</strong></li>
+      <li>Marge valeur : <strong>2 425 €</strong></li>
+      <li>Taux de marge sur CA HT : <strong>28,5 %</strong></li>
+      <li>Période : <strong>03/08/2026 → 05/08/2026</strong></li>
+      <li>Jours présents : <strong>3</strong></li>
+      <li>CA moyen / jour : <strong>2 989 €</strong></li>
+      <li>Stock valorisé : <strong>5 000 €</strong></li>
+      <li>Références stock : <strong>10</strong></li>
+      <li>Stock sans vente sur la période : <strong>2 références · 1 600 € · 32 % du stock</strong></li>
+      <li>Classement Top produits : <strong>par CA</strong>, avec PRODUIT_TEST_B en tête</li>
+    </ul>
+  </div>
+
+  <div class="box">
+    <h2>3. Parcours à faire passer</h2>
+    <ol>
+      <li>Créer un compte neuf et un diagnostic.</li>
+      <li>Importer l'activité dans « activité / ventes », puis le Top produits et le stock dans leurs emplacements respectifs.</li>
+      <li>Comparer la pré-analyse aux résultats attendus ci-dessus. Toute différence chiffrée est un P0.</li>
+      <li>Confirmer l'absence de données patient et envoyer pour relecture.</li>
+      <li>Se déconnecter puis se reconnecter : le dossier doit être conservé.</li>
+      <li>Dans <code>?admin=1</code>, télécharger les originaux, relire, renseigner synthèse, constats, 3 priorités et plan 30 jours.</li>
+      <li>Valider : le PDF serveur doit être généré.</li>
+      <li>Retour côté titulaire : statut « Diagnostic disponible », ouverture et téléchargement du PDF.</li>
+      <li>Créer une action, la démarrer puis la terminer.</li>
+    </ol>
+  </div>
+
+  <p class="muted">Critère de sortie : aucun P0, chiffres réconciliés, parcours complet effectué sans intervention technique.</p>
+</body>
+</html>
