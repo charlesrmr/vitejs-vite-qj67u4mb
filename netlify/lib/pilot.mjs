@@ -29,6 +29,7 @@ const stores = {
   files: (req) => getStore({ name: storeName('pilot-files', req), region: REGION, consistency: 'strong' }),
   resets: (req) => getStore({ name: storeName('pilot-resets', req), region: REGION, consistency: 'strong' }),
   verifications: (req) => getStore({ name: storeName('pilot-verifications', req), region: REGION, consistency: 'strong' }),
+  actions: (req) => getStore({ name: storeName('pilot-actions', req), region: REGION, consistency: 'strong' }),
 };
 
 export const STORE = stores;
@@ -246,6 +247,53 @@ export function requireWriteAccess(account) {
 
 export function getPharmacyId(account) {
   return String(account?.pharmacyId || account?.id || '');
+}
+
+export function sanitizeActionInput(input = {}) {
+  const text = (value, max = 1000) => String(value ?? '').trim().slice(0, max);
+  const finite = (value) => Number.isFinite(value) ? Number(value) : null;
+  const dueDate = /^\d{4}-\d{2}-\d{2}$/.test(String(input.dueDate || ''))
+    ? String(input.dueDate)
+    : null;
+
+  return {
+    title: text(input.title, 240),
+    detail: text(input.detail, 2000),
+    ownerName: text(input.ownerName, 160),
+    dueDate,
+    priority: ['high', 'medium', 'low'].includes(input.priority) ? input.priority : 'medium',
+    status: ['todo', 'in_progress', 'blocked', 'done', 'canceled'].includes(input.status)
+      ? input.status
+      : 'todo',
+    impactEur: finite(input.impactEur),
+    metricLabel: text(input.metricLabel, 200),
+    resultNote: text(input.resultNote, 2000),
+    sourceDossierId: text(input.sourceDossierId, 100) || null,
+  };
+}
+
+export const actionKey = (pharmacyId, actionId) =>
+  `pharmacy/${pharmacyId}/action/${actionId}.json`;
+
+export function publicAction(action) {
+  if (!action) return null;
+  return {
+    id: action.id,
+    pharmacyId: action.pharmacyId,
+    title: action.title,
+    detail: action.detail || '',
+    ownerName: action.ownerName || '',
+    dueDate: action.dueDate || null,
+    priority: action.priority || 'medium',
+    status: action.status || 'todo',
+    impactEur: Number.isFinite(action.impactEur) ? action.impactEur : null,
+    metricLabel: action.metricLabel || '',
+    resultNote: action.resultNote || '',
+    sourceDossierId: action.sourceDossierId || null,
+    createdAt: action.createdAt || null,
+    updatedAt: action.updatedAt || null,
+    completedAt: action.completedAt || null,
+  };
 }
 
 export function publicAccount(account) {
