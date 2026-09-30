@@ -9,6 +9,7 @@ import {
   nowIso,
   publicDossier,
   requireAdmin,
+  requireWriteAccess,
 } from '../lib/pilot.mjs';
 
 export default async (req) => {
@@ -186,6 +187,31 @@ export default async (req) => {
   }
 
   try {
+    const pilotWrite = requireWriteAccess({ billing: { status: 'pilot' } });
+    const expiredTrialWrite = requireWriteAccess({
+      billing: {
+        status: 'trialing',
+        trialEndsAt: '2000-01-01T00:00:00.000Z',
+      },
+    });
+
+    const writeGateOk =
+      pilotWrite?.ok === true &&
+      expiredTrialWrite?.error instanceof Response &&
+      expiredTrialWrite.error.status === 402;
+
+    add(
+      'Verrou écriture abonnement',
+      writeGateOk,
+      writeGateOk
+        ? 'Accès pilote autorisé et essai expiré bloqué en écriture'
+        : 'Le verrou d’écriture ne suit pas le statut abonnement'
+    );
+  } catch (error) {
+    add('Verrou écriture abonnement', false, error?.message || 'Échec du contrôle');
+  }
+
+  try {
     const publicView = publicDossier({
       id: 'dos_public_boundary',
       accountId: 'acct_secret',
@@ -269,7 +295,7 @@ export default async (req) => {
   add('URL publique', Boolean(process.env.PILOT_PUBLIC_URL), process.env.PILOT_PUBLIC_URL ? 'Configurée' : 'À configurer pour les liens email');
 
   const critical = checks.filter((c) =>
-    ['Stockage privé', 'Génération PDF', 'Persistance classement produits', 'Historique snapshots', 'Droits abonnement', 'Frontière données publiques', 'Secret administrateur'].includes(c.name)
+    ['Stockage privé', 'Génération PDF', 'Persistance classement produits', 'Historique snapshots', 'Droits abonnement', 'Verrou écriture abonnement', 'Frontière données publiques', 'Secret administrateur'].includes(c.name)
   );
   const ok = critical.every((c) => c.ok);
 
