@@ -22,6 +22,8 @@ const stockMetricLabel = (analysis) =>
 export function ClientPortal({
   account,
   dossiers,
+  history = [],
+  historyComparison = null,
   loading,
   error,
   onRefresh,
@@ -65,6 +67,51 @@ export function ClientPortal({
             <span>Commencez avec votre export activité ; stock et top produits pourront enrichir la lecture.</span>
             <button onClick={onNew}>Préparer mon premier diagnostic →</button>
           </div>
+        )}
+
+        {!loading && history.length >= 2 && (
+          <article className="cp-card">
+            <div className="cp-card-top">
+              <div>
+                <span className="cp-status reviewed">ÉVOLUTION</span>
+                <h3>Les deux dernières périodes comparables</h3>
+                <p>
+                  {historyComparison?.previousPeriodLabel || history[history.length - 2]?.periodLabel || 'Période précédente'}
+                  {' → '}
+                  {historyComparison?.latestPeriodLabel || history[history.length - 1]?.periodLabel || 'Dernière période'}
+                </p>
+              </div>
+            </div>
+
+            {historyComparison && (
+              <div className="cp-kpis">
+                {historyComparison.ca && (
+                  <div>
+                    <span>{historyComparison.ca.mode === 'daily' ? 'CA moyen / jour' : 'CA période'}</span>
+                    <b>{historyComparison.ca.deltaPct >= 0 ? '+' : ''}{historyComparison.ca.deltaPct}%</b>
+                  </div>
+                )}
+                {historyComparison.margin && (
+                  <div>
+                    <span>Marge</span>
+                    <b>{historyComparison.margin.deltaPoints >= 0 ? '+' : ''}{historyComparison.margin.deltaPoints} pt</b>
+                  </div>
+                )}
+                {historyComparison.stock && (
+                  <div>
+                    <span>Stock valorisé</span>
+                    <b>{historyComparison.stock.deltaPct >= 0 ? '+' : ''}{historyComparison.stock.deltaPct}%</b>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {!historyComparison?.ca && !historyComparison?.margin && !historyComparison?.stock && (
+              <div className="cp-wait">
+                Deux périodes sont enregistrées, mais leurs données ne sont pas suffisamment comparables pour calculer une évolution fiable.
+              </div>
+            )}
+          </article>
         )}
 
         <div className="cp-list">
