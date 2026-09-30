@@ -71,7 +71,20 @@ export default async (req) => {
     }, 403);
   }
 
-  dossier.analysis = cleanAnalysis(body?.analysis || {});
+  const cleanedAnalysis = cleanAnalysis(body?.analysis || {});
+  const hasUsableAnalysis =
+    Number.isFinite(cleanedAnalysis.ca) ||
+    Number.isFinite(cleanedAnalysis.activity?.days) ||
+    cleanedAnalysis.top10.length > 0 ||
+    cleanedAnalysis.familles.length > 0;
+
+  if (!hasUsableAnalysis) {
+    return json({
+      error: "La pré-analyse ne contient aucune donnée exploitable. Vérifiez l'export et le mapping avant l'envoi.",
+    }, 400);
+  }
+
+  dossier.analysis = cleanedAnalysis;
   dossier.privacyConfirmedAt = nowIso();
   dossier.status = 'submitted';
   dossier.submittedAt = nowIso();
