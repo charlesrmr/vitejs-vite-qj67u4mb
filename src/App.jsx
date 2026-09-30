@@ -927,17 +927,6 @@ export default function App() {
           throw new Error('Votre dossier sécurisé n’est pas initialisé. Reconnectez-vous.');
         }
 
-        if (!filesPersisted) {
-          await uploadAllFiles({
-            token: sessionToken,
-            dossierId,
-            files,
-            privacyConfirmed: patientDataConfirmed,
-            onProgress: setUploadProgress,
-          });
-          setFilesPersisted(true);
-        }
-
         const parsed = {};
         for (const [k, f] of Object.entries(files)) {
           if (f) parsed[k] = await parseFile(f);
@@ -965,7 +954,7 @@ export default function App() {
         setStep('upload');
       }
     },
-    [files, sessionToken, dossierId, filesPersisted, patientDataConfirmed]
+    [files, sessionToken, dossierId, patientDataConfirmed]
   );
 
   const updateMapping = (fileType, field, value) => {
@@ -983,9 +972,26 @@ export default function App() {
     setStep('loading');
     setLs(2);
     try {
+      if (!sessionToken || !dossierId) {
+        throw new Error('Votre dossier sécurisé n’est pas initialisé. Reconnectez-vous.');
+      }
+
       const res = buildFromFiles(parsedFiles, mappings);
       res.officine = profile.pharmacyName || res.officine;
       res.lgo = profile.lgo || res.lgo;
+
+      if (!filesPersisted) {
+        setUploadProgress(null);
+        await uploadAllFiles({
+          token: sessionToken,
+          dossierId,
+          files,
+          privacyConfirmed: patientDataConfirmed,
+          onProgress: setUploadProgress,
+        });
+        setFilesPersisted(true);
+      }
+
       await finishAnalysis(res);
     } catch (err) {
       setData(null);
