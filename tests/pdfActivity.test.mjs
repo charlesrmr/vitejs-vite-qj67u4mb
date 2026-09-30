@@ -40,7 +40,7 @@ test('parses validated accounting summary as net TTC', () => {
     ['Période sélectionnée du 01/08/2026 00:00:00 au 31/08/2026 23:59:59'],
     ['CA Brut 83697,82'],
     ['Remise -874,87'],
-    ['CA Net 82822,95 82822,95'],
+    ['CA Net 82111,11 82111,11'],
     ['CA Net 82822,95'],
   ];
 
@@ -55,4 +55,21 @@ test('parses validated accounting summary as net TTC', () => {
     periodStart: '01/08/2026',
     periodEnd: '31/08/2026',
   });
+});
+
+test('does not confuse accounting and activity summaries', () => {
+  const accountingMatrix = [
+    ['Synthèse comptable VALIDÉE'],
+    ['Période sélectionnée du 01/08/2026 00:00:00 au 31/08/2026 23:59:59'],
+    ['CA Net 82822,95'],
+  ];
+  const activityMatrix = [
+    ["Synthèse d'activité VALIDÉE"],
+    ['Période sélectionnée du 01/08/2026 00:00:00 au 31/08/2026 23:59:59'],
+    ['SYNTHESE PAR TYPE DE VENTE'],
+    ['TOTAL : 83697,82 2484 33,69'],
+  ];
+
+  assert.deepEqual(parseKnownPdfActivity(accountingMatrix), []);
+  assert.deepEqual(parseKnownPdfAccounting(activityMatrix), []);
 });
