@@ -1,5 +1,5 @@
 import {
-  STORE, fileChunkKey, getOwnedDossier, json, nowIso, requireUser, saveDossier,
+  STORE, fileChunkKey, getOwnedDossier, json, nowIso, requireUser, requireWriteAccess, saveDossier,
 } from '../lib/pilot.mjs';
 
 const MAX_CHUNK = 4 * 1024 * 1024;
@@ -10,6 +10,8 @@ export default async (req) => {
   if (req.method !== 'POST') return json({ error: 'Méthode non autorisée.' }, 405);
   const auth = await requireUser(req);
   if (auth.error) return auth.error;
+  const billingAccess = requireWriteAccess(auth.account);
+  if (billingAccess.error) return billingAccess.error;
 
   const dossierId = req.headers.get('x-dossier-id') || '';
   const uploadId = req.headers.get('x-upload-id') || '';
