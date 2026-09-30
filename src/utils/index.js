@@ -268,6 +268,48 @@ function pdfItemsToMatrix(items) {
     .filter((row) => row.some((cell) => String(cell || '').trim()))
 }
 
+function parseKnownPdfActivity(matrix) {
+  const lines = (matrix || [])
+    .map((row) =>
+      (row || [])
+        .map((cell) => String(cell || '').trim())
+        .filter(Boolean)
+        .join(' ')
+        .replace(/\s+/g, ' ')
+        .trim()
+    )
+    .filter(Boolean)
+
+  const fullText = lines.join('\n')
+  if (!normalizeLoose(fullText).includes('synthese d activite')) return []
+
+  const sectionIndex = lines.findIndex((line) =>
+    normalizeLoose(line).includes('synthese par type de vente')
+  )
+  const section = sectionIndex >= 0 ? lines.slice(sectionIndex, sectionIndex + 12) : lines
+  const totalLine = section.find((line) => /^total\s*:/i.test(line))
+  if (!totalLine) return []
+
+  const amounts = totalLine.match(/-?\d[\d ]*[,.]\d{2}\b/g) || []
+  if (!amounts.length) return []
+
+  const periodMatch = fullText.match(
+    /p[ée]riode\s+s[ée]lectionn[ée]e\s+du\s+(\d{1,2}\/\d{1,2}\/\d{4})(?:\s+\d{1,2}:\d{2}:\d{2})?\s+au\s+(\d{1,2}\/\d{1,2}\/\d{4})/i
+  )
+
+  const rows = [{ 'CA TTC': amounts[0] }]
+  Object.defineProperty(rows, '__pilotMeta', {
+    value: {
+      reportType: 'activity-summary',
+      reportMetric: null,
+      periodStart: periodMatch?.[1] || null,
+      periodEnd: periodMatch?.[2] || null,
+    },
+    enumerable: false,
+  })
+  return rows
+}
+
 async function parsePdfFile(file) {
   const pdfjs = await loadPdfJs()
   const buffer = await file.arrayBuffer()
@@ -285,6 +327,9 @@ async function parsePdfFile(file) {
       "PDF reçu, mais aucun texte exploitable n'a été détecté. Il s'agit peut-être d'un scan : utilisez l'export Excel/CSV ou un PDF texte."
     )
   }
+
+  const knownActivity = parseKnownPdfActivity(matrix)
+  if (knownActivity.length) return knownActivity
 
   const knownInventory = parseKnownPdfInventory(matrix)
   if (knownInventory.length) return knownInventory
