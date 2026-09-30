@@ -578,3 +578,154 @@ Un titulaire doit pouvoir répondre, après 5 minutes dans Pilot'Officine :
 6. **Le mois prochain : est-ce que ça a marché ?**
 
 Si un écran ou une fonctionnalité ne contribue à aucune de ces réponses, elle n'est probablement pas prioritaire.
+
+
+# 11. Modèle économique v0
+
+## Prix de lancement
+
+Pilot'Officine est lancé à **49 € HT / mois / officine**.
+
+Ce prix est un prix de lancement, destiné à être réévalué après les premiers usages réels. Le produit ne doit pas être architecturé autour d'un prix figé : plans, droits et billing restent découplés du prestataire de paiement.
+
+## Essai
+
+- **30 jours gratuits**
+- sans carte bancaire pendant la phase pilote / fondateurs
+- accès au produit réel, pas à une version bridée artificiellement
+- une seule période d'essai par officine
+
+Objectif : permettre au titulaire d'importer ses propres données, comprendre la valeur du cockpit et créer au moins une action utile avant de payer.
+
+## Offre gratuite
+
+Pas de plan gratuit permanent au lancement.
+
+Raisons :
+- risque de transformer le produit en outil consulté une fois puis abandonné ;
+- coût de support et de relecture ;
+- complexité inutile de droits / quotas ;
+- Pilot'Officine doit être perçu comme un outil de gestion d'entreprise, pas comme un gadget gratuit.
+
+La **démonstration publique** reste gratuite et sans compte.
+
+## Mensuel
+
+**49 € HT / mois / officine**
+
+Principes :
+- sans engagement long ;
+- paiement récurrent ;
+- accès au logiciel et aux évolutions incluses dans le plan ;
+- possibilité de résilier depuis l'espace de facturation ;
+- accès conservé jusqu'à la fin de la période payée.
+
+## Annuel
+
+Prix de départ recommandé : **490 € HT / an / officine**.
+
+Cela correspond à deux mois offerts par rapport au mensuel et améliore le cash ainsi que la rétention.
+
+Le prix annuel pourra être activé après validation du comportement des premiers clients ; il n'est pas nécessaire de le mettre en avant dès le premier jour.
+
+## Fondateurs
+
+Premières officines :
+- 30 jours offerts ;
+- prix de lancement 49 € HT / mois ;
+- conservation du tarif fondateur pendant une durée à définir lors de l'ouverture commerciale ;
+- feedback produit demandé en contrepartie.
+
+Ne pas promettre une gratuité à vie.
+
+## Ce qui est inclus dans le logiciel
+
+Le prix logiciel doit couvrir progressivement :
+- espace officine ;
+- imports ;
+- cockpit ;
+- historique ;
+- comparaisons ;
+- actions ;
+- simulateurs ;
+- rapports générés ;
+- modules entreprise disponibles dans le plan ;
+- support produit standard.
+
+Le produit doit rester utilisable sans intervention humaine obligatoire de CRC Pharma à chaque cycle.
+
+## Relecture humaine et CRC Pharma
+
+Séparer clairement **SaaS** et **conseil**.
+
+Le prix de 49 € / mois ne doit pas inclure du temps de consultant illimité.
+
+Architecture commerciale :
+
+### Pilot'Officine
+Logiciel récurrent, 49 € HT / mois.
+
+### Relecture / diagnostic humain
+Option payante ou crédit ponctuel.
+Le pilote peut inclure une première relecture afin de valider la qualité produit, mais ce coût ne doit pas devenir une obligation structurelle du plan à 49 €.
+
+### CRC Pharma
+Prestations séparées :
+- aide décisionnelle ;
+- audit ;
+- accompagnement managérial ;
+- performance équipe ;
+- problématiques RH ;
+- mission de transformation ;
+- accompagnement mensuel.
+
+Pilot'Officine doit devenir un **canal d'identification des besoins** pour CRC Pharma sans forcer la vente de conseil.
+
+## Règle produit / business
+
+Chaque module doit préciser :
+- ce qui relève du logiciel ;
+- ce qui relève d'une donnée externe ;
+- ce qui relève d'une interprétation humaine ;
+- ce qui peut déclencher une proposition CRC Pharma.
+
+Aucune fonctionnalité ne doit rendre nécessaire une intervention manuelle de Charles pour que le produit de base fonctionne.
+
+## Architecture billing
+
+Le compte Pilot'Officine conserve sa propre abstraction :
+
+- plan ;
+- statut ;
+- date de fin de période ;
+- annulation en fin de période ;
+- prestataire de paiement ;
+- identifiant client prestataire ;
+- identifiant abonnement prestataire.
+
+Le prestataire de paiement ne doit jamais devenir la base client principale.
+
+Statuts cibles :
+- pilot ;
+- trialing ;
+- active ;
+- past_due ;
+- canceled ;
+- paused.
+
+Le contrôle d'accès au produit doit dépendre de cette couche interne synchronisée par webhook.
+
+## Facturation française
+
+Le paiement et la facturation électronique sont deux sujets distincts.
+
+L'architecture doit pouvoir conserver :
+- raison sociale ;
+- SIREN ;
+- numéro de TVA intracommunautaire ;
+- adresse de facturation ;
+- email de facturation ;
+- référence client ;
+- données nécessaires à une future plateforme agréée.
+
+Ne pas coupler la conformité française à un simple PDF émis par le prestataire de paiement.
