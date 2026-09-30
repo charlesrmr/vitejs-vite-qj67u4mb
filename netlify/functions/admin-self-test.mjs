@@ -66,6 +66,7 @@ export default async (req) => {
   try {
     const cleaned = cleanAnalysis({
       product_ranking_mode: 'margin',
+      stock_date: '21/06/2026',
       top10: [{
         nom: 'Produit test',
         ca: 100,
@@ -77,10 +78,14 @@ export default async (req) => {
     const product = cleaned.top10?.[0];
     add(
       'Persistance classement produits',
-      cleaned.product_ranking_mode === 'margin' && product?.marge_eur === 25,
-      cleaned.product_ranking_mode === 'margin' && product?.marge_eur === 25
-        ? 'Mode de classement et marge € conservés'
-        : 'Données produit perdues au nettoyage serveur'
+      cleaned.product_ranking_mode === 'margin' &&
+        product?.marge_eur === 25 &&
+        cleaned.stock_date === '21/06/2026',
+      cleaned.product_ranking_mode === 'margin' &&
+        product?.marge_eur === 25 &&
+        cleaned.stock_date === '21/06/2026'
+        ? 'Mode de classement, marge € et date stock conservés'
+        : 'Données d’analyse perdues au nettoyage serveur'
     );
   } catch (error) {
     add('Persistance classement produits', false, error?.message || 'Échec du contrôle');
