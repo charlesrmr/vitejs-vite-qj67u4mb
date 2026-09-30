@@ -1729,6 +1729,16 @@ export default function App() {
               Le fichier activité suffit pour démarrer —{' '}
               <b>produits et stock enrichissent le diagnostic</b>
             </p>
+            {typeof window !== 'undefined' && window.location.hostname.startsWith('deploy-preview-') && (
+              <p className="up-note">
+                Test CTO · fichiers anonymisés :{' '}
+                <a href="/test-data/activite-test-anonymisee.csv" download>activité</a>
+                {' · '}
+                <a href="/test-data/top-produits-test-anonymise.csv" download>top produits</a>
+                {' · '}
+                <a href="/test-data/stock-test-anonymise.csv" download>stock</a>
+              </p>
+            )}
             <label className="review-privacy-check">
               <input
                 type="checkbox"
