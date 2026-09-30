@@ -1737,6 +1737,11 @@ export default function App() {
                 <a href="/test-data/top-produits-test-anonymise.csv" download>top produits</a>
                 {' · '}
                 <a href="/test-data/stock-test-anonymise.csv" download>stock</a>
+                <br />
+                <small>
+                  Contrôle attendu : CA 62 403 € · CA HT 59 350 € · marge 16 570 € / 27,9 % ·
+                  12 jours · CA moyen/jour 5 200 € · évolution +5,3 % · stock 3 555 €.
+                </small>
               </p>
             )}
             <label className="review-privacy-check">
