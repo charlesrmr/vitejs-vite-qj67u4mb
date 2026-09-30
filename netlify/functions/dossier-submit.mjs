@@ -29,6 +29,22 @@ export default async (req) => {
     return json({ error: 'Confirmez que les fichiers ne contiennent aucune donnée nominative patient.' }, 400);
   }
 
+  const context = String(process.env.CONTEXT || '').toLowerCase();
+  const allowNonProdEmails =
+    String(process.env.PILOT_ALLOW_NONPROD_EMAILS || '').toLowerCase() === 'true';
+  const verificationDeliveryEnabled = Boolean(
+    process.env.RESEND_API_KEY &&
+    process.env.PILOT_EMAIL_FROM &&
+    process.env.PILOT_PUBLIC_URL &&
+    (!context || context === 'production' || allowNonProdEmails)
+  );
+  if (verificationDeliveryEnabled && !auth.account.emailVerifiedAt) {
+    return json({
+      error: "Vérifiez votre adresse email avant d’envoyer le dossier pour relecture.",
+      code: 'EMAIL_VERIFICATION_REQUIRED',
+    }, 403);
+  }
+
   const configuredLimit = Number(process.env.PILOT_MAX_FOUNDERS || 10);
   const maxFounders = Number.isFinite(configuredLimit)
     ? Math.min(1000, Math.max(1, Math.floor(configuredLimit)))
