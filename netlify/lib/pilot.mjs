@@ -231,9 +231,14 @@ export function publicBilling(account) {
   };
 }
 
+export function getPharmacyId(account) {
+  return String(account?.pharmacyId || account?.id || '');
+}
+
 export function publicAccount(account) {
   return {
     id: account.id,
+    pharmacyId: getPharmacyId(account),
     profile: account.profile,
     billingProfile: sanitizeBillingProfile(account.billingProfile || {}),
     billing: publicBilling(account),
