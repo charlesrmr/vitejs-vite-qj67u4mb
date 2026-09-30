@@ -1125,7 +1125,22 @@ export function buildFromFiles(filesMap, columnMappings = {}) {
         .map((row) => parseSaleDate(row[stockCols.date]))
         .filter(Boolean)
         .sort((a, b) => b - a)
-      if (stockDates.length) data.stock_date = formatFrenchDate(stockDates[0])
+      if (stockDates.length) {
+        const stockSnapshot = stockDates[0]
+        data.stock_date = formatFrenchDate(stockSnapshot)
+
+        const activityStart = parseSaleDate(salesPeriodStart)
+        const activityEnd = parseSaleDate(salesPeriodEnd)
+        if (
+          activityStart &&
+          activityEnd &&
+          (stockSnapshot < activityStart || stockSnapshot > activityEnd)
+        ) {
+          data.qualityWarnings.push(
+            `Le stock est une photographie au ${data.stock_date}, en dehors de la période d’activité ${metadataSalesPeriod}. Les données de stock et d’activité ne décrivent donc pas le même instant.`
+          )
+        }
+      }
     }
 
     if (stockCols.stockValeur) {
