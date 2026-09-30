@@ -75,6 +75,20 @@ export function sanitizeProfile(input = {}) {
   };
 }
 
+export function sanitizeBillingProfile(input = {}) {
+  const text = (key, max = 250) => String(input[key] || '').trim().slice(0, max);
+  return {
+    legalName: text('legalName', 180),
+    siren: text('siren', 20).replace(/\s+/g, ''),
+    vatNumber: text('vatNumber', 40).replace(/\s+/g, '').toUpperCase(),
+    email: normalizeEmail(input.email).slice(0, 160),
+    address: text('address', 220),
+    postalCode: text('postalCode', 20),
+    city: text('city', 120),
+    country: text('country', 2).toUpperCase() || 'FR',
+  };
+}
+
 export function validateProfile(profile) {
   const required = [
     'firstName', 'lastName', 'email', 'phone', 'pharmacyName',
@@ -190,6 +204,7 @@ export function publicAccount(account) {
   return {
     id: account.id,
     profile: account.profile,
+    billingProfile: sanitizeBillingProfile(account.billingProfile || {}),
     billing: publicBilling(account),
     emailVerifiedAt: account.emailVerifiedAt || null,
     createdAt: account.createdAt,
