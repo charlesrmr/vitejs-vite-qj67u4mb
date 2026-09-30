@@ -582,8 +582,11 @@ function inferTopProductReportMeta(rows) {
     return pairs ? descending / pairs : 0
   }
 
+  const rawMarginColumn = Object.keys(rows[0]).find(
+    (column) => normalizeHeader(column) === 'marge'
+  ) || null
   const caScore = descendingScore(columns.caHt || columns.caTtc || columns.ca)
-  const marginScore = descendingScore(columns.margeEur)
+  const marginScore = descendingScore(columns.margeEur || rawMarginColumn)
   let reportMetric = null
   if (marginScore >= 0.9 && marginScore > caScore + 0.15) reportMetric = 'margin'
   else if (caScore >= 0.9 && caScore > marginScore + 0.15) reportMetric = 'ca'
