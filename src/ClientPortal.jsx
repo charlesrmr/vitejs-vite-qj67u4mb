@@ -19,11 +19,23 @@ const caMetricLabel = (analysis) =>
 const stockMetricLabel = (analysis) =>
   analysis?.stock_date ? `Stock au ${analysis.stock_date}` : 'Stock';
 
+const ACTION_STATUS_LABELS = {
+  todo: 'À faire',
+  in_progress: 'En cours',
+  blocked: 'Bloquée',
+};
+
+const formatActionDate = (value) => {
+  const match = String(value || '').match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  return match ? `${match[3]}/${match[2]}/${match[1]}` : '';
+};
+
 export function ClientPortal({
   account,
   dossiers,
   history = [],
   historyComparison = null,
+  actions = [],
   loading,
   error,
   onRefresh,
@@ -33,6 +45,10 @@ export function ClientPortal({
   onSettings,
   onLogout,
 }) {
+  const openActions = actions.filter(
+    (action) => action?.status !== 'done' && action?.status !== 'canceled'
+  );
+
   return (
     <div className="cp-page">
       <div className="cp-shell">
@@ -60,6 +76,46 @@ export function ClientPortal({
 
         {error && <div className="cp-error">{error}</div>}
         {loading && <div className="cp-loading">Chargement de vos dossiers...</div>}
+
+        {!loading && openActions.length > 0 && (
+          <article className="cp-card">
+            <div className="cp-card-top">
+              <div>
+                <span className="cp-status in_review">PLAN D’ACTION</span>
+                <h3>À faire maintenant</h3>
+                <p>{openActions.length} action(s) ouverte(s) pour l’officine.</p>
+              </div>
+            </div>
+
+            <div className="cr-items">
+              {openActions.slice(0, 3).map((action, index) => {
+                const meta = [
+                  ACTION_STATUS_LABELS[action.status] || action.status,
+                  action.ownerName ? `Responsable : ${action.ownerName}` : '',
+                  action.dueDate ? `Échéance : ${formatActionDate(action.dueDate)}` : '',
+                  Number.isFinite(action.impactEur) ? `Impact estimé : ${eur(action.impactEur)}` : '',
+                ].filter(Boolean);
+
+                return (
+                  <div className="cr-item" key={action.id}>
+                    <i>{String(index + 1).padStart(2, '0')}</i>
+                    <div>
+                      <div>
+                        <b>{action.title}</b>
+                        <strong>{action.priority === 'high' ? 'Priorité haute' : action.priority === 'low' ? 'Priorité basse' : 'Priorité normale'}</strong>
+                      </div>
+                      <p>{meta.join(' · ')}</p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {openActions.length > 3 && (
+              <div className="cp-wait">+ {openActions.length - 3} autre(s) action(s) ouverte(s).</div>
+            )}
+          </article>
+        )}
 
         {!loading && !dossiers.length && (
           <div className="cp-empty">
