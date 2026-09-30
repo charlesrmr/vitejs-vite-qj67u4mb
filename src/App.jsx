@@ -964,7 +964,7 @@ export default function App() {
         setStep('upload');
       }
     },
-    [files, sessionToken, dossierId, filesPersisted]
+    [files, sessionToken, dossierId, filesPersisted, patientDataConfirmed]
   );
 
   const updateMapping = (fileType, field, value) => {
