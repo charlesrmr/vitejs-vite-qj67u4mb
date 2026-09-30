@@ -833,6 +833,7 @@ export default function App() {
   const [reviewError, setReviewError] = useState('');
   const [clientDossiers, setClientDossiers] = useState([]);
   const [clientHistory, setClientHistory] = useState([]);
+  const [clientHistoryComparison, setClientHistoryComparison] = useState(null);
   const [portalLoading, setPortalLoading] = useState(false);
   const [portalError, setPortalError] = useState('');
   const [settingsSaving, setSettingsSaving] = useState(false);
@@ -1040,6 +1041,7 @@ export default function App() {
       const result = await listMyDossiers(token);
       setClientDossiers(result.dossiers || []);
       setClientHistory(result.history || []);
+      setClientHistoryComparison(result.historyComparison || null);
     } catch (err) {
       setPortalError(err?.message || 'Impossible de charger vos dossiers.');
     } finally {
@@ -1232,6 +1234,7 @@ export default function App() {
       setProfile(EMPTY_PROFILE);
       setClientDossiers([]);
       setClientHistory([]);
+      setClientHistoryComparison(null);
       setSelectedClientDossier(null);
       setStep('landing');
     } catch (err) {
@@ -1248,6 +1251,8 @@ export default function App() {
     setAccount(null);
     setProfile(EMPTY_PROFILE);
     setClientDossiers([]);
+    setClientHistory([]);
+    setClientHistoryComparison(null);
     setSelectedClientDossier(null);
     setStep('landing');
     if (token) {
@@ -1322,6 +1327,7 @@ export default function App() {
       const dossierResult = await listMyDossiers(result.sessionToken);
       setClientDossiers(dossierResult.dossiers || []);
       setClientHistory(dossierResult.history || []);
+      setClientHistoryComparison(dossierResult.historyComparison || null);
 
       try {
         const url = new URL(window.location.href);
@@ -1504,6 +1510,7 @@ export default function App() {
           account={account}
           dossiers={clientDossiers}
           history={clientHistory}
+          historyComparison={clientHistoryComparison}
           loading={portalLoading}
           error={portalError}
           onRefresh={() => refreshPortal(sessionToken)}
