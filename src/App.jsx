@@ -832,6 +832,7 @@ export default function App() {
   const [patientDataConfirmed, setPatientDataConfirmed] = useState(false);
   const [reviewError, setReviewError] = useState('');
   const [clientDossiers, setClientDossiers] = useState([]);
+  const [clientHistory, setClientHistory] = useState([]);
   const [portalLoading, setPortalLoading] = useState(false);
   const [portalError, setPortalError] = useState('');
   const [settingsSaving, setSettingsSaving] = useState(false);
@@ -1038,6 +1039,7 @@ export default function App() {
     try {
       const result = await listMyDossiers(token);
       setClientDossiers(result.dossiers || []);
+      setClientHistory(result.history || []);
     } catch (err) {
       setPortalError(err?.message || 'Impossible de charger vos dossiers.');
     } finally {
@@ -1229,6 +1231,7 @@ export default function App() {
       setAccount(null);
       setProfile(EMPTY_PROFILE);
       setClientDossiers([]);
+      setClientHistory([]);
       setSelectedClientDossier(null);
       setStep('landing');
     } catch (err) {
@@ -1318,6 +1321,7 @@ export default function App() {
 
       const dossierResult = await listMyDossiers(result.sessionToken);
       setClientDossiers(dossierResult.dossiers || []);
+      setClientHistory(dossierResult.history || []);
 
       try {
         const url = new URL(window.location.href);
@@ -1348,8 +1352,10 @@ export default function App() {
       try {
         const dossierResult = await listMyDossiers(result.sessionToken);
         setClientDossiers(dossierResult.dossiers || []);
+        setClientHistory(dossierResult.history || []);
       } catch (listError) {
         setClientDossiers([]);
+        setClientHistory([]);
         setPortalError('Connexion réussie, mais vos dossiers n’ont pas pu être chargés. Utilisez « Actualiser » pour réessayer.');
       }
     } catch (err) {
@@ -1497,6 +1503,7 @@ export default function App() {
         <ClientPortal
           account={account}
           dossiers={clientDossiers}
+          history={clientHistory}
           loading={portalLoading}
           error={portalError}
           onRefresh={() => refreshPortal(sessionToken)}
