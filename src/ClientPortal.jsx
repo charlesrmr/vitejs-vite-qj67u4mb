@@ -116,6 +116,7 @@ export function AccountSettings({
   success,
   onBack,
   onSaveProfile,
+  onSaveBillingProfile,
   onChangePassword,
   onDeleteAccount,
   onRequestVerification,
@@ -123,6 +124,7 @@ export function AccountSettings({
   verificationResult,
 }) {
   const [form, setForm] = useState(account?.profile || {});
+  const [billingForm, setBillingForm] = useState(account?.billingProfile || { country: 'FR' });
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -131,11 +133,17 @@ export function AccountSettings({
 
   useEffect(() => {
     setForm(account?.profile || {});
+    setBillingForm(account?.billingProfile || { country: 'FR' });
   }, [account]);
 
   const field = (key) => ({
     value: form?.[key] || '',
     onChange: (e) => setForm((prev) => ({ ...prev, [key]: e.target.value })),
+  });
+
+  const billingField = (key) => ({
+    value: billingForm?.[key] || '',
+    onChange: (e) => setBillingForm((prev) => ({ ...prev, [key]: e.target.value })),
   });
 
   const submitPassword = (e) => {
@@ -184,6 +192,39 @@ export function AccountSettings({
             <label className="full"><span>Contexte</span><textarea rows="4" {...field('context')} /></label>
             <div className="settings-actions full">
               <button className="primary" type="submit" disabled={saving}>{saving ? 'Enregistrement...' : 'Enregistrer mes informations'}</button>
+            </div>
+          </form>
+        </section>
+
+        <section className="settings-card">
+          <div className="settings-card-head">
+            <span>ABONNEMENT & FACTURATION</span>
+            <h2>Pilot'Officine</h2>
+            <p>
+              {account?.billing?.status === 'pilot'
+                ? 'Phase pilote · le tarif de lancement prévu est de 49 € HT / mois / officine.'
+                : `Statut de l'abonnement : ${account?.billing?.status || 'N/D'}.`}
+            </p>
+          </div>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              onSaveBillingProfile(billingForm);
+            }}
+            className="settings-grid"
+          >
+            <label className="full"><span>Raison sociale</span><input {...billingField('legalName')} /></label>
+            <label><span>SIREN</span><input {...billingField('siren')} inputMode="numeric" /></label>
+            <label><span>TVA intracommunautaire</span><input {...billingField('vatNumber')} /></label>
+            <label className="full"><span>Email de facturation</span><input type="email" {...billingField('email')} /></label>
+            <label className="full"><span>Adresse de facturation</span><input {...billingField('address')} /></label>
+            <label><span>Code postal</span><input {...billingField('postalCode')} /></label>
+            <label><span>Ville</span><input {...billingField('city')} /></label>
+            <label><span>Pays</span><input {...billingField('country')} maxLength="2" placeholder="FR" /></label>
+            <div className="settings-actions full">
+              <button className="primary" type="submit" disabled={saving}>
+                {saving ? 'Enregistrement...' : 'Enregistrer la facturation'}
+              </button>
             </div>
           </form>
         </section>
