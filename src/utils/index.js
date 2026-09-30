@@ -310,6 +310,43 @@ function parseKnownPdfActivity(matrix) {
   return rows
 }
 
+function parseKnownPdfAccounting(matrix) {
+  const lines = (matrix || [])
+    .map((row) =>
+      (row || [])
+        .map((cell) => String(cell || '').trim())
+        .filter(Boolean)
+        .join(' ')
+        .replace(/\s+/g, ' ')
+        .trim()
+    )
+    .filter(Boolean)
+
+  const fullText = lines.join('\n')
+  if (!normalizeLoose(fullText).includes('synthese comptable')) return []
+
+  const caNetLines = lines.filter((line) => /^ca\s+net\b/i.test(line))
+  const caNetLine = caNetLines[caNetLines.length - 1] || ''
+  const amounts = caNetLine.match(/-?\d[\d ]*[,.]\d{2}\b/g) || []
+  if (!amounts.length) return []
+
+  const periodMatch = fullText.match(
+    /p[ée]riode\s+s[ée]lectionn[ée]e\s+du\s+(\d{1,2}\/\d{1,2}\/\d{4})(?:\s+\d{1,2}:\d{2}:\d{2})?\s+au\s+(\d{1,2}\/\d{1,2}\/\d{4})/i
+  )
+
+  const rows = [{ 'CA TTC': amounts[0] }]
+  Object.defineProperty(rows, '__pilotMeta', {
+    value: {
+      reportType: 'accounting-summary',
+      reportMetric: null,
+      periodStart: periodMatch?.[1] || null,
+      periodEnd: periodMatch?.[2] || null,
+    },
+    enumerable: false,
+  })
+  return rows
+}
+
 async function parsePdfFile(file) {
   const pdfjs = await loadPdfJs()
   const buffer = await file.arrayBuffer()
@@ -330,6 +367,9 @@ async function parsePdfFile(file) {
 
   const knownActivity = parseKnownPdfActivity(matrix)
   if (knownActivity.length) return knownActivity
+
+  const knownAccounting = parseKnownPdfAccounting(matrix)
+  if (knownAccounting.length) return knownAccounting
 
   const knownInventory = parseKnownPdfInventory(matrix)
   if (knownInventory.length) return knownInventory
