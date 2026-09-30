@@ -826,6 +826,11 @@ export function buildFromFiles(filesMap, columnMappings = {}) {
   }
 
   const data = emptyRealData()
+  if (salesReportMeta?.reportType === 'activity-summary') {
+    data.qualityWarnings.push(
+      "Le PDF d’activité est une synthèse agrégée : le CA total et la période sont exploitables, mais ce document seul ne permet pas d’analyser le détail journalier, la marge, les familles ou les produits."
+    )
+  }
   data.detectedColumns.ventes = salesCols
   const inferredSalesPeriod = inferPeriod(ventes, salesCols.date)
   const salesPeriodStart = ventes.__pilotMeta?.periodStart || null
