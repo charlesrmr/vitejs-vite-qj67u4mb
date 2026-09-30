@@ -9,6 +9,16 @@ const LABELS = {
   reviewed: 'Diagnostic disponible',
 };
 
+const caMetricLabel = (analysis) =>
+  analysis?.ca_basis === 'gross_ttc'
+    ? 'CA brut TTC'
+    : analysis?.ca_basis === 'net_ttc'
+      ? 'CA net TTC'
+      : 'CA';
+
+const stockMetricLabel = (analysis) =>
+  analysis?.stock_date ? `Stock au ${analysis.stock_date}` : 'Stock';
+
 export function ClientPortal({
   account,
   dossiers,
@@ -70,9 +80,9 @@ export function ClientPortal({
               </div>
 
               <div className="cp-kpis">
-                <div><span>CA</span><b>{eur(d.analysis?.ca)}</b></div>
+                <div><span>{caMetricLabel(d.analysis)}</span><b>{eur(d.analysis?.ca)}</b></div>
                 <div><span>Marge</span><b>{Number.isFinite(d.analysis?.marge_pct) ? `${d.analysis.marge_pct}%` : 'N/D'}</b></div>
-                <div><span>Stock</span><b>{eur(d.analysis?.stock_eur)}</b></div>
+                <div><span>{stockMetricLabel(d.analysis)}</span><b>{eur(d.analysis?.stock_eur)}</b></div>
                 <div><span>Stock sans vente</span><b>{Number.isFinite(d.analysis?.dormant_stock_eur) ? eur(d.analysis.dormant_stock_eur) : num(d.analysis?.dormants)}</b></div>
               </div>
 
@@ -274,9 +284,9 @@ export function ClientReport({ dossier, onBack, onDownload, downloading, downloa
         </header>
 
         <div className="cr-kpis">
-          <div><span>CA</span><b>{eur(a.ca)}</b><small>{Number.isFinite(a.ca_ttc) ? 'TTC' : 'base importée'}</small></div>
+          <div><span>{caMetricLabel(a)}</span><b>{eur(a.ca)}</b><small>{a.ca_basis === 'gross_ttc' ? 'avant remises' : a.ca_basis === 'net_ttc' ? 'après remises' : Number.isFinite(a.ca_ttc) ? 'TTC' : 'base importée'}</small></div>
           <div><span>Marge</span><b>{Number.isFinite(a.marge_pct) ? `${a.marge_pct}%` : 'N/D'}</b><small>{eur(a.marge_eur)}</small></div>
-          <div><span>Stock</span><b>{eur(a.stock_eur)}</b><small>valorisation importée</small></div>
+          <div><span>{stockMetricLabel(a)}</span><b>{eur(a.stock_eur)}</b><small>valorisation importée</small></div>
           <div><span>Stock sans vente</span><b>{Number.isFinite(a.dormant_stock_eur) ? eur(a.dormant_stock_eur) : num(a.dormants)}</b><small>{Number.isFinite(a.dormant_stock_pct) ? `${a.dormant_stock_pct}% du stock valorisé` : 'si rapprochement disponible'}</small></div>
         </div>
 
@@ -322,9 +332,9 @@ export function ClientReport({ dossier, onBack, onDownload, downloading, downloa
           <small>Pré-analyse automatisée · Relecture Pilot'Officine</small>
         </div>
         <div className="client-print-kpis">
-          <div><span>CA</span><b>{eur(a.ca)}</b></div>
+          <div><span>{caMetricLabel(a)}</span><b>{eur(a.ca)}</b></div>
           <div><span>Marge</span><b>{Number.isFinite(a.marge_pct) ? `${a.marge_pct}%` : 'N/D'}</b></div>
-          <div><span>Stock</span><b>{eur(a.stock_eur)}</b></div>
+          <div><span>{stockMetricLabel(a)}</span><b>{eur(a.stock_eur)}</b></div>
           <div><span>Stock sans vente</span><b>{Number.isFinite(a.dormant_stock_eur) ? eur(a.dormant_stock_eur) : num(a.dormants)}</b></div>
         </div>
         <PrintSection eyebrow="SYNTHÈSE" title="Ce qu'il faut retenir" text={r.executiveSummary} />
