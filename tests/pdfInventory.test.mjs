@@ -32,3 +32,31 @@ test('parses aggregate stock summary without inventing product detail', () => {
     'Nb Produits': '4073',
   });
 });
+
+test('parses detailed stock rows with CIP, quantity and net purchase value', () => {
+  const matrix = [
+    ['PRODUIT TEST ALPHA 9990000000001 99 3 4,960 € 10,0% 14,88 €'],
+    ['PRODUIT TEST BETA 9990000000002 99 7 3,880 € 10,0% 27,16 €'],
+    ['PRODUIT TEST GAMMA 9990000000003 99 2 8,280 € 10,0% 16,56 €'],
+  ];
+
+  const rows = parseKnownPdfInventory(matrix);
+
+  assert.equal(rows.length, 3);
+  assert.deepEqual(rows[0], {
+    'Désignation': 'PRODUIT TEST ALPHA',
+    'CIP': '9990000000001',
+    'Stock': '3',
+    'Px Ach. Net HT': '4,960',
+    'TVA': '10,0%',
+    'Montant Net HT': '14,88',
+  });
+  assert.deepEqual(rows[2], {
+    'Désignation': 'PRODUIT TEST GAMMA',
+    'CIP': '9990000000003',
+    'Stock': '2',
+    'Px Ach. Net HT': '8,280',
+    'TVA': '10,0%',
+    'Montant Net HT': '16,56',
+  });
+});
