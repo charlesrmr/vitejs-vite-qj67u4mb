@@ -360,6 +360,13 @@ export function buildHistorySnapshot(dossier) {
     }
   }
 
+  const salesColumns = analysis.detectedColumns?.ventes || {};
+  const caSource = analysis.ca_basis ||
+    (salesColumns.caTtc ? `ttc:${String(salesColumns.caTtc).trim().toLowerCase()}` :
+      salesColumns.caHt ? `ht:${String(salesColumns.caHt).trim().toLowerCase()}` :
+      salesColumns.ca ? `ca:${String(salesColumns.ca).trim().toLowerCase()}` :
+      null);
+
   return {
     dossierId: dossier.id,
     status: dossier.status,
@@ -369,6 +376,7 @@ export function buildHistorySnapshot(dossier) {
     periodDays,
     ca: finite(analysis.ca),
     caBasis: analysis.ca_basis || null,
+    caSource,
     activityDays: finite(analysis.activity?.days),
     dailyCaAvg: finite(analysis.activity?.dailyCaAvg),
     marginPct: finite(analysis.marge_pct),
@@ -390,6 +398,85 @@ export function buildHistorySnapshots(dossiers = []) {
       const bKey = b.periodEnd || b.submittedAt || b.updatedAt || '';
       return String(aKey).localeCompare(String(bKey));
     });
+}
+
+export function buildHistoryComparison(snapshots = []) {
+  const items = Array.isArray(snapshots) ? snapshots.filter(Boolean) : [];
+  if (items.length < 2) return null;
+
+  const previous = items[items.length - 2];
+  const latest = items[items.length - 1];
+  const pct = (from, to) =>
+    Number.isFinite(from) && from !== 0 && Number.isFinite(to)
+      ? Math.round(((to - from) / Math.abs(from)) * 1000) / 10
+      : null;
+
+  const sameCaSource = Boolean(
+    previous.caSource &&
+    latest.caSource &&
+    previous.caSource === latest.caSource
+  );
+
+  let ca = null;
+  if (
+    sameCaSource &&
+    Number.isFinite(previous.dailyCaAvg) &&
+    Number.isFinite(latest.dailyCaAvg) &&
+    previous.activityDays >= 5 &&
+    latest.activityDays >= 5
+  ) {
+    ca = {
+      mode: 'daily',
+      previous: previous.dailyCaAvg,
+      latest: latest.dailyCaAvg,
+      deltaPct: pct(previous.dailyCaAvg, latest.dailyCaAvg),
+    };
+  } else if (
+    sameCaSource &&
+    Number.isFinite(previous.ca) &&
+    Number.isFinite(latest.ca) &&
+    Number.isFinite(previous.periodDays) &&
+    Number.isFinite(latest.periodDays) &&
+    previous.periodDays > 0 &&
+    latest.periodDays > 0
+  ) {
+    const durationGap = Math.abs(latest.periodDays - previous.periodDays) /
+      Math.max(latest.periodDays, previous.periodDays);
+    if (durationGap <= 0.05) {
+      ca = {
+        mode: 'total',
+        previous: previous.ca,
+        latest: latest.ca,
+        deltaPct: pct(previous.ca, latest.ca),
+      };
+    }
+  }
+
+  const margin = Number.isFinite(previous.marginPct) && Number.isFinite(latest.marginPct)
+    ? {
+        previous: previous.marginPct,
+        latest: latest.marginPct,
+        deltaPoints: Math.round((latest.marginPct - previous.marginPct) * 10) / 10,
+      }
+    : null;
+
+  const stock = Number.isFinite(previous.stockEur) && Number.isFinite(latest.stockEur)
+    ? {
+        previous: previous.stockEur,
+        latest: latest.stockEur,
+        deltaPct: pct(previous.stockEur, latest.stockEur),
+      }
+    : null;
+
+  return {
+    previousDossierId: previous.dossierId,
+    latestDossierId: latest.dossierId,
+    previousPeriodLabel: previous.periodLabel,
+    latestPeriodLabel: latest.periodLabel,
+    ca,
+    margin,
+    stock,
+  };
 }
 
 export function sanitizeReview(input = {}) {
