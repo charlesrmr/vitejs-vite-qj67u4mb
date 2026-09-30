@@ -19,6 +19,13 @@ const statusLabel = {
   reviewed: 'Validé',
 };
 
+const analysisCaLabel = (analysis) =>
+  analysis?.ca_basis === 'gross_ttc'
+    ? 'CA brut TTC'
+    : analysis?.ca_basis === 'net_ttc'
+      ? 'CA net TTC'
+      : 'CA';
+
 function seedReview(dossier) {
   const analysis = dossier?.analysis || {};
   const alerts = Array.isArray(analysis.alerts) ? analysis.alerts : [];
@@ -124,7 +131,7 @@ function PrintableReport({ dossier }) {
       </section>
 
       <section className="pr-kpis">
-        <div><span>CA</span><b>{eur(analysis.ca)}</b><small>{Number.isFinite(analysis.ca_ttc) ? 'TTC' : 'base importée'}</small></div>
+        <div><span>{analysisCaLabel(analysis)}</span><b>{eur(analysis.ca)}</b><small>{analysis.ca_basis === 'gross_ttc' ? 'avant remises' : analysis.ca_basis === 'net_ttc' ? 'après remises' : Number.isFinite(analysis.ca_ttc) ? 'TTC' : 'base importée'}</small></div>
         <div><span>Marge</span><b>{Number.isFinite(analysis.marge_pct) ? `${analysis.marge_pct}%` : 'N/D'}</b><small>{eur(analysis.marge_eur)}</small></div>
         <div><span>Stock</span><b>{eur(analysis.stock_eur)}</b><small>{analysis.stock_date ? `au ${analysis.stock_date}` : 'valorisation importée'}</small></div>
         <div><span>Stock sans vente</span><b>{Number.isFinite(analysis.dormant_stock_eur) ? eur(analysis.dormant_stock_eur) : num(analysis.dormants)}</b><small>{Number.isFinite(analysis.dormant_stock_pct) ? `${analysis.dormant_stock_pct}% du stock` : 'si rapprochement disponible'}</small></div>
@@ -634,7 +641,7 @@ export default function AdminPanel() {
               </div>
 
               <div className="adm-kpis">
-                <div><span>CA</span><b>{eur(selected.analysis?.ca)}</b><small>{selected.analysis?.periode || 'N/D'}</small></div>
+                <div><span>{analysisCaLabel(selected.analysis)}</span><b>{eur(selected.analysis?.ca)}</b><small>{selected.analysis?.periode || 'N/D'}</small></div>
                 <div><span>Marge</span><b>{Number.isFinite(selected.analysis?.marge_pct) ? `${selected.analysis.marge_pct}%` : 'N/D'}</b><small>{eur(selected.analysis?.marge_eur)}</small></div>
                 <div><span>Stock</span><b>{eur(selected.analysis?.stock_eur)}</b><small>{selected.analysis?.stock_date ? `au ${selected.analysis.stock_date}` : 'valorisé'}</small></div>
                 <div><span>Stock sans vente</span><b>{Number.isFinite(selected.analysis?.dormant_stock_eur) ? eur(selected.analysis.dormant_stock_eur) : num(selected.analysis?.dormants)}</b><small>{Number.isFinite(selected.analysis?.dormant_stock_pct) ? `${selected.analysis.dormant_stock_pct}% du stock` : 'si disponible'}</small></div>
