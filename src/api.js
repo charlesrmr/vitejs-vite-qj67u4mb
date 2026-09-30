@@ -193,6 +193,15 @@ export async function updateAccount(token, profile) {
   });
 }
 
+export async function updateBillingProfile(token, billingProfile) {
+  return apiRequest('/api/account/billing-profile', {
+    method: 'POST',
+    token,
+    body: { billingProfile },
+  });
+}
+
+
 export async function changePassword(token, currentPassword, newPassword) {
   return apiRequest('/api/account/password', {
     method: 'POST',
