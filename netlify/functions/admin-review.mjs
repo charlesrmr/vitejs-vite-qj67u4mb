@@ -1,7 +1,7 @@
 import { buildReviewedPdf } from '../lib/report.mjs';
 import { clientReadyEmail, sendPilotEmail } from '../lib/notify.mjs';
 import {
-  STORE, json, nowIso, requireAdmin, sanitizeReview, saveDossier,
+  STORE, actionKey, json, newId, nowIso, requireAdmin, sanitizeReview, saveDossier,
 } from '../lib/pilot.mjs';
 
 export default async (req) => {
@@ -83,6 +83,57 @@ export default async (req) => {
   }
 
   await saveDossier(dossier, req);
+
+  if (status === 'reviewed') {
+    const pharmacyId = String(dossier.pharmacyId || dossier.accountId || '');
+    if (pharmacyId) {
+      const { blobs: actionBlobs } = await STORE.actions(req).list({
+        prefix: `pharmacy/${pharmacyId}/action/`,
+      });
+      let alreadySeeded = false;
+      for (const blob of actionBlobs || []) {
+        const action = await STORE.actions(req).get(blob.key, {
+          type: 'json',
+          consistency: 'strong',
+        });
+        if (action?.sourceDossierId === dossier.id) {
+          alreadySeeded = true;
+          break;
+        }
+      }
+
+      if (!alreadySeeded) {
+        const reviewedAt = dossier.reviewedAt || nowIso();
+        const due = new Date(reviewedAt);
+        due.setUTCDate(due.getUTCDate() + 30);
+        const dueDate = due.toISOString().slice(0, 10);
+
+        for (const item of review.actions || []) {
+          if (!item?.title && !item?.body) continue;
+          const id = newId('act');
+          const action = {
+            id,
+            pharmacyId,
+            createdByAccountId: dossier.accountId,
+            title: item.title || 'Action du diagnostic',
+            detail: item.body || '',
+            ownerName: '',
+            dueDate,
+            priority: 'medium',
+            status: 'todo',
+            impactEur: null,
+            metricLabel: item.metric || '',
+            resultNote: '',
+            sourceDossierId: dossier.id,
+            createdAt: reviewedAt,
+            updatedAt: reviewedAt,
+            completedAt: null,
+          };
+          await STORE.actions(req).setJSON(actionKey(pharmacyId, id), action);
+        }
+      }
+    }
+  }
 
   if (status === 'reviewed' && !wasReviewed) {
     const notification = await sendPilotEmail(clientReadyEmail(dossier));
