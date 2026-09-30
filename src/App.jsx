@@ -1731,16 +1731,20 @@ export default function App() {
             </p>
             {typeof window !== 'undefined' && window.location.hostname.startsWith('deploy-preview-') && (
               <p className="up-note">
-                Test CTO · fichiers anonymisés :{' '}
-                <a href="/test-data/activite-test-anonymisee.csv" download>activité</a>
+                Test CTO · exports LGO anonymisés réels :{' '}
+                <a href="/test-data/activite-test-anonymisee.csv" download>mars</a>
+                {' · '}
+                <a href="/test-data/activite-test-anonymisee-2026-04.csv" download>avril</a>
+                {' · '}
+                <a href="/test-data/activite-test-anonymisee-2026-05.csv" download>mai</a>
                 {' · '}
                 <a href="/test-data/top-produits-test-anonymise.csv" download>top produits</a>
                 {' · '}
-                <a href="/test-data/stock-test-anonymise.csv" download>stock</a>
+                <a href="/test-data/stock-test-anonymise.csv" download>stock test</a>
                 <br />
                 <small>
-                  Contrôle attendu : CA 62 403 € · CA HT 59 350 € · marge 16 570 € / 27,9 % ·
-                  12 jours · CA moyen/jour 5 200 € · évolution +5,3 % · stock 3 555 €.
+                  Mars attendu : CA TTC 112 311 € · CA HT 108 054 € · marge 31 251 € / 28,9 % ·
+                  26 jours · CA moyen/jour 4 320 €. Pour tester l’historique, créez ensuite un dossier avril puis mai.
                 </small>
               </p>
             )}
