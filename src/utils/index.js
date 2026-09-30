@@ -760,7 +760,11 @@ function buildLocalSynthesis(data) {
   } else {
     parts.push("La marge n'est pas calculable avec les colonnes fournies.")
   }
-  if (Number.isFinite(data.stock_eur)) parts.push(`Le stock valorisé fourni représente ${eur(data.stock_eur)}.`)
+  if (Number.isFinite(data.stock_eur)) {
+    parts.push(
+      `Le stock valorisé fourni représente ${eur(data.stock_eur)}${data.stock_date ? ` au ${data.stock_date}` : ''}.`
+    )
+  }
   else parts.push("Aucun stock valorisé exploitable n'a été fourni.")
 
   if (Number.isFinite(data.dormants)) {
@@ -807,6 +811,7 @@ function emptyRealData() {
     marge_pct: null,
     marge_eur: null,
     stock_eur: null,
+    stock_date: null,
     stock_references: null,
     dormants: null,
     dormant_stock_eur: null,
@@ -1115,6 +1120,14 @@ export function buildFromFiles(filesMap, columnMappings = {}) {
     const stockCols = { ...detectColumns(stockRows), ...(columnMappings.stock || {}) }
     data.detectedColumns.stock = stockCols
 
+    if (stockCols.date) {
+      const stockDates = stockRows
+        .map((row) => parseSaleDate(row[stockCols.date]))
+        .filter(Boolean)
+        .sort((a, b) => b - a)
+      if (stockDates.length) data.stock_date = formatFrenchDate(stockDates[0])
+    }
+
     if (stockCols.stockValeur) {
       let stockTotal = 0
       stockRows.forEach((row) => {
@@ -1237,7 +1250,7 @@ export function buildFromFiles(filesMap, columnMappings = {}) {
     data.alerts.push({
       type: 'b',
       title: `Stock valorisé : ${eur(data.stock_eur)}`,
-      body: "Valeur calculée uniquement à partir de l'export stock fourni. La rotation n'est pas calculée sans base d'achats/COGS compatible.",
+      body: `Valeur calculée uniquement à partir de l'export stock fourni${data.stock_date ? ` (photographie au ${data.stock_date})` : ''}. La rotation n'est pas calculée sans base d'achats/COGS compatible.`,
     })
   }
   if (data.dormants !== null) {
