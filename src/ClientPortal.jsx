@@ -36,6 +36,8 @@ export function ClientPortal({
   history = [],
   historyComparison = null,
   actions = [],
+  actionSaving = false,
+  onCreateAction,
   loading,
   error,
   onRefresh,
@@ -48,6 +50,27 @@ export function ClientPortal({
   const openActions = actions.filter(
     (action) => action?.status !== 'done' && action?.status !== 'canceled'
   );
+  const [newAction, setNewAction] = useState({
+    title: '',
+    ownerName: '',
+    dueDate: '',
+    priority: 'medium',
+  });
+  const canWrite = account?.billing?.accessMode !== 'read_only';
+
+  const submitAction = async (event) => {
+    event.preventDefault();
+    if (!onCreateAction || !newAction.title.trim() || actionSaving || !canWrite) return;
+    const ok = await onCreateAction({
+      ...newAction,
+      title: newAction.title.trim(),
+      ownerName: newAction.ownerName.trim(),
+      status: 'todo',
+    });
+    if (ok) {
+      setNewAction({ title: '', ownerName: '', dueDate: '', priority: 'medium' });
+    }
+  };
 
   return (
     <div className="cp-page">
@@ -76,6 +99,67 @@ export function ClientPortal({
 
         {error && <div className="cp-error">{error}</div>}
         {loading && <div className="cp-loading">Chargement de vos dossiers...</div>}
+
+        {!loading && (
+          <article className="cp-card">
+            <div className="cp-card-top">
+              <div>
+                <span className="cp-status draft">ACTION</span>
+                <h3>Transformer une décision en action</h3>
+                <p>Une action claire, un responsable, une échéance. Le suivi viendra ensuite.</p>
+              </div>
+            </div>
+
+            {canWrite ? (
+              <form className="settings-grid" onSubmit={submitAction}>
+                <label className="full">
+                  <span>Action *</span>
+                  <input
+                    value={newAction.title}
+                    onChange={(e) => setNewAction((prev) => ({ ...prev, title: e.target.value }))}
+                    placeholder="Ex. Réduire le stock dormant de 5 000 €"
+                  />
+                </label>
+                <label>
+                  <span>Responsable</span>
+                  <input
+                    value={newAction.ownerName}
+                    onChange={(e) => setNewAction((prev) => ({ ...prev, ownerName: e.target.value }))}
+                    placeholder="Ex. Claire"
+                  />
+                </label>
+                <label>
+                  <span>Échéance</span>
+                  <input
+                    type="date"
+                    value={newAction.dueDate}
+                    onChange={(e) => setNewAction((prev) => ({ ...prev, dueDate: e.target.value }))}
+                  />
+                </label>
+                <label>
+                  <span>Priorité</span>
+                  <select
+                    value={newAction.priority}
+                    onChange={(e) => setNewAction((prev) => ({ ...prev, priority: e.target.value }))}
+                  >
+                    <option value="high">Haute</option>
+                    <option value="medium">Normale</option>
+                    <option value="low">Basse</option>
+                  </select>
+                </label>
+                <div className="settings-actions">
+                  <button className="primary" type="submit" disabled={actionSaving || !newAction.title.trim()}>
+                    {actionSaving ? 'Enregistrement...' : 'Ajouter au plan d’action'}
+                  </button>
+                </div>
+              </form>
+            ) : (
+              <div className="cp-wait">
+                Votre espace est en lecture seule. Les actions existantes restent visibles, mais un accès actif est requis pour en créer une nouvelle.
+              </div>
+            )}
+          </article>
+        )}
 
         {!loading && openActions.length > 0 && (
           <article className="cp-card">
