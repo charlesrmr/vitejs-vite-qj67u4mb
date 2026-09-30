@@ -51,6 +51,18 @@ PILOT_MAX_FOUNDERS=10
 
 Si cette variable n'est pas définie, la limite est de 10 pharmacies ayant réellement envoyé au moins un dossier. La simple création d'un compte ne consomme pas de place.
 
+Le mode des **nouveaux comptes uniquement** peut être activé au lancement commercial :
+
+```
+PILOT_ACCOUNT_MODE=pilot
+PILOT_TRIAL_DAYS=30
+```
+
+- `pilot` (valeur par défaut) conserve le fonctionnement fondateur actuel ;
+- `trial` crée les nouveaux comptes avec un essai complet de la durée indiquée ;
+- changer cette variable ne modifie pas les comptes existants ;
+- ne passer à `trial` qu'une fois le paiement et le parcours de conversion réellement disponibles.
+
 Variables optionnelles pour les notifications transactionnelles :
 
 ```
