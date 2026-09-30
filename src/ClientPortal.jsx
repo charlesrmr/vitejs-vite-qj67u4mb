@@ -43,8 +43,15 @@ function RecruitmentSimulator({ history = [] }) {
     }
   }, [latestMarginPct, marginPct]);
 
-  const cost = Number(String(monthlyCost).replace(',', '.'));
-  const margin = Number(String(marginPct).replace(',', '.'));
+  const parseInputNumber = (value) => {
+    const normalized = String(value || '')
+      .replace(/[\s\u00a0\u202f]/g, '')
+      .replace(',', '.')
+      .replace(/[^0-9.-]/g, '');
+    return normalized ? Number(normalized) : NaN;
+  };
+  const cost = parseInputNumber(monthlyCost);
+  const margin = parseInputNumber(marginPct);
   const valid = Number.isFinite(cost) && cost > 0 && Number.isFinite(margin) && margin > 0 && margin < 100;
   const monthlyRevenueNeeded = valid ? cost / (margin / 100) : null;
   const annualCost = valid ? cost * 12 : null;
