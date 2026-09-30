@@ -32,6 +32,17 @@ export default async (req) => {
     ...passwordData,
     consentAcceptedAt: createdAt,
     privacyNoticeVersion: 'pilote-2026-09',
+    billing: {
+      plan: 'pilot',
+      status: 'pilot',
+      provider: null,
+      customerId: null,
+      subscriptionId: null,
+      priceId: null,
+      currentPeriodEnd: null,
+      cancelAtPeriodEnd: false,
+      updatedAt: createdAt,
+    },
     createdAt,
     updatedAt: createdAt,
   };
