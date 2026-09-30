@@ -25,8 +25,10 @@ export default async (req) => {
   if (!dossier.files?.ventes?.complete) {
     return json({ error: 'Le fichier activité / ventes doit être enregistré avant l’envoi.' }, 400);
   }
-  if (body?.patientDataConfirmed !== true) {
-    return json({ error: 'Confirmez que les fichiers ne contiennent aucune donnée nominative patient.' }, 400);
+  if (body?.patientDataConfirmed !== true || !dossier.uploadPrivacyConfirmedAt) {
+    return json({
+      error: 'La confirmation de confidentialité doit être enregistrée avant l’envoi du dossier.',
+    }, 400);
   }
 
   const context = String(process.env.CONTEXT || '').toLowerCase();
