@@ -4,6 +4,7 @@ import pdfWorker from 'pdfjs-dist/build/pdf.worker.min.mjs?url'
 import { DEMO } from '../data/demo'
 import { parseKnownPdfInventory } from './pdfInventory'
 import { parseKnownPdfActivity, parseKnownPdfAccounting } from './pdfActivity'
+import { inferNamedPdfProductRankingMeta } from './pdfProducts'
 
 // ── FORMATTERS ───────────────────────────────────────────────────
 export const eur = (n) => {
@@ -304,29 +305,11 @@ async function parsePdfFile(file) {
     )
   }
 
-  const pdfText = normalizeLoose(
-    matrix.flatMap((row) => row || []).join(' ')
-  )
   const pdfColumns = detectColumns(rows)
-  const positionColumn = Object.keys(rows[0] || {}).find((column) =>
-    ['position', 'pos', 'rang', 'rank'].includes(normalizeHeader(column))
-  )
-  const isNamedProductRanking =
-    (
-      pdfText.includes('produits les plus delivres') ||
-      pdfText.includes('meilleures ventes produits') ||
-      pdfText.includes('hit parade')
-    ) &&
-    Boolean(positionColumn && pdfColumns.produit && pdfColumns.quantite)
-
-  if (isNamedProductRanking) {
+  const productRankingMeta = inferNamedPdfProductRankingMeta(matrix, rows, pdfColumns)
+  if (productRankingMeta) {
     Object.defineProperty(rows, '__pilotMeta', {
-      value: {
-        reportType: 'top-products',
-        reportMetric: 'quantity',
-        periodStart: null,
-        periodEnd: null,
-      },
+      value: productRankingMeta,
       enumerable: false,
     })
   }
