@@ -225,7 +225,7 @@ export async function buildReviewedPdf(dossier) {
     const kpis = [
       ['CA', money(analysis.ca)],
       ['Marge', percent(analysis.marge_pct)],
-      ['Stock', money(analysis.stock_eur)],
+      [analysis.stock_date ? `Stock au ${analysis.stock_date}` : 'Stock', money(analysis.stock_eur)],
       ['Stock sans vente', Number.isFinite(analysis.dormant_stock_eur) ? money(analysis.dormant_stock_eur) : (Number.isFinite(analysis.dormants) ? `${analysis.dormants} refs` : 'N/D')],
     ];
     const gap = 8;
