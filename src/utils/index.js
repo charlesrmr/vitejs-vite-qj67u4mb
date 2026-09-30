@@ -304,6 +304,33 @@ async function parsePdfFile(file) {
     )
   }
 
+  const pdfText = normalizeLoose(
+    matrix.flatMap((row) => row || []).join(' ')
+  )
+  const pdfColumns = detectColumns(rows)
+  const positionColumn = Object.keys(rows[0] || {}).find((column) =>
+    ['position', 'pos', 'rang', 'rank'].includes(normalizeHeader(column))
+  )
+  const isNamedProductRanking =
+    (
+      pdfText.includes('produits les plus delivres') ||
+      pdfText.includes('meilleures ventes produits') ||
+      pdfText.includes('hit parade')
+    ) &&
+    Boolean(positionColumn && pdfColumns.produit && pdfColumns.quantite)
+
+  if (isNamedProductRanking) {
+    Object.defineProperty(rows, '__pilotMeta', {
+      value: {
+        reportType: 'top-products',
+        reportMetric: 'quantity',
+        periodStart: null,
+        periodEnd: null,
+      },
+      enumerable: false,
+    })
+  }
+
   return rows
 }
 
