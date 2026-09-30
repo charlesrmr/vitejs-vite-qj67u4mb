@@ -3,6 +3,7 @@ import * as XLSX from 'xlsx'
 import pdfWorker from 'pdfjs-dist/build/pdf.worker.min.mjs?url'
 import { DEMO } from '../data/demo'
 import { parseKnownPdfInventory } from './pdfInventory'
+import { parseKnownPdfActivity, parseKnownPdfAccounting } from './pdfActivity'
 
 // ── FORMATTERS ───────────────────────────────────────────────────
 export const eur = (n) => {
@@ -266,87 +267,6 @@ function pdfItemsToMatrix(items) {
       return cells.map((cell) => cell.text)
     })
     .filter((row) => row.some((cell) => String(cell || '').trim()))
-}
-
-function parseKnownPdfActivity(matrix) {
-  const lines = (matrix || [])
-    .map((row) =>
-      (row || [])
-        .map((cell) => String(cell || '').trim())
-        .filter(Boolean)
-        .join(' ')
-        .replace(/\s+/g, ' ')
-        .trim()
-    )
-    .filter(Boolean)
-
-  const fullText = lines.join('\n')
-  if (!normalizeLoose(fullText).includes('synthese d activite')) return []
-
-  const sectionIndex = lines.findIndex((line) =>
-    normalizeLoose(line).includes('synthese par type de vente')
-  )
-  const section = sectionIndex >= 0 ? lines.slice(sectionIndex, sectionIndex + 12) : lines
-  const totalLine = section.find((line) => /^total\s*:/i.test(line))
-  if (!totalLine) return []
-
-  const amounts = totalLine.match(/-?\d[\d ]*[,.]\d{2}\b/g) || []
-  if (!amounts.length) return []
-
-  const periodMatch = fullText.match(
-    /p[ée]riode\s+s[ée]lectionn[ée]e\s+du\s+(\d{1,2}\/\d{1,2}\/\d{4})(?:\s+\d{1,2}:\d{2}:\d{2})?\s+au\s+(\d{1,2}\/\d{1,2}\/\d{4})/i
-  )
-
-  const rows = [{ 'CA TTC': amounts[0] }]
-  Object.defineProperty(rows, '__pilotMeta', {
-    value: {
-      reportType: 'activity-summary',
-      reportMetric: null,
-      caBasis: 'gross_ttc',
-      periodStart: periodMatch?.[1] || null,
-      periodEnd: periodMatch?.[2] || null,
-    },
-    enumerable: false,
-  })
-  return rows
-}
-
-function parseKnownPdfAccounting(matrix) {
-  const lines = (matrix || [])
-    .map((row) =>
-      (row || [])
-        .map((cell) => String(cell || '').trim())
-        .filter(Boolean)
-        .join(' ')
-        .replace(/\s+/g, ' ')
-        .trim()
-    )
-    .filter(Boolean)
-
-  const fullText = lines.join('\n')
-  if (!normalizeLoose(fullText).includes('synthese comptable')) return []
-
-  const caNetLines = lines.filter((line) => /^ca\s+net\b/i.test(line))
-  const caNetLine = caNetLines[caNetLines.length - 1] || ''
-  const amounts = caNetLine.match(/-?\d[\d ]*[,.]\d{2}\b/g) || []
-  if (!amounts.length) return []
-
-  const periodMatch = fullText.match(
-    /p[ée]riode\s+s[ée]lectionn[ée]e\s+du\s+(\d{1,2}\/\d{1,2}\/\d{4})(?:\s+\d{1,2}:\d{2}:\d{2})?\s+au\s+(\d{1,2}\/\d{1,2}\/\d{4})/i
-  )
-
-  const rows = [{ 'CA TTC': amounts[0] }]
-  Object.defineProperty(rows, '__pilotMeta', {
-    value: {
-      reportType: 'accounting-summary',
-      reportMetric: null,
-      caBasis: 'net_ttc',
-      periodStart: periodMatch?.[1] || null,
-      periodEnd: periodMatch?.[2] || null,
-    },
-    enumerable: false,
-  })
-  return rows
 }
 
 async function parsePdfFile(file) {
