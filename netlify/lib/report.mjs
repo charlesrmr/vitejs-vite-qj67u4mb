@@ -223,7 +223,7 @@ export async function buildReviewedPdf(dossier) {
   // KPI strip
   {
     const kpis = [
-      ['CA', money(analysis.ca)],
+      [analysis.ca_basis === 'gross_ttc' ? 'CA brut TTC' : analysis.ca_basis === 'net_ttc' ? 'CA net TTC' : 'CA', money(analysis.ca)],
       ['Marge', percent(analysis.marge_pct)],
       [analysis.stock_date ? `Stock au ${analysis.stock_date}` : 'Stock', money(analysis.stock_eur)],
       ['Stock sans vente', Number.isFinite(analysis.dormant_stock_eur) ? money(analysis.dormant_stock_eur) : (Number.isFinite(analysis.dormants) ? `${analysis.dormants} refs` : 'N/D')],
