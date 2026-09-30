@@ -38,6 +38,7 @@ export function ClientPortal({
   actions = [],
   actionSaving = false,
   onCreateAction,
+  onUpdateActionStatus,
   loading,
   error,
   onRefresh,
@@ -189,6 +190,28 @@ export function ClientPortal({
                         <strong>{action.priority === 'high' ? 'Priorité haute' : action.priority === 'low' ? 'Priorité basse' : 'Priorité normale'}</strong>
                       </div>
                       <p>{meta.join(' · ')}</p>
+                      {canWrite && onUpdateActionStatus && (
+                        <div className="cp-head-actions">
+                          {action.status === 'todo' && (
+                            <button
+                              type="button"
+                              disabled={actionSaving}
+                              onClick={() => onUpdateActionStatus(action, 'in_progress')}
+                            >
+                              Démarrer
+                            </button>
+                          )}
+                          {action.status !== 'done' && (
+                            <button
+                              type="button"
+                              disabled={actionSaving}
+                              onClick={() => onUpdateActionStatus(action, 'done')}
+                            >
+                              Terminer
+                            </button>
+                          )}
+                        </div>
+                      )}
                     </div>
                   </div>
                 );
