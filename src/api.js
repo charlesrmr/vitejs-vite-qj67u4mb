@@ -68,6 +68,26 @@ export async function getDossier(token, dossierId) {
   return apiRequest(`/api/dossier?id=${encodeURIComponent(dossierId)}`, { token });
 }
 
+export async function listPharmacyActions(token) {
+  return apiRequest('/api/actions', { token });
+}
+
+export async function createPharmacyAction(token, action) {
+  return apiRequest('/api/actions', {
+    method: 'POST',
+    token,
+    body: { action },
+  });
+}
+
+export async function updatePharmacyAction(token, id, action) {
+  return apiRequest('/api/actions', {
+    method: 'POST',
+    token,
+    body: { id, action },
+  });
+}
+
 export async function submitDossier(token, dossierId, analysis, patientDataConfirmed) {
   return apiRequest('/api/dossier/submit', {
     method: 'POST',
