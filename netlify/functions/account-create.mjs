@@ -27,6 +27,7 @@ export default async (req) => {
   const createdAt = nowIso();
   const account = {
     id: newId('acct'),
+    pharmacyId: newId('pharm'),
     key: accountKey,
     profile,
     ...passwordData,
