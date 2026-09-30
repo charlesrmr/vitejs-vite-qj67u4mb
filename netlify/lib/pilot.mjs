@@ -437,6 +437,11 @@ export function buildHistorySnapshot(dossier) {
       salesColumns.caHt ? `ht:${String(salesColumns.caHt).trim().toLowerCase()}` :
       salesColumns.ca ? `ca:${String(salesColumns.ca).trim().toLowerCase()}` :
       null);
+  const marginSource = salesColumns.margeEur
+    ? `eur:${String(salesColumns.margeEur).trim().toLowerCase()}|base:${caSource || 'unknown'}`
+    : salesColumns.margePct
+      ? `pct:${String(salesColumns.margePct).trim().toLowerCase()}|base:${caSource || 'unknown'}`
+      : null;
 
   return {
     dossierId: dossier.id,
@@ -452,6 +457,7 @@ export function buildHistorySnapshot(dossier) {
     dailyCaAvg: finite(analysis.activity?.dailyCaAvg),
     marginPct: finite(analysis.marge_pct),
     marginEur: finite(analysis.marge_eur),
+    marginSource,
     stockEur: finite(analysis.stock_eur),
     stockDate: analysis.stock_date || null,
     submittedAt: dossier.submittedAt || null,
@@ -523,13 +529,21 @@ export function buildHistoryComparison(snapshots = []) {
     }
   }
 
-  const margin = Number.isFinite(previous.marginPct) && Number.isFinite(latest.marginPct)
-    ? {
-        previous: previous.marginPct,
-        latest: latest.marginPct,
-        deltaPoints: Math.round((latest.marginPct - previous.marginPct) * 10) / 10,
-      }
-    : null;
+  const sameMarginSource = Boolean(
+    previous.marginSource &&
+    latest.marginSource &&
+    previous.marginSource === latest.marginSource
+  );
+  const margin =
+    sameMarginSource &&
+    Number.isFinite(previous.marginPct) &&
+    Number.isFinite(latest.marginPct)
+      ? {
+          previous: previous.marginPct,
+          latest: latest.marginPct,
+          deltaPoints: Math.round((latest.marginPct - previous.marginPct) * 10) / 10,
+        }
+      : null;
 
   const stock = Number.isFinite(previous.stockEur) && Number.isFinite(latest.stockEur)
     ? {
