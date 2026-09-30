@@ -1200,6 +1200,11 @@ export function buildFromFiles(filesMap, columnMappings = {}) {
     )
 
     const stockKeyColumn = stockCols.cip || stockCols.produit
+    if (!stockKeyColumn && Number.isFinite(data.stock_eur)) {
+      data.qualityWarnings.push(
+        "Dormance non calculée : l'état de stock fourni est agrégé et ne contient pas de CIP/EAN ou de désignation par référence. La valeur globale du stock reste exploitable."
+      )
+    }
     if (stockKeyColumn && !salesKeys.size) {
       data.qualityWarnings.push(
         "Dormance non calculée : l'export d'activité ne contient pas de références produit exploitables. Un Top produits, même fourni, n'est pas considéré comme un historique exhaustif des ventes."
