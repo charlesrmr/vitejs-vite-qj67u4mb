@@ -88,6 +88,14 @@ export async function updatePharmacyAction(token, id, action) {
   });
 }
 
+export async function removePharmacyAction(token, id) {
+  return apiRequest('/api/actions', {
+    method: 'DELETE',
+    token,
+    body: { id },
+  });
+}
+
 export async function submitDossier(token, dossierId, analysis, patientDataConfirmed) {
   return apiRequest('/api/dossier/submit', {
     method: 'POST',
