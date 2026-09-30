@@ -38,6 +38,7 @@ import {
   submitDossier,
   updateAccount,
   updateBillingProfile,
+  updatePharmacyAction,
   uploadAllFiles,
 } from './api';
 import AdminPanel from './AdminPanel';
@@ -1065,6 +1066,25 @@ export default function App() {
     }
   };
 
+  const updateClientActionStatus = async (action, status) => {
+    if (!sessionToken || !action?.id) return false;
+    setActionSaving(true);
+    setPortalError('');
+    try {
+      await updatePharmacyAction(sessionToken, action.id, {
+        ...action,
+        status,
+      });
+      await loadClientActions(sessionToken);
+      return true;
+    } catch (err) {
+      setPortalError(err?.message || 'Impossible de mettre à jour cette action.');
+      return false;
+    } finally {
+      setActionSaving(false);
+    }
+  };
+
   const refreshPortal = async (token = sessionToken) => {
     if (!token) return;
     setPortalLoading(true);
@@ -1552,6 +1572,7 @@ export default function App() {
           actions={clientActions}
           actionSaving={actionSaving}
           onCreateAction={createClientAction}
+          onUpdateActionStatus={updateClientActionStatus}
           loading={portalLoading}
           error={portalError}
           onRefresh={() => refreshPortal(sessionToken)}
