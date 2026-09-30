@@ -865,6 +865,7 @@ export default function App() {
     }
     setError('');
     setFiles((p) => ({ ...p, [k]: f }));
+    setPatientDataConfirmed(false);
     setFilesPersisted(false);
     setUploadProgress(null);
   };
@@ -912,6 +913,10 @@ export default function App() {
 
       if (!files.ventes) {
         setError('Ajoutez un export activité / ventes avant de continuer.');
+        return;
+      }
+      if (!patientDataConfirmed) {
+        setError('Confirmez que les fichiers ne contiennent aucune donnée nominative patient avant de les envoyer.');
         return;
       }
 
@@ -1623,6 +1628,17 @@ export default function App() {
               Le fichier activité suffit pour démarrer —{' '}
               <b>produits et stock enrichissent le diagnostic</b>
             </p>
+            <label className="review-privacy-check">
+              <input
+                type="checkbox"
+                checked={patientDataConfirmed}
+                onChange={(e) => setPatientDataConfirmed(e.target.checked)}
+              />
+              <span>
+                Je confirme que les fichiers que je vais envoyer ne contiennent aucune donnée nominative patient
+                (nom, prénom, coordonnées, ordonnance ou historique individuel).
+              </span>
+            </label>
             {uploadProgress && (
               <div className="upload-progress">
                 <div><span>Envoi sécurisé</span><b>{uploadProgress.fileName}</b></div>
@@ -1631,7 +1647,7 @@ export default function App() {
               </div>
             )}
             {error && <div className="up-error">{error}</div>}
-            <button className="btn-go" onClick={() => run(false)} disabled={!files.ventes}>
+            <button className="btn-go" onClick={() => run(false)} disabled={!files.ventes || !patientDataConfirmed}>
               Préparer ma pré-analyse
             </button>
             <button className="btn-demo" onClick={() => run(true)}>
@@ -1787,6 +1803,10 @@ export default function App() {
               <div className="review-success">
                 <b>Dossier envoyé pour relecture.</b>
                 <span>La pré-analyse et les exports sont maintenant enregistrés côté serveur.</span>
+              </div>
+            ) : patientDataConfirmed ? (
+              <div className="review-privacy-check">
+                <span>Confidentialité confirmée avant l’envoi des fichiers : aucune donnée nominative patient.</span>
               </div>
             ) : (
               <label className="review-privacy-check">
