@@ -231,6 +231,19 @@ export function publicBilling(account) {
   };
 }
 
+export function requireWriteAccess(account) {
+  const access = getBillingAccess(account);
+  if (access.mode === 'full') return { ok: true };
+
+  return {
+    error: json({
+      error: "Votre accès Pilot'Officine est actuellement en lecture seule. Vos anciens dossiers restent consultables et téléchargeables, mais un accès actif est nécessaire pour créer ou envoyer une nouvelle analyse.",
+      code: 'BILLING_READ_ONLY',
+      billing: publicBilling(account),
+    }, 402),
+  };
+}
+
 export function getPharmacyId(account) {
   return String(account?.pharmacyId || account?.id || '');
 }
