@@ -1531,6 +1531,7 @@ export default function App() {
           dossiers={clientDossiers}
           history={clientHistory}
           historyComparison={clientHistoryComparison}
+          actions={clientActions}
           loading={portalLoading}
           error={portalError}
           onRefresh={() => refreshPortal(sessionToken)}
