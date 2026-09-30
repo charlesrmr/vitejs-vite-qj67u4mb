@@ -1,7 +1,9 @@
 import {
   STORE,
+  actionKey,
   dossierKey,
   getOwnedDossier,
+  getPharmacyId,
   json,
   requireUser,
 } from '../lib/pilot.mjs';
@@ -23,6 +25,23 @@ export default async (req) => {
   });
   for (const blob of storedFiles || []) {
     await STORE.files(req).delete(blob.key);
+  }
+
+  const pharmacyId = String(dossier.pharmacyId || getPharmacyId(auth.account) || '');
+  if (pharmacyId) {
+    const { blobs: actionBlobs } = await STORE.actions(req).list({
+      prefix: `pharmacy/${pharmacyId}/action/`,
+    });
+    for (const blob of actionBlobs || []) {
+      const action = await STORE.actions(req).get(blob.key, {
+        type: 'json',
+        consistency: 'strong',
+      });
+      if (action?.sourceDossierId !== dossier.id) continue;
+      action.sourceDossierId = null;
+      action.updatedAt = new Date().toISOString();
+      await STORE.actions(req).setJSON(actionKey(pharmacyId, action.id), action);
+    }
   }
 
   await STORE.dossiers(req).delete(dossierKey(dossier.id));
