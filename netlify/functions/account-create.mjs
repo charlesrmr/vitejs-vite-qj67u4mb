@@ -25,6 +25,16 @@ export default async (req) => {
 
   const passwordData = hashPassword(password);
   const createdAt = nowIso();
+  const accountMode = String(process.env.PILOT_ACCOUNT_MODE || 'pilot').toLowerCase() === 'trial'
+    ? 'trial'
+    : 'pilot';
+  const configuredTrialDays = Number(process.env.PILOT_TRIAL_DAYS || 30);
+  const trialDays = Number.isFinite(configuredTrialDays)
+    ? Math.min(90, Math.max(1, Math.floor(configuredTrialDays)))
+    : 30;
+  const trialEndsAt = accountMode === 'trial'
+    ? new Date(Date.parse(createdAt) + trialDays * 86400000).toISOString()
+    : null;
   const account = {
     id: newId('acct'),
     pharmacyId: newId('pharm'),
@@ -44,13 +54,15 @@ export default async (req) => {
       country: 'FR',
     },
     billing: {
-      plan: 'pilot',
-      status: 'pilot',
+      plan: accountMode === 'trial' ? 'standard' : 'pilot',
+      status: accountMode === 'trial' ? 'trialing' : 'pilot',
       provider: null,
       customerId: null,
       subscriptionId: null,
       priceId: null,
+      trialEndsAt,
       currentPeriodEnd: null,
+      graceEndsAt: null,
       cancelAtPeriodEnd: false,
       updatedAt: createdAt,
     },
