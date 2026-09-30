@@ -245,6 +245,9 @@ export function publicAccount(account) {
 export function cleanAnalysis(input = {}) {
   const txt = (value, max = 1000) => String(value ?? '').trim().slice(0, max);
   const finite = (value) => Number.isFinite(value) ? Number(value) : null;
+  const isoDate = (value) => /^\d{4}-\d{2}-\d{2}$/.test(String(value || ''))
+    ? String(value)
+    : null;
   const alerts = Array.isArray(input.alerts)
     ? input.alerts.slice(0, 30).map((item) => ({
         type: ['r', 'a', 'g', 'b'].includes(item?.type) ? item.type : 'b',
@@ -290,6 +293,8 @@ export function cleanAnalysis(input = {}) {
   return {
     officine: txt(input.officine, 200) || null,
     periode: txt(input.periode, 200) || null,
+    period_start: isoDate(input.period_start),
+    period_end: isoDate(input.period_end),
     lgo: txt(input.lgo, 100) || null,
     ca: finite(input.ca),
     ca_ht: finite(input.ca_ht),
