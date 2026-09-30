@@ -2,6 +2,7 @@ import { buildReviewedPdf } from '../lib/report.mjs';
 import {
   STORE,
   cleanAnalysis,
+  getBillingAccess,
   json,
   newId,
   nowIso,
@@ -96,6 +97,37 @@ export default async (req) => {
   }
 
   try {
+    const now = Date.now();
+    const future = new Date(now + 24 * 3600 * 1000).toISOString();
+    const past = new Date(now - 24 * 3600 * 1000).toISOString();
+
+    const pilotAccess = getBillingAccess({ billing: { status: 'pilot' } }, now);
+    const activeAccess = getBillingAccess({ billing: { status: 'active' } }, now);
+    const trialAccess = getBillingAccess({ billing: { status: 'trialing', trialEndsAt: future } }, now);
+    const expiredTrial = getBillingAccess({ billing: { status: 'trialing', trialEndsAt: past } }, now);
+    const graceAccess = getBillingAccess({ billing: { status: 'past_due', graceEndsAt: future } }, now);
+    const overdueAccess = getBillingAccess({ billing: { status: 'past_due', graceEndsAt: past } }, now);
+
+    const billingAccessOk =
+      pilotAccess.mode === 'full' &&
+      activeAccess.mode === 'full' &&
+      trialAccess.mode === 'full' &&
+      expiredTrial.mode === 'read_only' &&
+      graceAccess.mode === 'full' &&
+      overdueAccess.mode === 'read_only';
+
+    add(
+      'Droits abonnement',
+      billingAccessOk,
+      billingAccessOk
+        ? 'Pilote, essai, actif et délai de grâce correctement distingués'
+        : 'La logique full / lecture seule est incohérente'
+    );
+  } catch (error) {
+    add('Droits abonnement', false, error?.message || 'Échec du contrôle');
+  }
+
+  try {
     const publicView = publicDossier({
       id: 'dos_public_boundary',
       accountId: 'acct_secret',
@@ -179,7 +211,7 @@ export default async (req) => {
   add('URL publique', Boolean(process.env.PILOT_PUBLIC_URL), process.env.PILOT_PUBLIC_URL ? 'Configurée' : 'À configurer pour les liens email');
 
   const critical = checks.filter((c) =>
-    ['Stockage privé', 'Génération PDF', 'Persistance classement produits', 'Frontière données publiques', 'Secret administrateur'].includes(c.name)
+    ['Stockage privé', 'Génération PDF', 'Persistance classement produits', 'Droits abonnement', 'Frontière données publiques', 'Secret administrateur'].includes(c.name)
   );
   const ok = critical.every((c) => c.ok);
 
