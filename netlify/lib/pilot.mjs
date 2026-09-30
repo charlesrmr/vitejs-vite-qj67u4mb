@@ -176,10 +176,21 @@ export async function saveDossier(dossier, req) {
   return dossier;
 }
 
+export function publicBilling(account) {
+  const billing = account?.billing || {};
+  return {
+    plan: String(billing.plan || 'pilot'),
+    status: String(billing.status || 'pilot'),
+    currentPeriodEnd: billing.currentPeriodEnd || null,
+    cancelAtPeriodEnd: Boolean(billing.cancelAtPeriodEnd),
+  };
+}
+
 export function publicAccount(account) {
   return {
     id: account.id,
     profile: account.profile,
+    billing: publicBilling(account),
     emailVerifiedAt: account.emailVerifiedAt || null,
     createdAt: account.createdAt,
   };
