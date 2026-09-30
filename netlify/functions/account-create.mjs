@@ -24,13 +24,16 @@ export default async (req) => {
   if (existing) return json({ error: 'Un compte existe déjà avec cet email.' }, 409);
 
   const passwordData = hashPassword(password);
+  const createdAt = nowIso();
   const account = {
     id: newId('acct'),
     key: accountKey,
     profile,
     ...passwordData,
-    createdAt: nowIso(),
-    updatedAt: nowIso(),
+    consentAcceptedAt: createdAt,
+    privacyNoticeVersion: 'pilote-2026-09',
+    createdAt,
+    updatedAt: createdAt,
   };
   const write = await store.setJSON(accountKey, account, { onlyIfNew: true });
   if (write?.modified === false) {
