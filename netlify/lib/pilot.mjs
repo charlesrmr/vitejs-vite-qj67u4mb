@@ -341,6 +341,57 @@ export function cleanAnalysis(input = {}) {
   };
 }
 
+export function buildHistorySnapshot(dossier) {
+  if (!dossier || dossier.status === 'draft' || !dossier.analysis) return null;
+
+  const analysis = dossier.analysis || {};
+  const isoDay = (value) =>
+    /^\d{4}-\d{2}-\d{2}$/.test(String(value || '')) ? String(value) : null;
+  const finite = (value) => Number.isFinite(value) ? Number(value) : null;
+  const start = isoDay(analysis.period_start);
+  const end = isoDay(analysis.period_end);
+
+  let periodDays = null;
+  if (start && end) {
+    const startMs = Date.parse(`${start}T00:00:00Z`);
+    const endMs = Date.parse(`${end}T00:00:00Z`);
+    if (Number.isFinite(startMs) && Number.isFinite(endMs) && endMs >= startMs) {
+      periodDays = Math.floor((endMs - startMs) / 86400000) + 1;
+    }
+  }
+
+  return {
+    dossierId: dossier.id,
+    status: dossier.status,
+    periodLabel: analysis.periode || null,
+    periodStart: start,
+    periodEnd: end,
+    periodDays,
+    ca: finite(analysis.ca),
+    caBasis: analysis.ca_basis || null,
+    activityDays: finite(analysis.activity?.days),
+    dailyCaAvg: finite(analysis.activity?.dailyCaAvg),
+    marginPct: finite(analysis.marge_pct),
+    marginEur: finite(analysis.marge_eur),
+    stockEur: finite(analysis.stock_eur),
+    stockDate: analysis.stock_date || null,
+    submittedAt: dossier.submittedAt || null,
+    reviewedAt: dossier.reviewedAt || null,
+    updatedAt: dossier.updatedAt || null,
+  };
+}
+
+export function buildHistorySnapshots(dossiers = []) {
+  return (Array.isArray(dossiers) ? dossiers : [])
+    .map(buildHistorySnapshot)
+    .filter(Boolean)
+    .sort((a, b) => {
+      const aKey = a.periodEnd || a.submittedAt || a.updatedAt || '';
+      const bKey = b.periodEnd || b.submittedAt || b.updatedAt || '';
+      return String(aKey).localeCompare(String(bKey));
+    });
+}
+
 export function sanitizeReview(input = {}) {
   const txt = (v, max = 10000) => String(v || '').trim().slice(0, max);
   const arr = (v, max = 5) =>
