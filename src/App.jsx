@@ -35,6 +35,7 @@ import {
   saveSessionToken,
   submitDossier,
   updateAccount,
+  updateBillingProfile,
   uploadAllFiles,
 } from './api';
 import AdminPanel from './AdminPanel';
@@ -1142,6 +1143,22 @@ export default function App() {
     }
   };
 
+  const saveBillingProfile = async (nextBillingProfile) => {
+    if (!sessionToken) return;
+    setSettingsSaving(true);
+    setSettingsError('');
+    setSettingsSuccess('');
+    try {
+      const result = await updateBillingProfile(sessionToken, nextBillingProfile);
+      setAccount(result.account);
+      setSettingsSuccess('Coordonnées de facturation mises à jour.');
+    } catch (err) {
+      setSettingsError(err?.message || 'Impossible de mettre à jour les coordonnées de facturation.');
+    } finally {
+      setSettingsSaving(false);
+    }
+  };
+
   const requestAccountVerification = async () => {
     if (!sessionToken) return;
     setVerificationSaving(true);
@@ -1502,6 +1519,7 @@ export default function App() {
             setStep('portal');
           }}
           onSaveProfile={saveAccountProfile}
+          onSaveBillingProfile={saveBillingProfile}
           onChangePassword={changeAccountPassword}
           onDeleteAccount={deleteClientAccount}
           onRequestVerification={requestAccountVerification}
