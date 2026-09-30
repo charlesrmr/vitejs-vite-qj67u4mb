@@ -66,6 +66,7 @@ export default async (req) => {
   try {
     const cleaned = cleanAnalysis({
       product_ranking_mode: 'margin',
+      ca_basis: 'gross_ttc',
       stock_date: '21/06/2026',
       top10: [{
         nom: 'Produit test',
@@ -80,11 +81,13 @@ export default async (req) => {
       'Persistance classement produits',
       cleaned.product_ranking_mode === 'margin' &&
         product?.marge_eur === 25 &&
+        cleaned.ca_basis === 'gross_ttc' &&
         cleaned.stock_date === '21/06/2026',
       cleaned.product_ranking_mode === 'margin' &&
         product?.marge_eur === 25 &&
+        cleaned.ca_basis === 'gross_ttc' &&
         cleaned.stock_date === '21/06/2026'
-        ? 'Mode de classement, marge € et date stock conservés'
+        ? 'Mode de classement, marge €, base CA et date stock conservés'
         : 'Données d’analyse perdues au nettoyage serveur'
     );
   } catch (error) {
