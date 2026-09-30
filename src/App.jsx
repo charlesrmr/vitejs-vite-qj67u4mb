@@ -1764,6 +1764,24 @@ export default function App() {
               </div>
             </div>
 
+            {!reviewSent && account && !account.emailVerifiedAt && (
+              <div className="account-error">
+                <b>Adresse email non vérifiée.</b>{' '}
+                En production, la vérification peut être requise avant l’envoi du dossier.
+                <button
+                  type="button"
+                  onClick={requestAccountVerification}
+                  disabled={verificationSaving}
+                  style={{ marginLeft: 10 }}
+                >
+                  {verificationSaving ? 'Envoi...' : 'Envoyer le lien de vérification'}
+                </button>
+                {verificationResult?.sent && <span> Lien envoyé.</span>}
+                {verificationResult?.deliveryAvailable === false && (
+                  <span> L’envoi automatique n’est pas activé dans cet environnement.</span>
+                )}
+              </div>
+            )}
             {reviewError && <div className="account-error">{reviewError}</div>}
             {reviewSent ? (
               <div className="review-success">
