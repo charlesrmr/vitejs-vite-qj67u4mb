@@ -1564,7 +1564,11 @@ export default function App() {
   return (
     <div className="app">
       <header className="hd">
-        <button className="hd-l hd-home" onClick={reset} aria-label="Retour à l'accueil">
+        <button
+          className="hd-l hd-home"
+          onClick={account && sessionToken ? startAccount : reset}
+          aria-label={account && sessionToken ? 'Retour à mes diagnostics' : "Retour à l'accueil"}
+        >
           <div className="hd-mk">P</div>
           <div className="hd-nm">Pilot'Officine</div>
         </button>
