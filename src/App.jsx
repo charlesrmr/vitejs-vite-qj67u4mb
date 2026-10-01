@@ -1153,6 +1153,34 @@ export default function App() {
     }
   };
 
+  const resumeDraftFromPortal = async (id) => {
+    if (!sessionToken || !id) {
+      setStep('login');
+      return;
+    }
+    setPortalError('');
+    try {
+      const result = await getDossier(sessionToken, id);
+      if (result.dossier?.status !== 'draft') {
+        throw new Error('Ce dossier n’est plus modifiable.');
+      }
+      setDossierId(id);
+      setFiles({ ventes: null, produits: null, stock: null });
+      setParsedFiles({});
+      setMappings({});
+      setFilesPersisted(false);
+      setUploadProgress(null);
+      setPatientDataConfirmed(false);
+      setData(null);
+      setSyn('');
+      setReviewSent(false);
+      setReviewError('');
+      setStep('upload');
+    } catch (err) {
+      setPortalError(err?.message || 'Impossible de reprendre ce brouillon.');
+    }
+  };
+
   const openClientDossier = async (id) => {
     if (!sessionToken) return;
     setPortalLoading(true);
@@ -1622,6 +1650,7 @@ export default function App() {
           error={portalError}
           onRefresh={() => refreshPortal(sessionToken)}
           onNew={startNewFromPortal}
+          onResume={resumeDraftFromPortal}
           onOpen={openClientDossier}
           onDelete={deleteClientDossier}
           onSettings={openSettings}
