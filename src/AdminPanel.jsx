@@ -633,7 +633,7 @@ export default function AdminPanel() {
               <div className="adm-readiness">
                 <div className="adm-envline">
                   <span>{health?.environment || 'environnement inconnu'}</span>
-                  <code>{health?.commitRef ? health.commitRef.slice(0, 8) : 'commit N/D'}</code>
+                  {health?.commitRef && <code>{health.commitRef.slice(0, 8)}</code>}
                 </div>
                 <div className="adm-readiness-head">
                   <b>État du MVP</b>
