@@ -148,6 +148,7 @@ export function ClientPortal({
   });
   const [portalView, setPortalView] = useState('diagnostics');
   const canWrite = account?.billing?.accessMode !== 'read_only';
+  const draftDossier = dossiers.find((dossier) => dossier?.status === 'draft') || null;
 
   const submitAction = async (event) => {
     event.preventDefault();
@@ -212,8 +213,15 @@ export function ClientPortal({
                 <h2>Vos données entrent.<br />La relecture fait la différence.</h2>
                 <p>Chaque dossier conserve les exports déposés, la pré-analyse et le diagnostic final une fois validé.</p>
               </div>
-              <button onClick={onNew} disabled={!canWrite}>
-                {canWrite ? '+ Nouveau diagnostic' : 'Accès en lecture seule'}
+              <button
+                onClick={() => draftDossier && onResume ? onResume(draftDossier.id) : onNew()}
+                disabled={!canWrite}
+              >
+                {canWrite
+                  ? draftDossier
+                    ? 'Reprendre le brouillon'
+                    : '+ Nouveau diagnostic'
+                  : 'Accès en lecture seule'}
               </button>
             </section>
 
