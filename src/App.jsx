@@ -1158,6 +1158,18 @@ export default function App() {
       setStep('login');
       return;
     }
+
+    if (dossierId === id) {
+      if (data) {
+        setStep('dashboard');
+        return;
+      }
+      if (Object.values(files).some(Boolean)) {
+        setStep('upload');
+        return;
+      }
+    }
+
     setPortalError('');
     try {
       const result = await getDossier(sessionToken, id);
