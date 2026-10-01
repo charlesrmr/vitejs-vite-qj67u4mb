@@ -166,7 +166,7 @@ export function requireAdmin(req) {
   if (!configured) {
     return { error: json({ error: 'PILOT_ADMIN_TOKEN non configuré sur Netlify.' }, 503) };
   }
-  const supplied = bearer(req);
+  const supplied = String(req.headers.get('x-pilot-admin-token') || bearer(req) || '').trim();
   const a = Buffer.from(supplied);
   const b = Buffer.from(configured);
   if (!supplied || a.length !== b.length || !timingSafeEqual(a, b)) {
