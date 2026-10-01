@@ -184,7 +184,7 @@ export function ClientPortal({
             className={portalView === 'diagnostics' ? 'active' : ''}
             onClick={() => setPortalView('diagnostics')}
           >
-            Diagnostics
+            Mini-audit
           </button>
           <button
             type="button"
@@ -192,13 +192,6 @@ export function ClientPortal({
             onClick={() => setPortalView('actions')}
           >
             Actions{openActions.length ? ` · ${openActions.length}` : ''}
-          </button>
-          <button
-            type="button"
-            className={portalView === 'simulator' ? 'active' : ''}
-            onClick={() => setPortalView('simulator')}
-          >
-            Simulateur
           </button>
         </nav>
 
@@ -492,16 +485,6 @@ export function ClientPortal({
           </div>
         )}
 
-        {!loading && portalView === 'simulator' && (
-          <div className="cp-view-stack">
-            <section className="cp-view-head">
-              <span>SIMULATEUR</span>
-              <h2>Tester une décision avant de la prendre.</h2>
-              <p>Un outil simple pour transformer une hypothèse de coût en seuil économique.</p>
-            </section>
-            <RecruitmentSimulator history={history} />
-          </div>
-        )}
       </div>
     </div>
   );
