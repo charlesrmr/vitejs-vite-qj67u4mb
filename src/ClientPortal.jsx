@@ -149,6 +149,8 @@ export function ClientPortal({
   const [portalView, setPortalView] = useState('diagnostics');
   const canWrite = account?.billing?.accessMode !== 'read_only';
   const draftDossier = dossiers.find((dossier) => dossier?.status === 'draft') || null;
+  const latestReviewedDossier = dossiers.find((dossier) => dossier?.status === 'reviewed' && dossier?.review) || null;
+  const latestPriorities = (latestReviewedDossier?.review?.priorities || []).slice(0, 3);
 
   const submitAction = async (event) => {
     event.preventDefault();
@@ -223,6 +225,35 @@ export function ClientPortal({
                 Votre accès est actuellement en lecture seule. Vos anciens diagnostics et rapports restent disponibles.
                 <button type="button" onClick={onSettings}>Voir mon abonnement</button>
               </div>
+            )}
+
+            {latestReviewedDossier && latestPriorities.length > 0 && (
+              <article className="cp-card cp-priorities-card">
+                <div className="cp-card-top">
+                  <div>
+                    <span className="cp-status reviewed">3 SUJETS MAXIMUM</span>
+                    <h3>À traiter maintenant</h3>
+                    <p>{latestReviewedDossier.analysis?.periode || 'Dernier mini-audit'} · issus du mini-audit relu</p>
+                  </div>
+                  <button className="cp-inline-link" type="button" onClick={() => onOpen(latestReviewedDossier.id)}>
+                    Ouvrir le mini-audit →
+                  </button>
+                </div>
+                <div className="cr-items">
+                  {latestPriorities.map((priority, index) => (
+                    <div className="cr-item" key={`${priority.title || 'priorite'}-${index}`}>
+                      <i>{String(index + 1).padStart(2, '0')}</i>
+                      <div>
+                        <div>
+                          <b>{priority.title || 'Priorité à traiter'}</b>
+                          {priority.metric && <strong>{priority.metric}</strong>}
+                        </div>
+                        {priority.body && <p>{priority.body}</p>}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </article>
             )}
 
             {!dossiers.length && (
