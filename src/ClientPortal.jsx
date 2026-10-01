@@ -253,6 +253,10 @@ export function ClientPortal({
                     </div>
                   ))}
                 </div>
+                <div className="cp-priorities-foot">
+                  <span>{openActions.length ? `${openActions.length} action${openActions.length > 1 ? 's' : ''} ouverte${openActions.length > 1 ? 's' : ''}` : 'Le plan d’action est prêt à être suivi.'}</span>
+                  <button type="button" onClick={() => setPortalView('actions')}>Passer aux actions →</button>
+                </div>
               </article>
             )}
 
