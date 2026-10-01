@@ -172,7 +172,19 @@ export function ClientPortal({
           </div>
         </header>
 
-        <section className="cp-hero">
+        <nav className="cp-section-nav" aria-label="Navigation de l'espace officine">
+          <button type="button" onClick={() => document.getElementById('diagnostics')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}>
+            Diagnostics
+          </button>
+          <button type="button" onClick={() => document.getElementById('actions')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}>
+            Actions
+          </button>
+          <button type="button" onClick={() => document.getElementById('simulateur')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}>
+            Simulateur
+          </button>
+        </nav>
+
+        <section className="cp-hero" id="diagnostics">
           <div>
             <span>VOS DIAGNOSTICS</span>
             <h2>Vos données entrent.<br />La relecture fait la différence.</h2>
@@ -194,7 +206,7 @@ export function ClientPortal({
         {loading && <div className="cp-loading">Chargement de vos dossiers...</div>}
 
         {!loading && (
-          <article className="cp-card">
+          <article className="cp-card" id="actions">
             <div className="cp-card-top">
               <div>
                 <span className="cp-status draft">ACTION</span>
@@ -371,7 +383,11 @@ export function ClientPortal({
           </article>
         )}
 
-        {!loading && <RecruitmentSimulator history={history} />}
+        {!loading && (
+          <div id="simulateur">
+            <RecruitmentSimulator history={history} />
+          </div>
+        )}
 
         <div className="cp-list">
           {dossiers.map((d) => (
