@@ -128,6 +128,7 @@ export function ClientPortal({
   error,
   onRefresh,
   onNew,
+  onResume,
   onOpen,
   onDelete,
   onSettings,
@@ -306,8 +307,10 @@ export function ClientPortal({
                       <button className="primary" onClick={() => onOpen(d.id)}>Voir mon diagnostic →</button>
                     ) : d.status === 'submitted' || d.status === 'in_review' ? (
                       <span className="cp-wait">Votre dossier est entre les mains de Pilot'Officine.</span>
+                    ) : d.status === 'draft' && canWrite && onResume ? (
+                      <button className="primary" onClick={() => onResume(d.id)}>Reprendre le brouillon →</button>
                     ) : (
-                      <span className="cp-wait">Dossier non envoyé pour relecture.</span>
+                      <span className="cp-wait">Brouillon conservé dans votre espace.</span>
                     )}
                   </div>
                 </article>
