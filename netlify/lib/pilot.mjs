@@ -1,6 +1,7 @@
 import { getStore } from '@netlify/blobs';
 import {
   createHash,
+  createHmac,
   randomBytes,
   randomUUID,
   scryptSync,
@@ -161,27 +162,78 @@ export async function requireUser(req) {
   return { account, session, token };
 }
 
+export function adminTokenMatches(value) {
+  const configured = String(process.env.PILOT_ADMIN_TOKEN || '').trim();
+  const supplied = String(value || '').trim();
+  if (!configured || !supplied) return false;
+  const a = Buffer.from(supplied);
+  const b = Buffer.from(configured);
+  return a.length === b.length && timingSafeEqual(a, b);
+}
+
+function adminSessionValue() {
+  const configured = String(process.env.PILOT_ADMIN_TOKEN || '').trim();
+  if (!configured) return null;
+  const expiresAt = Date.now() + 8 * 60 * 60 * 1000;
+  const nonce = randomBytes(12).toString('hex');
+  const payload = `${expiresAt}.${nonce}`;
+  const signature = createHmac('sha256', configured).update(payload).digest('hex');
+  return `${payload}.${signature}`;
+}
+
+export function adminSessionCookie() {
+  const value = adminSessionValue();
+  if (!value) return null;
+  return `pilot_admin_session=${encodeURIComponent(value)}; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=28800`;
+}
+
+export function clearAdminSessionCookie() {
+  return 'pilot_admin_session=; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=0';
+}
+
+function cookieValue(req, name) {
+  const raw = req.headers.get('cookie') || '';
+  const match = raw
+    .split(';')
+    .map((part) => part.trim())
+    .find((part) => part.startsWith(`${name}=`));
+  if (!match) return '';
+  try { return decodeURIComponent(match.slice(name.length + 1)); } catch { return ''; }
+}
+
+function validAdminSession(req) {
+  const configured = String(process.env.PILOT_ADMIN_TOKEN || '').trim();
+  const value = cookieValue(req, 'pilot_admin_session');
+  if (!configured || !value) return false;
+  const [expiresRaw, nonce, signature] = value.split('.');
+  const expiresAt = Number(expiresRaw);
+  if (!Number.isFinite(expiresAt) || expiresAt <= Date.now() || !nonce || !signature) return false;
+  const payload = `${expiresRaw}.${nonce}`;
+  const expected = createHmac('sha256', configured).update(payload).digest('hex');
+  const a = Buffer.from(signature);
+  const b = Buffer.from(expected);
+  return a.length === b.length && timingSafeEqual(a, b);
+}
+
 export function requireAdmin(req) {
   const configured = String(process.env.PILOT_ADMIN_TOKEN || '').trim();
   if (!configured) {
     return { error: json({ error: 'PILOT_ADMIN_TOKEN non configuré sur Netlify.' }, 503) };
   }
+
   const supplied = String(req.headers.get('x-pilot-admin-token') || bearer(req) || '').trim();
-  const a = Buffer.from(supplied);
-  const b = Buffer.from(configured);
-  if (!supplied || a.length !== b.length || !timingSafeEqual(a, b)) {
-    let previewDiagnostic = '';
-    try {
-      const host = new URL(req.url).hostname.toLowerCase();
-      if (host.startsWith('deploy-preview-')) {
-        const suppliedFp = supplied ? sha256(supplied).slice(0, 8) : 'absent';
-        const configuredFp = sha256(configured).slice(0, 8);
-        previewDiagnostic = ` Diagnostic preview : reçu ${supplied.length} car. [${suppliedFp}], attendu ${configured.length} car. [${configuredFp}].`;
-      }
-    } catch {}
-    return { error: json({ error: `Accès administrateur refusé.${previewDiagnostic}` }, 401) };
-  }
-  return { ok: true };
+  if (adminTokenMatches(supplied) || validAdminSession(req)) return { ok: true };
+
+  let previewDiagnostic = '';
+  try {
+    const host = new URL(req.url).hostname.toLowerCase();
+    if (host.startsWith('deploy-preview-')) {
+      const suppliedFp = supplied ? sha256(supplied).slice(0, 8) : 'absent';
+      const configuredFp = sha256(configured).slice(0, 8);
+      previewDiagnostic = ` Diagnostic preview : reçu ${supplied.length} car. [${suppliedFp}], attendu ${configured.length} car. [${configuredFp}].`;
+    }
+  } catch {}
+  return { error: json({ error: `Accès administrateur refusé.${previewDiagnostic}` }, 401) };
 }
 
 export async function getOwnedDossier(id, accountId, req) {
