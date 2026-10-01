@@ -881,20 +881,35 @@ export default function App() {
   useEffect(() => {
     let cancelled = false;
     if (!sessionToken || account) return undefined;
-    getMe(sessionToken)
-      .then(({ account: restored }) => {
+
+    const restoreSession = async () => {
+      try {
+        const [{ account: restored }, dossierResult, actionResult] = await Promise.all([
+          getMe(sessionToken),
+          listMyDossiers(sessionToken),
+          listPharmacyActions(sessionToken).catch(() => ({ actions: [] })),
+        ]);
         if (cancelled) return;
+
         setAccount(restored);
         setProfile((prev) => ({ ...prev, ...(restored?.profile || {}) }));
-      })
-      .catch(() => {
+        setClientDossiers(dossierResult.dossiers || []);
+        setClientHistory(dossierResult.history || []);
+        setClientHistoryComparison(dossierResult.historyComparison || null);
+        setClientActions(actionResult.actions || []);
+
+        if (!verifyToken && !resetToken) setStep('portal');
+      } catch {
         if (cancelled) return;
         saveSessionToken('');
         setSessionToken('');
         setAccount(null);
-      });
+      }
+    };
+
+    restoreSession();
     return () => { cancelled = true; };
-  }, [sessionToken, account]);
+  }, [sessionToken, account, verifyToken, resetToken]);
 
   const finishAnalysis = async (res) => {
     setData(res);
