@@ -543,7 +543,16 @@ export default function AdminPanel() {
           <span>PILOT'OFFICINE · ADMIN</span>
           <h1>Espace de relecture</h1>
           <p>Le token admin reste uniquement dans cette session navigateur.</p>
-          <input type="password" value={inputToken} onChange={(e) => setInputToken(e.target.value)} placeholder="PILOT_ADMIN_TOKEN" autoFocus />
+          <input
+            type="password"
+            name="pilot-admin-token"
+            value={inputToken}
+            onChange={(e) => setInputToken(e.target.value)}
+            placeholder="PILOT_ADMIN_TOKEN"
+            autoComplete="off"
+            spellCheck="false"
+            autoFocus
+          />
           {error && <div className="account-error">{error}</div>}
           <button type="submit">Ouvrir le back-office →</button>
         </form>
