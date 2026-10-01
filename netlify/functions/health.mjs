@@ -29,7 +29,7 @@ export default async (req) => {
       emailDeliveryEnabled,
       operatorNotificationConfigured: Boolean(process.env.PILOT_NOTIFY_TO),
       publicUrlConfigured: Boolean(process.env.PILOT_PUBLIC_URL),
-      environment: process.env.CONTEXT || null,
+      environment: process.env.CONTEXT || (storageScope === 'preview' ? 'deploy-preview' : 'production'),
       commitRef: process.env.COMMIT_REF || null,
       deployId: process.env.DEPLOY_ID || null,
       checkedAt: new Date().toISOString(),
