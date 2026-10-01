@@ -170,7 +170,16 @@ export function requireAdmin(req) {
   const a = Buffer.from(supplied);
   const b = Buffer.from(configured);
   if (!supplied || a.length !== b.length || !timingSafeEqual(a, b)) {
-    return { error: json({ error: 'Accès administrateur refusé.' }, 401) };
+    let previewDiagnostic = '';
+    try {
+      const host = new URL(req.url).hostname.toLowerCase();
+      if (host.startsWith('deploy-preview-')) {
+        const suppliedFp = supplied ? sha256(supplied).slice(0, 8) : 'absent';
+        const configuredFp = sha256(configured).slice(0, 8);
+        previewDiagnostic = ` Diagnostic preview : reçu ${supplied.length} car. [${suppliedFp}], attendu ${configured.length} car. [${configuredFp}].`;
+      }
+    } catch {}
+    return { error: json({ error: `Accès administrateur refusé.${previewDiagnostic}` }, 401) };
   }
   return { ok: true };
 }
