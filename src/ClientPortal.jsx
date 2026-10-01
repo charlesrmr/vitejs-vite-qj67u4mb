@@ -167,9 +167,7 @@ export function ClientPortal({
             <p>{account?.profile?.pharmacyName} · {account?.profile?.city}</p>
           </div>
           <div className="cp-head-actions">
-            <button onClick={onRefresh}>Actualiser</button>
-            <button onClick={onSettings}>Mon compte</button>
-            <button onClick={onLogout}>Déconnexion</button>
+            <button onClick={onRefresh}>Actualiser les données</button>
           </div>
         </header>
 
