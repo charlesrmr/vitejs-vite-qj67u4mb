@@ -1,0 +1,20 @@
+import { STORE, json, requireAdmin } from '../lib/pilot.mjs';
+
+export default async (req) => {
+  if (req.method !== 'GET') return json({ error: 'Méthode non autorisée.' }, 405);
+  const auth = requireAdmin(req);
+  if (auth.error) return auth.error;
+  const id = new URL(req.url).searchParams.get('id');
+  if (!id) return json({ error: 'Identifiant manquant.' }, 400);
+
+  const dossier = await STORE.dossiers(req).get(`dossier/${id}.json`, {
+    type: 'json', consistency: 'strong',
+  });
+  if (!dossier) return json({ error: 'Dossier introuvable.' }, 404);
+  return json({ dossier });
+};
+
+export const config = {
+  path: '/api/admin/dossier',
+  rateLimit: { windowLimit: 60, windowSize: 60, aggregateBy: ['ip', 'domain'] },
+};
