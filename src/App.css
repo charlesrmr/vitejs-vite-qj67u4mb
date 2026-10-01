@@ -236,6 +236,14 @@
    .hd-home { background: transparent; border: 0; cursor: pointer; padding: 0; font-family: inherit; }
    .hd-cta { background: #fff; color: #0B1929; border: 0; border-radius: 8px; padding: 7px 12px; font-size: 11px; font-weight: 700; cursor: pointer; transition: transform .15s, box-shadow .15s; }
    .hd-cta:hover { transform: translateY(-1px); box-shadow: 0 5px 16px rgba(0,0,0,.18); }
+   @media (max-width: 680px) {
+     .hd { padding: 0 .75rem; }
+     .hd-r { gap: 5px; }
+     .hd-meta, .hd-badge { display: none; }
+     .hd-cta { padding: 6px 8px; font-size: 9px; white-space: nowrap; }
+     .hd-nm { font-size: 12px; }
+     .hd-l { gap: 7px; }
+   }
 
    .lp { background: #FAFAFA; color: #0F1117; overflow: hidden; }
    .lp-shell { width: min(1120px, calc(100% - 40px)); margin: 0 auto; }
