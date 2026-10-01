@@ -140,6 +140,7 @@ export function ClientPortal({
     dueDate: '',
     priority: 'medium',
   });
+  const [portalView, setPortalView] = useState('diagnostics');
   const canWrite = account?.billing?.accessMode !== 'read_only';
 
   const submitAction = async (event) => {
@@ -173,262 +174,290 @@ export function ClientPortal({
         </header>
 
         <nav className="cp-section-nav" aria-label="Navigation de l'espace officine">
-          <button type="button" onClick={() => document.getElementById('diagnostics')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}>
+          <button
+            type="button"
+            className={portalView === 'diagnostics' ? 'active' : ''}
+            onClick={() => setPortalView('diagnostics')}
+          >
             Diagnostics
           </button>
-          <button type="button" onClick={() => document.getElementById('actions')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}>
-            Actions
+          <button
+            type="button"
+            className={portalView === 'actions' ? 'active' : ''}
+            onClick={() => setPortalView('actions')}
+          >
+            Actions{openActions.length ? ` · ${openActions.length}` : ''}
           </button>
-          <button type="button" onClick={() => document.getElementById('simulateur')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}>
+          <button
+            type="button"
+            className={portalView === 'simulator' ? 'active' : ''}
+            onClick={() => setPortalView('simulator')}
+          >
             Simulateur
           </button>
         </nav>
 
-        <section className="cp-hero" id="diagnostics">
-          <div>
-            <span>VOS DIAGNOSTICS</span>
-            <h2>Vos données entrent.<br />La relecture fait la différence.</h2>
-            <p>Chaque dossier conserve les exports déposés, la pré-analyse et le diagnostic final une fois validé.</p>
-          </div>
-          <button onClick={onNew} disabled={!canWrite}>
-            {canWrite ? '+ Nouveau diagnostic' : 'Accès en lecture seule'}
-          </button>
-        </section>
-
-        {!canWrite && (
-          <div className="settings-inline-info">
-            Votre accès est actuellement en lecture seule. Vos anciens diagnostics et rapports restent disponibles.
-            <button type="button" onClick={onSettings}>Voir mon abonnement</button>
-          </div>
-        )}
-
         {error && <div className="cp-error">{error}</div>}
-        {loading && <div className="cp-loading">Chargement de vos dossiers...</div>}
+        {loading && <div className="cp-loading">Chargement de votre espace...</div>}
 
-        {!loading && (
-          <article className="cp-card" id="actions">
-            <div className="cp-card-top">
+        {!loading && portalView === 'diagnostics' && (
+          <>
+            <section className="cp-hero">
               <div>
-                <span className="cp-status draft">ACTION</span>
-                <h3>Transformer une décision en action</h3>
-                <p>Une action claire, un responsable, une échéance. Le suivi viendra ensuite.</p>
+                <span>VOS DIAGNOSTICS</span>
+                <h2>Vos données entrent.<br />La relecture fait la différence.</h2>
+                <p>Chaque dossier conserve les exports déposés, la pré-analyse et le diagnostic final une fois validé.</p>
               </div>
-            </div>
+              <button onClick={onNew} disabled={!canWrite}>
+                {canWrite ? '+ Nouveau diagnostic' : 'Accès en lecture seule'}
+              </button>
+            </section>
 
-            {canWrite ? (
-              <form className="settings-grid" onSubmit={submitAction}>
-                <label className="full">
-                  <span>Action *</span>
-                  <input
-                    value={newAction.title}
-                    onChange={(e) => setNewAction((prev) => ({ ...prev, title: e.target.value }))}
-                    placeholder="Ex. Réduire de 5 000 € le stock sans vente sur la période"
-                  />
-                </label>
-                <label>
-                  <span>Responsable</span>
-                  <input
-                    value={newAction.ownerName}
-                    onChange={(e) => setNewAction((prev) => ({ ...prev, ownerName: e.target.value }))}
-                    placeholder="Ex. Claire"
-                  />
-                </label>
-                <label>
-                  <span>Échéance</span>
-                  <input
-                    type="date"
-                    value={newAction.dueDate}
-                    onChange={(e) => setNewAction((prev) => ({ ...prev, dueDate: e.target.value }))}
-                  />
-                </label>
-                <label>
-                  <span>Priorité</span>
-                  <select
-                    value={newAction.priority}
-                    onChange={(e) => setNewAction((prev) => ({ ...prev, priority: e.target.value }))}
-                  >
-                    <option value="high">Haute</option>
-                    <option value="medium">Normale</option>
-                    <option value="low">Basse</option>
-                  </select>
-                </label>
-                <div className="settings-actions">
-                  <button className="primary" type="submit" disabled={actionSaving || !newAction.title.trim()}>
-                    {actionSaving ? 'Enregistrement...' : 'Ajouter au plan d’action'}
-                  </button>
-                </div>
-              </form>
-            ) : (
-              <div className="cp-wait">
-                Votre espace est en lecture seule. Les actions existantes restent visibles, mais un accès actif est requis pour en créer une nouvelle.
+            {!canWrite && (
+              <div className="settings-inline-info">
+                Votre accès est actuellement en lecture seule. Vos anciens diagnostics et rapports restent disponibles.
+                <button type="button" onClick={onSettings}>Voir mon abonnement</button>
               </div>
             )}
-          </article>
+
+            {!dossiers.length && (
+              <div className="cp-empty">
+                <b>Aucun diagnostic pour le moment.</b>
+                <span>Commencez avec votre export activité ; stock et top produits pourront enrichir la lecture.</span>
+                <button onClick={onNew} disabled={!canWrite}>
+                  {canWrite ? 'Préparer mon premier diagnostic →' : 'Accès en lecture seule'}
+                </button>
+              </div>
+            )}
+
+            {history.length >= 2 && (
+              <article className="cp-card">
+                <div className="cp-card-top">
+                  <div>
+                    <span className="cp-status reviewed">ÉVOLUTION</span>
+                    <h3>Les deux dernières périodes comparables</h3>
+                    <p>
+                      {historyComparison?.previousPeriodLabel || history[history.length - 2]?.periodLabel || 'Période précédente'}
+                      {' → '}
+                      {historyComparison?.latestPeriodLabel || history[history.length - 1]?.periodLabel || 'Dernière période'}
+                    </p>
+                  </div>
+                </div>
+
+                {historyComparison && (
+                  <div className="cp-kpis">
+                    {historyComparison.ca && (
+                      <div>
+                        <span>{historyComparison.ca.mode === 'daily' ? 'CA moyen / jour' : 'CA période'}</span>
+                        <b>{historyComparison.ca.deltaPct >= 0 ? '+' : ''}{historyComparison.ca.deltaPct}%</b>
+                      </div>
+                    )}
+                    {historyComparison.margin && (
+                      <div>
+                        <span>Marge</span>
+                        <b>{historyComparison.margin.deltaPoints >= 0 ? '+' : ''}{historyComparison.margin.deltaPoints} pt</b>
+                      </div>
+                    )}
+                    {historyComparison.stock && (
+                      <div>
+                        <span>Stock valorisé</span>
+                        <b>{historyComparison.stock.deltaPct >= 0 ? '+' : ''}{historyComparison.stock.deltaPct}%</b>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {!historyComparison?.ca && !historyComparison?.margin && !historyComparison?.stock && (
+                  <div className="cp-wait">
+                    Deux périodes sont enregistrées, mais leurs données ne sont pas suffisamment comparables pour calculer une évolution fiable.
+                  </div>
+                )}
+              </article>
+            )}
+
+            <div className="cp-list">
+              {dossiers.map((d) => (
+                <article className="cp-card" key={d.id}>
+                  <div className="cp-card-top">
+                    <div>
+                      <span className={`cp-status ${d.status}`}>{LABELS[d.status] || d.status}</span>
+                      <h3>{d.profile?.pharmacyName || 'Officine'}</h3>
+                      <p>{d.analysis?.periode || 'Pré-analyse non finalisée'} · {d.profile?.lgo || ''}</p>
+                    </div>
+                    <time>{new Date(d.updatedAt).toLocaleDateString('fr-FR')}</time>
+                  </div>
+
+                  <div className="cp-kpis">
+                    <div><span>{caMetricLabel(d.analysis)}</span><b>{eur(d.analysis?.ca)}</b></div>
+                    <div><span>Marge</span><b>{Number.isFinite(d.analysis?.marge_pct) ? `${d.analysis.marge_pct}%` : 'N/D'}</b></div>
+                    <div><span>{stockMetricLabel(d.analysis)}</span><b>{eur(d.analysis?.stock_eur)}</b></div>
+                    <div><span>Stock sans vente</span><b>{Number.isFinite(d.analysis?.dormant_stock_eur) ? eur(d.analysis.dormant_stock_eur) : num(d.analysis?.dormants)}</b></div>
+                  </div>
+
+                  <div className="cp-card-foot">
+                    <div className="cp-card-ref">
+                      <small>Réf. {d.id.slice(-10)}</small>
+                      <button className="danger-link" onClick={() => onDelete(d.id, d.profile?.pharmacyName)}>Supprimer</button>
+                    </div>
+                    {d.status === 'reviewed' ? (
+                      <button className="primary" onClick={() => onOpen(d.id)}>Voir mon diagnostic →</button>
+                    ) : d.status === 'submitted' || d.status === 'in_review' ? (
+                      <span className="cp-wait">Votre dossier est entre les mains de Pilot'Officine.</span>
+                    ) : (
+                      <span className="cp-wait">Dossier non envoyé pour relecture.</span>
+                    )}
+                  </div>
+                </article>
+              ))}
+            </div>
+          </>
         )}
 
-        {!loading && openActions.length > 0 && (
-          <article className="cp-card">
-            <div className="cp-card-top">
-              <div>
-                <span className="cp-status in_review">PLAN D’ACTION</span>
-                <h3>À faire maintenant</h3>
-                <p>{openActions.length} action(s) ouverte(s) pour l’officine.</p>
+        {!loading && portalView === 'actions' && (
+          <div className="cp-view-stack">
+            <section className="cp-view-head">
+              <span>PLAN D’ACTION</span>
+              <h2>Décider, attribuer, suivre.</h2>
+              <p>Gardez ici uniquement les décisions qui doivent vraiment avancer.</p>
+            </section>
+
+            <article className="cp-card">
+              <div className="cp-card-top">
+                <div>
+                  <span className="cp-status draft">NOUVELLE ACTION</span>
+                  <h3>Transformer une décision en action</h3>
+                  <p>Une action claire, un responsable, une échéance.</p>
+                </div>
               </div>
-            </div>
 
-            <div className="cr-items">
-              {openActions.slice(0, 3).map((action, index) => {
-                const meta = [
-                  ACTION_STATUS_LABELS[action.status] || action.status,
-                  action.ownerName ? `Responsable : ${action.ownerName}` : '',
-                  action.dueDate ? `Échéance : ${formatActionDate(action.dueDate)}` : '',
-                  Number.isFinite(action.impactEur) ? `Impact estimé : ${eur(action.impactEur)}` : '',
-                ].filter(Boolean);
+              {canWrite ? (
+                <form className="settings-grid" onSubmit={submitAction}>
+                  <label className="full">
+                    <span>Action *</span>
+                    <input
+                      value={newAction.title}
+                      onChange={(e) => setNewAction((prev) => ({ ...prev, title: e.target.value }))}
+                      placeholder="Ex. Réduire de 5 000 € le stock sans vente sur la période"
+                    />
+                  </label>
+                  <label>
+                    <span>Responsable</span>
+                    <input
+                      value={newAction.ownerName}
+                      onChange={(e) => setNewAction((prev) => ({ ...prev, ownerName: e.target.value }))}
+                      placeholder="Ex. Claire"
+                    />
+                  </label>
+                  <label>
+                    <span>Échéance</span>
+                    <input
+                      type="date"
+                      value={newAction.dueDate}
+                      onChange={(e) => setNewAction((prev) => ({ ...prev, dueDate: e.target.value }))}
+                    />
+                  </label>
+                  <label>
+                    <span>Priorité</span>
+                    <select
+                      value={newAction.priority}
+                      onChange={(e) => setNewAction((prev) => ({ ...prev, priority: e.target.value }))}
+                    >
+                      <option value="high">Haute</option>
+                      <option value="medium">Normale</option>
+                      <option value="low">Basse</option>
+                    </select>
+                  </label>
+                  <div className="settings-actions">
+                    <button className="primary" type="submit" disabled={actionSaving || !newAction.title.trim()}>
+                      {actionSaving ? 'Enregistrement...' : 'Ajouter au plan d’action'}
+                    </button>
+                  </div>
+                </form>
+              ) : (
+                <div className="cp-wait">
+                  Votre espace est en lecture seule. Les actions existantes restent visibles.
+                </div>
+              )}
+            </article>
 
-                return (
-                  <div className="cr-item" key={action.id}>
-                    <i>{String(index + 1).padStart(2, '0')}</i>
-                    <div>
-                      <div>
-                        <b>{action.title}</b>
-                        <strong>{action.priority === 'high' ? 'Priorité haute' : action.priority === 'low' ? 'Priorité basse' : 'Priorité normale'}</strong>
-                      </div>
-                      <p>{meta.join(' · ')}</p>
-                      {canWrite && onUpdateActionStatus && (
-                        <div className="cp-head-actions">
-                          {action.status === 'todo' && (
-                            <button
-                              type="button"
-                              disabled={actionSaving}
-                              onClick={() => onUpdateActionStatus(action, 'in_progress')}
-                            >
-                              Démarrer
-                            </button>
-                          )}
-                          {action.status !== 'done' && (
-                            <button
-                              type="button"
-                              disabled={actionSaving}
-                              onClick={() => onUpdateActionStatus(action, 'done')}
-                            >
-                              Terminer
-                            </button>
+            <article className="cp-card">
+              <div className="cp-card-top">
+                <div>
+                  <span className="cp-status in_review">À FAIRE</span>
+                  <h3>{openActions.length ? 'Actions ouvertes' : 'Aucune action ouverte'}</h3>
+                  <p>
+                    {openActions.length
+                      ? `${openActions.length} action(s) à suivre pour l’officine.`
+                      : 'Créez une action quand une décision mérite un responsable et une échéance.'}
+                  </p>
+                </div>
+              </div>
+
+              {openActions.length > 0 && (
+                <div className="cr-items">
+                  {openActions.map((action, index) => {
+                    const meta = [
+                      ACTION_STATUS_LABELS[action.status] || action.status,
+                      action.ownerName ? `Responsable : ${action.ownerName}` : '',
+                      action.dueDate ? `Échéance : ${formatActionDate(action.dueDate)}` : '',
+                      Number.isFinite(action.impactEur) ? `Impact estimé : ${eur(action.impactEur)}` : '',
+                    ].filter(Boolean);
+
+                    return (
+                      <div className="cr-item" key={action.id}>
+                        <i>{String(index + 1).padStart(2, '0')}</i>
+                        <div>
+                          <div>
+                            <b>{action.title}</b>
+                            <strong>{action.priority === 'high' ? 'Priorité haute' : action.priority === 'low' ? 'Priorité basse' : 'Priorité normale'}</strong>
+                          </div>
+                          <p>{meta.join(' · ')}</p>
+                          {canWrite && onUpdateActionStatus && (
+                            <div className="cp-head-actions">
+                              {action.status === 'todo' && (
+                                <button
+                                  type="button"
+                                  disabled={actionSaving}
+                                  onClick={() => onUpdateActionStatus(action, 'in_progress')}
+                                >
+                                  Démarrer
+                                </button>
+                              )}
+                              {action.status !== 'done' && (
+                                <button
+                                  type="button"
+                                  disabled={actionSaving}
+                                  onClick={() => onUpdateActionStatus(action, 'done')}
+                                >
+                                  Terminer
+                                </button>
+                              )}
+                            </div>
                           )}
                         </div>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-
-            {openActions.length > 3 && (
-              <div className="cp-wait">+ {openActions.length - 3} autre(s) action(s) ouverte(s).</div>
-            )}
-          </article>
-        )}
-
-        {!loading && !dossiers.length && (
-          <div className="cp-empty">
-            <b>Aucun diagnostic pour le moment.</b>
-            <span>Commencez avec votre export activité ; stock et top produits pourront enrichir la lecture.</span>
-            <button onClick={onNew} disabled={!canWrite}>
-              {canWrite ? 'Préparer mon premier diagnostic →' : 'Accès en lecture seule'}
-            </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </article>
           </div>
         )}
 
-        {!loading && history.length >= 2 && (
-          <article className="cp-card">
-            <div className="cp-card-top">
-              <div>
-                <span className="cp-status reviewed">ÉVOLUTION</span>
-                <h3>Les deux dernières périodes comparables</h3>
-                <p>
-                  {historyComparison?.previousPeriodLabel || history[history.length - 2]?.periodLabel || 'Période précédente'}
-                  {' → '}
-                  {historyComparison?.latestPeriodLabel || history[history.length - 1]?.periodLabel || 'Dernière période'}
-                </p>
-              </div>
-            </div>
-
-            {historyComparison && (
-              <div className="cp-kpis">
-                {historyComparison.ca && (
-                  <div>
-                    <span>{historyComparison.ca.mode === 'daily' ? 'CA moyen / jour' : 'CA période'}</span>
-                    <b>{historyComparison.ca.deltaPct >= 0 ? '+' : ''}{historyComparison.ca.deltaPct}%</b>
-                  </div>
-                )}
-                {historyComparison.margin && (
-                  <div>
-                    <span>Marge</span>
-                    <b>{historyComparison.margin.deltaPoints >= 0 ? '+' : ''}{historyComparison.margin.deltaPoints} pt</b>
-                  </div>
-                )}
-                {historyComparison.stock && (
-                  <div>
-                    <span>Stock valorisé</span>
-                    <b>{historyComparison.stock.deltaPct >= 0 ? '+' : ''}{historyComparison.stock.deltaPct}%</b>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {!historyComparison?.ca && !historyComparison?.margin && !historyComparison?.stock && (
-              <div className="cp-wait">
-                Deux périodes sont enregistrées, mais leurs données ne sont pas suffisamment comparables pour calculer une évolution fiable.
-              </div>
-            )}
-          </article>
-        )}
-
-        {!loading && (
-          <div id="simulateur">
+        {!loading && portalView === 'simulator' && (
+          <div className="cp-view-stack">
+            <section className="cp-view-head">
+              <span>SIMULATEUR</span>
+              <h2>Tester une décision avant de la prendre.</h2>
+              <p>Un outil simple pour transformer une hypothèse de coût en seuil économique.</p>
+            </section>
             <RecruitmentSimulator history={history} />
           </div>
         )}
-
-        <div className="cp-list">
-          {dossiers.map((d) => (
-            <article className="cp-card" key={d.id}>
-              <div className="cp-card-top">
-                <div>
-                  <span className={`cp-status ${d.status}`}>{LABELS[d.status] || d.status}</span>
-                  <h3>{d.profile?.pharmacyName || 'Officine'}</h3>
-                  <p>{d.analysis?.periode || 'Pré-analyse non finalisée'} · {d.profile?.lgo || ''}</p>
-                </div>
-                <time>{new Date(d.updatedAt).toLocaleDateString('fr-FR')}</time>
-              </div>
-
-              <div className="cp-kpis">
-                <div><span>{caMetricLabel(d.analysis)}</span><b>{eur(d.analysis?.ca)}</b></div>
-                <div><span>Marge</span><b>{Number.isFinite(d.analysis?.marge_pct) ? `${d.analysis.marge_pct}%` : 'N/D'}</b></div>
-                <div><span>{stockMetricLabel(d.analysis)}</span><b>{eur(d.analysis?.stock_eur)}</b></div>
-                <div><span>Stock sans vente</span><b>{Number.isFinite(d.analysis?.dormant_stock_eur) ? eur(d.analysis.dormant_stock_eur) : num(d.analysis?.dormants)}</b></div>
-              </div>
-
-              <div className="cp-card-foot">
-                <div className="cp-card-ref">
-                  <small>Réf. {d.id.slice(-10)}</small>
-                  <button className="danger-link" onClick={() => onDelete(d.id, d.profile?.pharmacyName)}>Supprimer</button>
-                </div>
-                {d.status === 'reviewed' ? (
-                  <button className="primary" onClick={() => onOpen(d.id)}>Voir mon diagnostic →</button>
-                ) : d.status === 'submitted' || d.status === 'in_review' ? (
-                  <span className="cp-wait">Votre dossier est entre les mains de Pilot'Officine.</span>
-                ) : (
-                  <span className="cp-wait">Dossier non envoyé pour relecture.</span>
-                )}
-              </div>
-            </article>
-          ))}
-        </div>
       </div>
     </div>
   );
 }
-
 
 
 export function AccountSettings({
