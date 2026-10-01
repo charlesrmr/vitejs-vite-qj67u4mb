@@ -146,6 +146,7 @@ export function ClientPortal({
     dueDate: '',
     priority: 'medium',
   });
+  const [actionResults, setActionResults] = useState({});
   const [portalView, setPortalView] = useState('diagnostics');
   const canWrite = account?.billing?.accessMode !== 'read_only';
   const draftDossier = dossiers.find((dossier) => dossier?.status === 'draft') || null;
@@ -442,6 +443,7 @@ export function ClientPortal({
                       ACTION_STATUS_LABELS[action.status] || action.status,
                       action.ownerName ? `Responsable : ${action.ownerName}` : '',
                       action.dueDate ? `Échéance : ${formatActionDate(action.dueDate)}` : '',
+                      action.metricLabel ? `Indicateur : ${action.metricLabel}` : '',
                       Number.isFinite(action.impactEur) ? `Impact estimé : ${eur(action.impactEur)}` : '',
                     ].filter(Boolean);
 
@@ -455,26 +457,44 @@ export function ClientPortal({
                           </div>
                           <p>{meta.join(' · ')}</p>
                           {canWrite && onUpdateActionStatus && (
-                            <div className="cp-head-actions">
-                              {action.status === 'todo' && (
-                                <button
-                                  type="button"
-                                  disabled={actionSaving}
-                                  onClick={() => onUpdateActionStatus(action, 'in_progress')}
-                                >
-                                  Démarrer
-                                </button>
+                            <>
+                              {action.status === 'in_progress' && (
+                                <label className="cp-action-result">
+                                  <span>Résultat / constat</span>
+                                  <input
+                                    value={actionResults[action.id] ?? action.resultNote ?? ''}
+                                    onChange={(event) => setActionResults((prev) => ({
+                                      ...prev,
+                                      [action.id]: event.target.value,
+                                    }))}
+                                    placeholder="Ex. stock ciblé réduit de 3 700 €"
+                                  />
+                                </label>
                               )}
-                              {action.status !== 'done' && (
-                                <button
-                                  type="button"
-                                  disabled={actionSaving}
-                                  onClick={() => onUpdateActionStatus(action, 'done')}
-                                >
-                                  Terminer
-                                </button>
-                              )}
-                            </div>
+                              <div className="cp-head-actions">
+                                {action.status === 'todo' && (
+                                  <button
+                                    type="button"
+                                    disabled={actionSaving}
+                                    onClick={() => onUpdateActionStatus(action, 'in_progress')}
+                                  >
+                                    Démarrer
+                                  </button>
+                                )}
+                                {action.status !== 'done' && (
+                                  <button
+                                    type="button"
+                                    disabled={actionSaving}
+                                    onClick={() => onUpdateActionStatus({
+                                      ...action,
+                                      resultNote: actionResults[action.id] ?? action.resultNote ?? '',
+                                    }, 'done')}
+                                  >
+                                    Terminer
+                                  </button>
+                                )}
+                              </div>
+                            </>
                           )}
                         </div>
                       </div>
@@ -505,9 +525,11 @@ export function ClientPortal({
                         <p>
                           {[
                             action.ownerName ? `Responsable : ${action.ownerName}` : '',
+                            action.metricLabel ? `Indicateur : ${action.metricLabel}` : '',
                             action.dueDate ? `Échéance : ${formatActionDate(action.dueDate)}` : '',
                           ].filter(Boolean).join(' · ') || 'Action clôturée'}
                         </p>
+                        {action.resultNote && <p><b>Résultat :</b> {action.resultNote}</p>}
                       </div>
                     </div>
                   ))}
