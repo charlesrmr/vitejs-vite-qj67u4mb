@@ -249,11 +249,24 @@ export default function AdminPanel() {
     setSelfTesting(true);
     setError('');
     try {
-      const data = await adminFetch('/api/admin/self-test', token, {
+      const response = await fetch('/api/admin/self-test', {
         method: 'POST',
+        headers: {
+          authorization: `Bearer ${token}`,
+          'content-type': 'application/json',
+        },
         body: JSON.stringify({}),
       });
-      setSelfTest(data);
+      const data = await response.json().catch(() => ({}));
+      setSelfTest({
+        ok: Boolean(data?.ok),
+        checks: Array.isArray(data?.checks) ? data.checks : [],
+        checkedAt: data?.checkedAt || null,
+        error: data?.error || null,
+      });
+      if (!response.ok && !Array.isArray(data?.checks)) {
+        setError(data?.error || 'Erreur serveur');
+      }
     } catch (err) {
       setSelfTest({ ok: false, checks: [], error: err.message });
       setError(err.message);
