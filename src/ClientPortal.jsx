@@ -23,6 +23,8 @@ const ACTION_STATUS_LABELS = {
   todo: 'À faire',
   in_progress: 'En cours',
   blocked: 'Bloquée',
+  done: 'Terminée',
+  canceled: 'Annulée',
 };
 
 const formatActionDate = (value) => {
@@ -133,6 +135,9 @@ export function ClientPortal({
 }) {
   const openActions = actions.filter(
     (action) => action?.status !== 'done' && action?.status !== 'canceled'
+  );
+  const closedActions = actions.filter(
+    (action) => action?.status === 'done' || action?.status === 'canceled'
   );
   const [newAction, setNewAction] = useState({
     title: '',
@@ -439,6 +444,40 @@ export function ClientPortal({
                 </div>
               )}
             </article>
+
+            {closedActions.length > 0 && (
+              <article className="cp-card">
+                <div className="cp-card-top">
+                  <div>
+                    <span className="cp-status reviewed">HISTORIQUE</span>
+                    <h3>Actions terminées</h3>
+                    <p>{closedActions.length} action{closedActions.length > 1 ? 's' : ''} clôturée{closedActions.length > 1 ? 's' : ''}.</p>
+                  </div>
+                </div>
+                <div className="cr-items">
+                  {closedActions.slice(0, 5).map((action, index) => (
+                    <div className="cr-item" key={action.id}>
+                      <i>{String(index + 1).padStart(2, '0')}</i>
+                      <div>
+                        <div>
+                          <b>{action.title}</b>
+                          <strong>{ACTION_STATUS_LABELS[action.status] || action.status}</strong>
+                        </div>
+                        <p>
+                          {[
+                            action.ownerName ? `Responsable : ${action.ownerName}` : '',
+                            action.dueDate ? `Échéance : ${formatActionDate(action.dueDate)}` : '',
+                          ].filter(Boolean).join(' · ') || 'Action clôturée'}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                {closedActions.length > 5 && (
+                  <div className="cp-wait">+ {closedActions.length - 5} autre{closedActions.length - 5 > 1 ? 's' : ''} action{closedActions.length - 5 > 1 ? 's' : ''} clôturée{closedActions.length - 5 > 1 ? 's' : ''}.</div>
+                )}
+              </article>
+            )}
           </div>
         )}
 
