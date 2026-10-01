@@ -162,7 +162,7 @@ export async function requireUser(req) {
 }
 
 export function requireAdmin(req) {
-  const configured = process.env.PILOT_ADMIN_TOKEN;
+  const configured = String(process.env.PILOT_ADMIN_TOKEN || '').trim();
   if (!configured) {
     return { error: json({ error: 'PILOT_ADMIN_TOKEN non configuré sur Netlify.' }, 503) };
   }
