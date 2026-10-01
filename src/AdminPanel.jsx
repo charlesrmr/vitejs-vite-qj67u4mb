@@ -70,7 +70,7 @@ async function adminFetch(path, token, options = {}) {
   const response = await fetch(path, {
     ...options,
     headers: {
-      authorization: `Bearer ${token}`,
+      'x-pilot-admin-token': token,
       ...(options.body ? { 'content-type': 'application/json' } : {}),
       ...(options.headers || {}),
     },
@@ -252,7 +252,7 @@ export default function AdminPanel() {
       const response = await fetch('/api/admin/self-test', {
         method: 'POST',
         headers: {
-          authorization: `Bearer ${token}`,
+          'x-pilot-admin-token': token,
           'content-type': 'application/json',
         },
         body: JSON.stringify({}),
@@ -396,7 +396,7 @@ export default function AdminPanel() {
     try {
       const response = await fetch(
         `/api/report/download?admin=1&id=${encodeURIComponent(selected.id)}`,
-        { headers: { authorization: `Bearer ${token}` } }
+        { headers: { 'x-pilot-admin-token': token } }
       );
       if (!response.ok) {
         const data = await response.json().catch(() => ({}));
@@ -422,7 +422,7 @@ export default function AdminPanel() {
     try {
       const response = await fetch(
         `/api/file/download?admin=1&dossierId=${encodeURIComponent(selected.id)}&slot=${encodeURIComponent(slot)}`,
-        { headers: { authorization: `Bearer ${token}` } }
+        { headers: { 'x-pilot-admin-token': token } }
       );
       if (!response.ok) {
         const data = await response.json().catch(() => ({}));
