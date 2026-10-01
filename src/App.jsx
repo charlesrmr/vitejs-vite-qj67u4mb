@@ -1553,8 +1553,24 @@ export default function App() {
             <div className="hd-meta">{account.profile.firstName}</div>
           )}
           <div className="hd-badge">pilote</div>
-          {step === 'landing' && (
-            <button className="hd-cta" onClick={startAccount}>{account ? 'Mes dossiers' : 'Préparer mon diagnostic'}</button>
+
+          {account && sessionToken ? (
+            <>
+              <button className="hd-cta" onClick={startAccount}>Mes diagnostics</button>
+              {step !== 'settings' && (
+                <button className="hd-cta" onClick={openSettings}>Mon compte</button>
+              )}
+              <button className="hd-cta" onClick={logoutClient}>Déconnexion</button>
+            </>
+          ) : (
+            <>
+              {step !== 'login' && (
+                <button className="hd-cta" onClick={() => setStep('login')}>Se connecter</button>
+              )}
+              {step !== 'account' && (
+                <button className="hd-cta" onClick={startAccount}>Créer un compte</button>
+              )}
+            </>
           )}
         </div>
       </header>
