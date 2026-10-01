@@ -481,7 +481,7 @@ export function ClientPortal({
                                     Démarrer
                                   </button>
                                 )}
-                                {action.status !== 'done' && (
+                                {action.status === 'in_progress' && (
                                   <button
                                     type="button"
                                     disabled={actionSaving}
