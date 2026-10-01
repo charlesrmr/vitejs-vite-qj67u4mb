@@ -6,7 +6,7 @@ const LABELS = {
   draft: 'Brouillon',
   submitted: 'Reçu · à relire',
   in_review: 'En cours de relecture',
-  reviewed: 'Diagnostic disponible',
+  reviewed: 'Mini-audit disponible',
 };
 
 const caMetricLabel = (analysis) =>
@@ -202,9 +202,9 @@ export function ClientPortal({
           <>
             <section className="cp-hero">
               <div>
-                <span>VOS DIAGNOSTICS</span>
-                <h2>Vos données entrent.<br />La relecture fait la différence.</h2>
-                <p>Chaque dossier conserve les exports déposés, la pré-analyse et le diagnostic final une fois validé.</p>
+                <span>MINI-AUDIT MENSUEL</span>
+                <h2>Ce qui change.<br />Ce qu’il faut traiter.</h2>
+                <p>Importez vos données du mois. Pilot'Officine compare, fait ressortir les sujets utiles et conserve les décisions prises.</p>
               </div>
               <button
                 onClick={() => draftDossier && onResume ? onResume(draftDossier.id) : onNew()}
@@ -239,8 +239,8 @@ export function ClientPortal({
               <article className="cp-card">
                 <div className="cp-card-top">
                   <div>
-                    <span className="cp-status reviewed">ÉVOLUTION</span>
-                    <h3>Les deux dernières périodes comparables</h3>
+                    <span className="cp-status reviewed">CE QUI A CHANGÉ</span>
+                    <h3>Depuis le dernier mini-audit</h3>
                     <p>
                       {historyComparison?.previousPeriodLabel || history[history.length - 2]?.periodLabel || 'Période précédente'}
                       {' → '}
@@ -305,9 +305,9 @@ export function ClientPortal({
                       <button className="danger-link" onClick={() => onDelete(d.id, d.profile?.pharmacyName)}>Supprimer</button>
                     </div>
                     {d.status === 'reviewed' ? (
-                      <button className="primary" onClick={() => onOpen(d.id)}>Voir mon diagnostic →</button>
+                      <button className="primary" onClick={() => onOpen(d.id)}>Voir le mini-audit →</button>
                     ) : d.status === 'submitted' || d.status === 'in_review' ? (
-                      <span className="cp-wait">Votre dossier est entre les mains de Pilot'Officine.</span>
+                      <span className="cp-wait">Mini-audit reçu · relecture en cours.</span>
                     ) : d.status === 'draft' && canWrite && onResume ? (
                       <button className="primary" onClick={() => onResume(d.id)}>Reprendre le brouillon →</button>
                     ) : (
@@ -323,9 +323,9 @@ export function ClientPortal({
         {!loading && portalView === 'actions' && (
           <div className="cp-view-stack">
             <section className="cp-view-head">
-              <span>PLAN D’ACTION</span>
-              <h2>Décider, attribuer, suivre.</h2>
-              <p>Gardez ici uniquement les décisions qui doivent vraiment avancer.</p>
+              <span>ACTIONS DU MINI-AUDIT</span>
+              <h2>Décider, attribuer, vérifier.</h2>
+              <p>Une décision utile devient une action avec un responsable, une échéance et un résultat à vérifier au prochain cycle.</p>
             </section>
 
             <article className="cp-card">
