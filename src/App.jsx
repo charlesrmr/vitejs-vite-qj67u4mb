@@ -884,21 +884,31 @@ export default function App() {
 
     const restoreSession = async () => {
       try {
-        const [{ account: restored }, dossierResult, actionResult] = await Promise.all([
-          getMe(sessionToken),
-          listMyDossiers(sessionToken),
-          listPharmacyActions(sessionToken).catch(() => ({ actions: [] })),
-        ]);
+        const { account: restored } = await getMe(sessionToken);
         if (cancelled) return;
 
         setAccount(restored);
         setProfile((prev) => ({ ...prev, ...(restored?.profile || {}) }));
-        setClientDossiers(dossierResult.dossiers || []);
-        setClientHistory(dossierResult.history || []);
-        setClientHistoryComparison(dossierResult.historyComparison || null);
-        setClientActions(actionResult.actions || []);
-
         if (!verifyToken && !resetToken) setStep('portal');
+
+        const [dossiersResult, actionsResult] = await Promise.allSettled([
+          listMyDossiers(sessionToken),
+          listPharmacyActions(sessionToken),
+        ]);
+        if (cancelled) return;
+
+        if (dossiersResult.status === 'fulfilled') {
+          const dossierResult = dossiersResult.value;
+          setClientDossiers(dossierResult.dossiers || []);
+          setClientHistory(dossierResult.history || []);
+          setClientHistoryComparison(dossierResult.historyComparison || null);
+        } else {
+          setPortalError('Votre session est active, mais vos diagnostics n’ont pas pu être chargés. Utilisez « Actualiser les données » pour réessayer.');
+        }
+
+        if (actionsResult.status === 'fulfilled') {
+          setClientActions(actionsResult.value.actions || []);
+        }
       } catch {
         if (cancelled) return;
         saveSessionToken('');
