@@ -66,17 +66,21 @@ function seedReview(dossier) {
   };
 }
 
-async function adminFetch(path, token, options = {}) {
+async function adminFetch(path, _token, options = {}) {
   const response = await fetch(path, {
     ...options,
+    credentials: 'same-origin',
     headers: {
-      'x-pilot-admin-token': token,
       ...(options.body ? { 'content-type': 'application/json' } : {}),
       ...(options.headers || {}),
     },
   });
   const data = await response.json().catch(() => ({}));
-  if (!response.ok) throw new Error(data?.error || 'Erreur serveur');
+  if (!response.ok) {
+    const error = new Error(data?.error || 'Erreur serveur');
+    error.status = response.status;
+    throw error;
+  }
   return data;
 }
 
@@ -217,9 +221,9 @@ function PrintableReport({ dossier }) {
 
 export default function AdminPanel() {
   const [token, setToken] = useState(() => {
-    try { return sessionStorage.getItem('pilot_admin_token') || ''; } catch { return ''; }
+    try { return sessionStorage.getItem('pilot_admin_session_active') === '1' ? 'session' : ''; } catch { return ''; }
   });
-  const [inputToken, setInputToken] = useState(token);
+  const [inputToken, setInputToken] = useState('');
   const [dossiers, setDossiers] = useState([]);
   const [capacity, setCapacity] = useState(null);
   const [selected, setSelected] = useState(null);
@@ -251,10 +255,8 @@ export default function AdminPanel() {
     try {
       const response = await fetch('/api/admin/self-test', {
         method: 'POST',
-        headers: {
-          'x-pilot-admin-token': token,
-          'content-type': 'application/json',
-        },
+        credentials: 'same-origin',
+        headers: { 'content-type': 'application/json' },
         body: JSON.stringify({}),
       });
       const data = await response.json().catch(() => ({}));
@@ -284,6 +286,10 @@ export default function AdminPanel() {
       setDossiers(data.dossiers || []);
       setCapacity(data.capacity || null);
     } catch (err) {
+      if (err?.status === 401) {
+        try { sessionStorage.removeItem('pilot_admin_session_active'); } catch {}
+        setToken('');
+      }
       setError(err.message);
       setDossiers([]);
     } finally {
@@ -308,9 +314,20 @@ export default function AdminPanel() {
     e.preventDefault();
     setError('');
     try {
-      const data = await adminFetch('/api/admin/dossiers', inputToken);
-      sessionStorage.setItem('pilot_admin_token', inputToken);
-      setToken(inputToken);
+      const response = await fetch('/api/admin/login', {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ token: inputToken }),
+      });
+      const loginData = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(loginData?.error || 'Accès administrateur refusé.');
+
+      const data = await adminFetch('/api/admin/dossiers', 'session');
+      sessionStorage.setItem('pilot_admin_session_active', '1');
+      sessionStorage.removeItem('pilot_admin_token');
+      setInputToken('');
+      setToken('session');
       setDossiers(data.dossiers || []);
       setCapacity(data.capacity || null);
     } catch (err) {
@@ -396,7 +413,7 @@ export default function AdminPanel() {
     try {
       const response = await fetch(
         `/api/report/download?admin=1&id=${encodeURIComponent(selected.id)}`,
-        { headers: { 'x-pilot-admin-token': token } }
+        { credentials: 'same-origin' }
       );
       if (!response.ok) {
         const data = await response.json().catch(() => ({}));
@@ -422,7 +439,7 @@ export default function AdminPanel() {
     try {
       const response = await fetch(
         `/api/file/download?admin=1&dossierId=${encodeURIComponent(selected.id)}&slot=${encodeURIComponent(slot)}`,
-        { headers: { 'x-pilot-admin-token': token } }
+        { credentials: 'same-origin' }
       );
       if (!response.ok) {
         const data = await response.json().catch(() => ({}));
@@ -549,7 +566,16 @@ export default function AdminPanel() {
         <div className="adm-header-actions">
           <button onClick={() => { loadHealth(); loadList(token); }}>Actualiser</button>
           <button onClick={exportCsv}>Exporter CSV</button>
-          <button onClick={() => { sessionStorage.removeItem('pilot_admin_token'); setToken(''); setSelected(null); }}>Verrouiller</button>
+          <button onClick={async () => {
+            try { await fetch('/api/admin/logout', { method: 'POST', credentials: 'same-origin' }); } catch {}
+            try {
+              sessionStorage.removeItem('pilot_admin_session_active');
+              sessionStorage.removeItem('pilot_admin_token');
+            } catch {}
+            setToken('');
+            setInputToken('');
+            setSelected(null);
+          }}>Verrouiller</button>
         </div>
       </header>
 
